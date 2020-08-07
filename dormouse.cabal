@@ -1,0 +1,99 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 7cdea8a337aad699bdf3a16481e3f8edd08ac84da3f2e4985f91e9fcf24d5510
+
+name:           dormouse
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/githubuser/dormouse#readme>
+homepage:       https://github.com/githubuser/dormouse#readme
+bug-reports:    https://github.com/githubuser/dormouse/issues
+author:         Phil Curzon
+maintainer:     example@example.com
+copyright:      2020 Phil Curzon
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/githubuser/dormouse
+
+library
+  exposed-modules:
+      Dormouse
+      Dormouse.Backend
+      Dormouse.Class
+      Dormouse.Headers
+      Dormouse.Methods
+      Dormouse.Payload
+      Dormouse.Status
+      Dormouse.Types
+      Dormouse.Uri
+  other-modules:
+      Paths_dormouse
+  hs-source-dirs:
+      src
+  default-extensions: OverloadedStrings MultiParamTypeClasses ScopedTypeVariables FlexibleContexts
+  build-depends:
+      aeson >=1.4.2 && <2.0.0
+    , base >=4.7 && <5
+    , bytestring >=0.10.8 && <0.11.0
+    , case-insensitive >=1.2.1.0 && <2.0.0
+    , http-client >=0.6.4.1 && <0.7.0
+    , http-types >=0.12.3 && <0.13
+    , safe-exceptions >=0.1.7 && <0.2.0
+    , text >=1.2.3 && <2.0.0
+    , uri-bytestring >=0.3.2.2 && <0.4
+  default-language: Haskell2010
+
+executable dormouse-examples
+  main-is: Main.hs
+  other-modules:
+      Paths_dormouse
+  hs-source-dirs:
+      examples
+  default-extensions: OverloadedStrings MultiParamTypeClasses ScopedTypeVariables FlexibleContexts
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      aeson >=1.4.2 && <2.0.0
+    , base >=4.7 && <5
+    , bytestring >=0.10.8 && <0.11.0
+    , case-insensitive >=1.2.1.0 && <2.0.0
+    , dormouse
+    , http-client >=0.6.4.1 && <0.7.0
+    , http-types >=0.12.3 && <0.13
+    , safe-exceptions >=0.1.7 && <0.2.0
+    , text >=1.2.3 && <2.0.0
+    , uri-bytestring >=0.3.2.2 && <0.4
+  default-language: Haskell2010
+
+test-suite dormouse-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Dormouse.StatusSpec
+      Paths_dormouse
+  hs-source-dirs:
+      test
+  default-extensions: OverloadedStrings MultiParamTypeClasses ScopedTypeVariables FlexibleContexts
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall
+  build-depends:
+      aeson >=1.4.2 && <2.0.0
+    , base >=4.7 && <5
+    , bytestring >=0.10.8 && <0.11.0
+    , case-insensitive >=1.2.1.0 && <2.0.0
+    , dormouse
+    , hspec >=2.0.0
+    , http-client >=0.6.4.1 && <0.7.0
+    , http-types >=0.12.3 && <0.13
+    , safe-exceptions >=0.1.7 && <0.2.0
+    , text >=1.2.3 && <2.0.0
+    , uri-bytestring >=0.3.2.2 && <0.4
+  default-language: Haskell2010

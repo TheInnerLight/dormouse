@@ -1,0 +1,8 @@
+cradle:
+  stack:
+    - path: "./src"
+      component: "dormouse:lib"
+    - path: "./examples"
+      component: "dormouse:exe:dormouse-examples"
+    - path: "./test"
+      component: "dormouse:test:dormouse-test"

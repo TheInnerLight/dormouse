@@ -1,0 +1,64 @@
+name:                dormouse
+version:             0.1.0.0
+github:              "githubuser/dormouse"
+license:             BSD3
+author:              Phil Curzon
+maintainer:          "example@example.com"
+copyright:           "2020 Phil Curzon"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/githubuser/dormouse#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- bytestring >= 0.10.8 && < 0.11.0
+- aeson >= 1.4.2 && < 2.0.0
+- http-client >= 0.6.4.1 && < 0.7.0
+- safe-exceptions >= 0.1.7 && < 0.2.0
+- case-insensitive >= 1.2.1.0 && < 2.0.0
+- http-types >= 0.12.3 && < 0.13
+- text >= 1.2.3 && < 2.0.0
+- uri-bytestring >= 0.3.2.2 && < 0.4
+
+library:
+  source-dirs: src
+
+executables:
+  dormouse-examples:
+    main:                Main.hs
+    source-dirs:         examples
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - dormouse
+
+tests:
+  dormouse-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -Wall
+    dependencies:
+    - hspec >= 2.0.0
+    - dormouse
+
+default-extensions:
+  - OverloadedStrings
+  - MultiParamTypeClasses
+  - ScopedTypeVariables
+  - FlexibleContexts
