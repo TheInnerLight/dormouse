@@ -9,7 +9,6 @@ Dormouse is an HTTP client that will help you REST.
 import Control.Monad.IO.Class
 import Dormouse
 import Data.Aeson.TH
-import Data.Char (toLower)
 import URI.ByteString.QQ (uri)
 
 data UserDetails = UserDetails 
@@ -23,7 +22,7 @@ data Echoed a = Echoed
   { echoeddata :: a
   } deriving (Eq, Show)
 
-deriveJSON defaultOptions{fieldLabelModifier = drop 6, constructorTagModifier = map toLower} ''Echoed
+deriveJSON defaultOptions {fieldLabelModifier = drop 6} ''Echoed
 
 main :: IO ()
 main = do
@@ -36,4 +35,3 @@ main = do
     liftIO $ print response
     return ()
 ```
-
