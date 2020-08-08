@@ -6,6 +6,7 @@ Dormouse is an HTTP client that will help you REST.
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE QuasiQuotes #-}
 
+import Control.Monad.IO.Class
 import Dormouse
 import Data.Aeson.TH
 import Data.Char (toLower)
@@ -31,7 +32,8 @@ main = do
     let userDetails = UserDetails { name = "James T. Kirk", nickname = "Jim", email = "james.t.kirk@starfleet.com"}
     let req = accept json $ supplyBody json userDetails $ post [uri|https://postman-echo.com/post?ship=enterprise|]
     resp <- sendHttp req
-    (blurg :: Echoed UserDetails) <- decodeBody resp
+    (response :: Echoed UserDetails) <- decodeBody resp
+    liftIO $ print response
     return ()
 ```
 
