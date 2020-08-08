@@ -13,6 +13,7 @@ data UserDetails = UserDetails
   } deriving (Eq, Show)
 
 deriveJSON defaultOptions ''UserDetails
+
 data Echoed a = Echoed 
   { echoeddata :: a
   } deriving (Eq, Show)
