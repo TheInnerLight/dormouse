@@ -14,18 +14,23 @@ module Dormouse.Payload
   , HttpPayload(..)
   , DecodingException(..)
   , JsonLbsPayload
-  , JsonSbsPayload
+  , OctetStreamPayload
+  , UrlFormPayload
   , json
-  , jsonStrict
+  , octetStream
+  , urlForm
+  , noBody
   ) where
 
 import Control.Exception.Safe (Exception, MonadThrow(..), throw)
 import Data.Aeson (FromJSON, ToJSON, Value, encode, fromEncoding, eitherDecode, eitherDecodeStrict)
 import Data.Functor.Const
 import Data.Proxy
+import Data.Text (Text, pack)
 import GHC.Exts
 import qualified Data.ByteString  as SB
 import qualified Data.ByteString.Lazy as LB
+import qualified Web.FormUrlEncoded as W
 
 newtype LBSRawPayload = LBSRawPayload {unLBSRawPayload :: LB.ByteString} deriving (Eq, Show)
 
@@ -55,30 +60,48 @@ instance HttpPayload JsonLbsPayload where
   type ResponsePayloadConstraint JsonLbsPayload b = FromJSON b
   type RawPayload JsonLbsPayload = LB.ByteString
   createRequestPayload _ b = encode b
-  extractResponsePayload _ lbs = either (\s -> throw $ DecodingException s) (\x -> return  x) $ eitherDecode lbs
+  extractResponsePayload _ lbs = either (throw . DecodingException . pack) return $ eitherDecode lbs
 
 json :: Proxy JsonLbsPayload
 json = Proxy :: Proxy JsonLbsPayload
 
-data JsonSbsPayload = JsonSbsPayload
+data OctetStreamPayload = OctetStreamPayload
 
-instance HasAcceptHeader JsonSbsPayload where
-  acceptHeader _ = Just "application/json"
+instance HasAcceptHeader OctetStreamPayload where
+  acceptHeader _ = Just "application/octet-stream"
 
-instance HasContentType JsonSbsPayload where
-  contentType _ = Just "application/json"
+instance HasContentType OctetStreamPayload where
+  contentType _ = Just "application/octet-stream"
 
-instance HttpPayload JsonSbsPayload where
-  type RequestPayloadConstraint JsonSbsPayload b = ToJSON b
-  type ResponsePayloadConstraint JsonSbsPayload b = FromJSON b
-  type RawPayload JsonSbsPayload = SB.ByteString
-  createRequestPayload _ b = LB.toStrict $ encode b
-  extractResponsePayload _ sbs = either (\s -> throw $ DecodingException s) (\x -> return  x) $ eitherDecodeStrict sbs
+instance HttpPayload OctetStreamPayload where
+  type RequestPayloadConstraint OctetStreamPayload b = b ~ LB.ByteString
+  type ResponsePayloadConstraint OctetStreamPayload b = b ~ LB.ByteString
+  type RawPayload OctetStreamPayload = LB.ByteString
+  createRequestPayload _ b = b
+  extractResponsePayload _ b = return b
 
-jsonStrict :: Proxy JsonSbsPayload
-jsonStrict = Proxy :: Proxy JsonSbsPayload
+octetStream :: Proxy OctetStreamPayload
+octetStream = Proxy :: Proxy OctetStreamPayload
 
-data DecodingException = DecodingException String
+data UrlFormPayload = UrlFormPayload
+
+instance HasAcceptHeader UrlFormPayload where
+  acceptHeader _ = Just "application/x-www-form-urlencoded"
+
+instance HasContentType UrlFormPayload where
+  contentType _ = Just "application/x-www-form-urlencoded"
+
+instance HttpPayload UrlFormPayload where
+  type RequestPayloadConstraint UrlFormPayload b = W.ToForm b
+  type ResponsePayloadConstraint UrlFormPayload b = W.FromForm b
+  type RawPayload UrlFormPayload = LB.ByteString
+  createRequestPayload _ b = W.urlEncodeAsForm b
+  extractResponsePayload _ lbs = either (throw . DecodingException) return $ W.urlDecodeAsForm lbs
+
+urlForm :: Proxy UrlFormPayload
+urlForm = Proxy :: Proxy UrlFormPayload
+
+data DecodingException = DecodingException Text
   deriving (Show)
 
 instance Exception DecodingException
@@ -97,3 +120,6 @@ instance HttpPayload EmptyPayload where
   type RawPayload EmptyPayload = LB.ByteString
   createRequestPayload _ b = LB.empty
   extractResponsePayload _ _ = return ()
+
+noBody :: Proxy EmptyPayload
+noBody = Proxy :: Proxy EmptyPayload

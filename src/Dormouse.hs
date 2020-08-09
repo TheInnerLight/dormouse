@@ -1,3 +1,4 @@
+{-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DisambiguateRecordFields #-}
 {-# LANGUAGE DuplicateRecordFields #-}
@@ -17,6 +18,7 @@ module Dormouse
   , DormouseT
   , Dormouse
   , AllowedBody
+  , UsingNetworkHttpClient
   , delete
   , get
   , Dormouse.head
@@ -119,7 +121,9 @@ accept prox (h@HttpRequest { headers = oldHeaders}) = h { headers = oldHeaders <
   where 
     newHeaders = foldMap (\v -> [("Accept" :: HeaderName, v)]) $ acceptHeader prox
 
-sendHttp :: (HasDormouseConfig env, MonadReader env m, HttpPayload acceptTag, Typeable acceptTag, MonadIO m, MonadThrow m, (RequestBackend (RawPayload tag)), ResponseBackend (RawPayload acceptTag)) => HttpRequest method tag acceptTag -> m (HttpResponse acceptTag)
+type UsingNetworkHttpClient tag acceptTag = (HttpPayload acceptTag, Typeable acceptTag, (RequestBackend (RawPayload tag)), ResponseBackend (RawPayload acceptTag))
+
+sendHttp :: (HasDormouseConfig env, MonadReader env m, MonadIO m, MonadThrow m, UsingNetworkHttpClient tag acceptTag) => HttpRequest method tag acceptTag -> m (HttpResponse acceptTag)
 sendHttp HttpRequest {method = method, url = url, body = rawBody, headers = headers} = do
   manager <- fmap clientManager $ reader (getDormouseConfig)
   initialRequest <- parseRequestFromUri url
@@ -137,9 +141,9 @@ sendHttp HttpRequest {method = method, url = url, body = rawBody, headers = head
 newtype DormouseT m a = DormouseT 
   { unDormouseT :: ReaderT DormouseConfig m a 
   } deriving (Functor, Applicative, Monad, MonadReader DormouseConfig, MonadIO, MonadThrow)
-  
+
 instance (MonadIO m, MonadThrow m) => MonadDormouse (DormouseT m) where
-  type MonadHttpConstraint (DormouseT m) tag acceptTag = (HttpPayload acceptTag, Typeable acceptTag, (RequestBackend (RawPayload tag)), ResponseBackend (RawPayload acceptTag))
+  type MonadHttpConstraint (DormouseT m) tag acceptTag = UsingNetworkHttpClient tag acceptTag
   send = sendHttp
 
 type Dormouse a = DormouseT IO a

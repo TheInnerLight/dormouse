@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 03f2b087f25559bf4ec959b6da34e1bf94cf60c6e18e5cccfdc751bf9d43b401
+-- hash: 28434f31afbabda3dde37f7a41a1c8da76c1877bcc2b6e94a2bb137591d2157e
 
 name:           dormouse
 version:        0.1.0.0
@@ -46,6 +46,7 @@ library
     , base >=4.7 && <5
     , bytestring >=0.10.8 && <0.11.0
     , case-insensitive >=1.2.1.0 && <2.0.0
+    , http-api-data >=0.4.1.1 && <0.5
     , http-client >=0.6.4.1 && <0.7.0
     , http-client-tls >=0.3.5.3 && <0.4
     , http-types >=0.12.3 && <0.13
@@ -69,6 +70,7 @@ executable dormouse-examples
     , bytestring >=0.10.8 && <0.11.0
     , case-insensitive >=1.2.1.0 && <2.0.0
     , dormouse
+    , http-api-data >=0.4.1.1 && <0.5
     , http-client >=0.6.4.1 && <0.7.0
     , http-client-tls >=0.3.5.3 && <0.4
     , http-types >=0.12.3 && <0.13
@@ -96,6 +98,7 @@ test-suite dormouse-test
     , case-insensitive >=1.2.1.0 && <2.0.0
     , dormouse
     , hspec >=2.0.0
+    , http-api-data >=0.4.1.1 && <0.5
     , http-client >=0.6.4.1 && <0.7.0
     , http-client-tls >=0.3.5.3 && <0.4
     , http-types >=0.12.3 && <0.13
