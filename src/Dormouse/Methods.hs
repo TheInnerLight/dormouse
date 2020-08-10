@@ -1,14 +1,18 @@
+{-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Dormouse.Methods
   ( HttpMethod(..)
+  , AllowedBody(..)
   , methodAsByteString
   ) where
 
 import qualified Data.ByteString as SB
 import qualified Data.ByteString.Char8 as C8SB
+import Data.Kind (Constraint)
 import Data.Proxy
 import GHC.TypeLits
 
@@ -38,6 +42,17 @@ instance Show (HttpMethod a) where
 
 instance Eq (HttpMethod a) where
   (==) _ _ = True
+
+type family AllowedBody (a :: Symbol) b :: Constraint
+type instance AllowedBody "CONNECT" b = (b ~ ())
+type instance AllowedBody "DELETE" b = ()
+type instance AllowedBody "GET" b = (b ~ ())
+type instance AllowedBody "HEAD" b = (b ~ ())
+type instance AllowedBody "OPTIONS" b = (b ~ ())
+type instance AllowedBody "PATCH" b = ()
+type instance AllowedBody "POST" b = ()
+type instance AllowedBody "PUT" b = ()
+type instance AllowedBody "TRACE" b = (b ~ ())
 
 methodAsByteString :: HttpMethod a -> SB.ByteString
 methodAsByteString CONNECT    = "CONNECT"

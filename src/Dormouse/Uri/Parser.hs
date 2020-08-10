@@ -2,11 +2,15 @@
 {-# LANGUAGE LambdaCase #-}
 
 module Dormouse.Uri.Parser
-  ( id
+  ( pUri
+  , pAbsoluteUri
+  , pRelativeUri
   ) where
 
 import Control.Applicative ((<|>))
 import Data.Char as C
+import Data.CaseInsensitive (CI, mk)
+import Data.Maybe (isJust)
 import qualified Data.Text as T
 import Data.Attoparsec.Text
 import Dormouse.Uri.Types
@@ -53,17 +57,17 @@ pPercentEnc = do
 
 pUsername :: Parser Username
 pUsername = do
-  xs <- many' (pUnreserved <|> pPercentEnc <|> pSubDelim)
+  xs <- many1' (pUnreserved <|> pPercentEnc <|> pSubDelim)
   return $ Username (T.pack xs)
 
 pPassword :: Parser Password
 pPassword = do
-  xs <- many' (pUnreserved <|> pPercentEnc <|> pSubDelim <> char ':')
+  xs <- many1' (pUnreserved <|> pPercentEnc <|> pSubDelim <> char ':')
   return $ Password (T.pack xs)
 
 pRegName :: Parser T.Text
 pRegName = do
-  xs <- many' (pUnreserved <|> pPercentEnc <|> pSubDelim)
+  xs <- many1' (pUnreserved <|> pPercentEnc <|> pSubDelim)
   return . T.pack $ xs
 
 pIPV4 :: Parser T.Text
@@ -84,13 +88,14 @@ pIPV4 = do
 
 pHost :: Parser Host
 pHost = do
-  hostText <- choice [pRegName, pIPV4]
+  hostText <- pIPV4 <|> pRegName
   return . Host  $ hostText
 
 pUserInfo :: Parser UserInfo
 pUserInfo = do
   username <- pUsername
-  password <- pMaybe pPassword
+  password <- pMaybe (char ':' *> pPassword)
+  _ <- char '@'
   return $ UserInfo { userInfoUsername = username, userInfoPassword = password }
 
 pAuthority :: Parser Authority
@@ -104,71 +109,87 @@ pAuthority = do
 pPathChar :: Parser Char 
 pPathChar = pUnreserved <|> pPercentEnc <|> pSubDelim <|> char ':' <|> char '@'
 
-pSegmentNz :: Parser Char 
-pSegmentNz = pPathChar
+pSegmentNz :: Parser PathSegment 
+pSegmentNz = fmap (PathSegment . T.pack) $ many1' pPathChar
 
-pSegmentNzNc :: Parser Char 
-pSegmentNzNc = pUnreserved <|> pPercentEnc <|> pSubDelim <|> char '@'
+pSegmentNzNc :: Parser PathSegment 
+pSegmentNzNc = fmap (PathSegment . T.pack) $ many1' (pUnreserved <|> pPercentEnc <|> pSubDelim <|> char '@')
 
 pSegment :: Parser PathSegment
 pSegment = fmap (PathSegment . T.pack) $ many' pPathChar
 
 pPathsAbEmpty :: Parser [PathSegment]
-pPathsAbEmpty = pSegment `sepBy` (char '/')
+pPathsAbEmpty = many1' (char '/' *> pSegment)
 
 pPathsAbsolute :: Parser [PathSegment]
 pPathsAbsolute = do
   slash <- char '/'
   seg <- pSegmentNz
-  comps <- pSegment `sepBy` (char ',')
-  return comps
+  comps <- many' (char '/' *> pSegment)
+  return $ seg : comps
 
 pPathsNoScheme :: Parser [PathSegment]
 pPathsNoScheme = do
   seg <- pSegmentNzNc
-  comps <- pSegment `sepBy` (char ',')
-  return comps
+  comps <- many' (char '/' *> pSegment)
+  return $ seg : comps
 
 pPathsRootless :: Parser [PathSegment]
 pPathsRootless = do
   seg <- pSegmentNz
-  comps <- pSegment `sepBy` (char ',')
-  return comps
+  comps <- many' (char '/' *> pSegment)
+  return $ seg : comps
 
 pPathsEmpty :: Parser [PathSegment]
 pPathsEmpty = return []
 
-pPath :: Parser Path
-pPath = fmap (Path) $ pPathsAbEmpty <|> pPathsAbsolute <|> pPathsNoScheme <|> pPathsRootless <|> pPathsEmpty
+pPathAbsAuth :: Parser (Path Absolute)
+pPathAbsAuth = fmap (Path) (pPathsAbEmpty <|> pPathsAbsolute <|> pPathsEmpty)
+
+pPathAbsNoAuth :: Parser (Path Absolute)
+pPathAbsNoAuth = fmap (Path) (pPathsAbEmpty <|> pPathsAbsolute <|> pPathsRootless <|> pPathsEmpty)
+
+pPathRel :: Parser (Path Relative)
+pPathRel = fmap (Path) (pPathsAbsolute <|> pPathsNoScheme <|> pPathsRootless <|> pPathsEmpty)
+
+pQuery :: Parser (Maybe Query)
+pQuery = 
+  let maybeQueryText = pMaybe (char '?' *> (many1' (pPathChar <|> char '/' <|> char '?'))) in
+  fmap (fmap (Query . T.pack)) $ maybeQueryText
+
+pFragment :: Parser (Maybe Fragment)
+pFragment = 
+  let maybeQueryText = pMaybe (char '#' *> (many1' (pPathChar <|> char '/' <|> char '?'))) in
+  fmap (fmap (Fragment . T.pack)) $ maybeQueryText
 
 pScheme :: Parser Scheme
 pScheme = do
   x <- pAsciiAlpha
   xs <- many' (pAsciiAlphaNumeric <|> char '+' <|> char '.' <|> char '-' )
   _ <- char ':'
-  return $ Scheme (T.pack $ x:xs)
+  return $ Scheme (T.toLower . T.pack $ x:xs)
 
-pAbsolutePart :: Parser (Scheme, Authority)
+
+pAbsolutePart :: Parser (Scheme, Maybe Authority)
 pAbsolutePart = do
   scheme <- pScheme
-  authority <- pAuthority
+  authority <- pMaybe pAuthority
   return (scheme, authority)
 
 pRelativeUri :: Parser (Uri Relative scheme)
 pRelativeUri = do
-  path <- pPath
-  return $ RelativeUri path [] (Fragment "")
+  path <- pPathRel
+  query <- pQuery
+  fragment <- pFragment
+  return $ RelativeUri path query fragment
 
 pAbsoluteUri :: Parser (Uri Absolute scheme)
 pAbsoluteUri = do
   (scheme, authority) <- pAbsolutePart
-  path <- pPath
-  let relPath = RelativeUri path [] (Fragment "")
-  return $ AbsoluteUri scheme authority relPath
+  path <- if isJust authority then pPathAbsAuth else pPathAbsNoAuth
+  query <- pQuery
+  fragment <- pFragment
+  return $ AbsoluteUri scheme authority path query fragment
 
 pUri :: Parser (Uri Unknown scheme)
-pUri = do
-  maybeAbsPart <- pMaybe pAbsolutePart
-  relativeUri <- pRelativeUri
-  return $ maybe (UnknownRel $ relativeUri) (\(scheme, authority) -> UnknownAbs $ AbsoluteUri scheme authority relativeUri) maybeAbsPart
-
+pUri = fmap AbsOrRelUri pAbsoluteUri <|> fmap AbsOrRelUri pRelativeUri

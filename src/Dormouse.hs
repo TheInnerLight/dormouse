@@ -15,28 +15,24 @@ module Dormouse
   , module Dormouse.Payload
   , module Dormouse.Status
   , module Dormouse.Types
+  , module Dormouse.Uri
   , DormouseT
   , Dormouse
-  , AllowedBody
-  , UsingNetworkHttpClient
   , delete
   , get
   , Dormouse.head
   , patch
   , post
   , put
-  , sendHttp
   , supplyBody
   , decodeBody
   , decodeBodyAs
   , accept
+  , expect
   , runDormouseT
   , runDormouse
   , C.newManager
   , TLS.tlsManagerSettings
-  , (//)
-  , (?:)
-  , (=:)
   ) where
 
 import Control.Applicative ((<|>))
@@ -58,13 +54,13 @@ import Dormouse.Methods
 import Dormouse.Status
 import Dormouse.Types
 import Dormouse.Uri
+import qualified Dormouse.MonadIOImpl as IOImpl
 import GHC.TypeLits
 import qualified Network.HTTP.Client as C
 import qualified Network.HTTP.Client.TLS as TLS
 import qualified Network.HTTP.Types.Status as NC
-import Text.URI (URI)
 
-emptyPayloadReq :: (RequestPayloadConstraint EmptyPayload (), HttpPayload EmptyPayload) => HttpMethod method -> URI -> HttpRequest method EmptyPayload acceptTag
+emptyPayloadReq :: (RequestPayloadConstraint EmptyPayload (), HttpPayload EmptyPayload) => HttpMethod method -> Uri Absolute scheme -> HttpRequest scheme method EmptyPayload acceptTag
 emptyPayloadReq method url = HttpRequest 
   { method = method
   , url = url
@@ -72,37 +68,25 @@ emptyPayloadReq method url = HttpRequest
   , body = LB.empty
   }
 
-delete :: (RequestPayloadConstraint EmptyPayload (), HttpPayload EmptyPayload) => URI -> HttpRequest "DELETE" EmptyPayload acceptTag
+delete :: (RequestPayloadConstraint EmptyPayload (), HttpPayload EmptyPayload) => Uri Absolute scheme -> HttpRequest scheme "DELETE" EmptyPayload acceptTag
 delete = emptyPayloadReq DELETE
 
-get :: (RequestPayloadConstraint EmptyPayload (), HttpPayload EmptyPayload) => URI -> HttpRequest "GET" EmptyPayload acceptTag
+get :: (RequestPayloadConstraint EmptyPayload (), HttpPayload EmptyPayload) => Uri Absolute scheme -> HttpRequest scheme "GET" EmptyPayload acceptTag
 get = emptyPayloadReq GET
 
-head :: (RequestPayloadConstraint EmptyPayload (), HttpPayload EmptyPayload) => URI -> HttpRequest "HEAD" EmptyPayload acceptTag
+head :: (RequestPayloadConstraint EmptyPayload (), HttpPayload EmptyPayload) => Uri Absolute scheme -> HttpRequest scheme "HEAD" EmptyPayload acceptTag
 head = emptyPayloadReq HEAD
 
-patch :: (RequestPayloadConstraint EmptyPayload (), HttpPayload EmptyPayload) => URI -> HttpRequest "PATCH" EmptyPayload acceptTag
+patch :: (RequestPayloadConstraint EmptyPayload (), HttpPayload EmptyPayload) => Uri Absolute scheme -> HttpRequest scheme "PATCH" EmptyPayload acceptTag
 patch = emptyPayloadReq PATCH
 
-post :: (RequestPayloadConstraint EmptyPayload (), HttpPayload EmptyPayload) => URI -> HttpRequest "POST" EmptyPayload acceptTag
+post :: (RequestPayloadConstraint EmptyPayload (), HttpPayload EmptyPayload) => Uri Absolute scheme -> HttpRequest scheme "POST" EmptyPayload acceptTag
 post = emptyPayloadReq POST
 
-put :: (RequestPayloadConstraint EmptyPayload (), HttpPayload EmptyPayload) => URI -> HttpRequest "PUT" EmptyPayload acceptTag
+put :: (RequestPayloadConstraint EmptyPayload (), HttpPayload EmptyPayload) => Uri Absolute scheme -> HttpRequest scheme "PUT" EmptyPayload acceptTag
 put = emptyPayloadReq PUT
 
-type family AllowedBody (a :: Symbol) b :: Constraint
-
-type instance AllowedBody "CONNECT" b = (b ~ ())
-type instance AllowedBody "DELETE" b = ()
-type instance AllowedBody "GET" b = (b ~ ())
-type instance AllowedBody "HEAD" b = (b ~ ())
-type instance AllowedBody "OPTIONS" b = (b ~ ())
-type instance AllowedBody "PATCH" b = ()
-type instance AllowedBody "POST" b = ()
-type instance AllowedBody "PUT" b = ()
-type instance AllowedBody "TRACE" b = (b ~ ())
-
-supplyBody :: (RequestPayloadConstraint tag b, HttpPayload tag, AllowedBody method b) => Proxy tag -> b -> HttpRequest method tag' acceptTag -> HttpRequest method tag acceptTag
+supplyBody :: (RequestPayloadConstraint tag b, HttpPayload tag, AllowedBody method b) => Proxy tag -> b -> HttpRequest scheme method tag' acceptTag -> HttpRequest scheme method tag acceptTag
 supplyBody prox a (HttpRequest {headers = headers, body = _, ..}) = 
   HttpRequest 
     { headers = foldMap (\v -> [("Content-Type" :: HeaderName, v)]) $ contentType prox
@@ -119,35 +103,24 @@ decodeBody (hr@HttpResponse {body = x}) = extractResponsePayload (proxyOfResp hr
 decodeBodyAs :: (ResponsePayloadConstraint tag b, HttpPayload tag, MonadThrow m, RawPayload tag ~ rawBody) => Proxy tag -> HttpResponse tag -> m b
 decodeBodyAs proxy (hr@HttpResponse {body = x}) = extractResponsePayload proxy x
 
-accept :: (HttpPayload acceptTag) => Proxy acceptTag -> HttpRequest method tag acceptTag -> HttpRequest method tag acceptTag
+accept :: (HttpPayload acceptTag) => Proxy acceptTag -> HttpRequest scheme method tag acceptTag -> HttpRequest scheme method tag acceptTag
 accept prox (h@HttpRequest { headers = oldHeaders}) = h { headers = oldHeaders <> newHeaders}
   where 
     newHeaders = foldMap (\v -> [("Accept" :: HeaderName, v)]) $ acceptHeader prox
 
-type UsingNetworkHttpClient tag acceptTag = (HttpPayload acceptTag, Typeable acceptTag, (RequestBackend (RawPayload tag)), ResponseBackend (RawPayload acceptTag))
-
-sendHttp :: (HasDormouseConfig env, MonadReader env m, MonadIO m, MonadThrow m, UsingNetworkHttpClient tag acceptTag) => HttpRequest method tag acceptTag -> m (HttpResponse acceptTag)
-sendHttp HttpRequest {method = method, url = url, body = rawBody, headers = headers} = do
-  manager <- fmap clientManager $ reader (getDormouseConfig)
-  initialRequest <- parseRequestFromUri url
-  let request = initialRequest { C.method = methodAsByteString method, C.requestBody = writeResponseBody rawBody, C.requestHeaders = headers }
-  response <- liftIO $ C.withResponse request manager readResponseBody
-  let resp = HttpResponse 
-       { statusCode = NC.statusCode . C.responseStatus $ response
-       , headers = C.responseHeaders response
-       , body = C.responseBody response
-       }
-  case statusCode resp of
-    Successful -> return resp
-    _          -> throw $ UnexpectedStatusCode (statusCode resp) resp
+expect :: (MonadDormouse m, MonadHttpConstraint m tag acceptTag, HttpPayload acceptTag, MonadThrow m, ResponsePayloadConstraint acceptTag b) => HttpRequest scheme method tag acceptTag -> m b
+expect r = do
+  resp <- send r
+  b <- decodeBody resp
+  return b
 
 newtype DormouseT m a = DormouseT 
   { unDormouseT :: ReaderT DormouseConfig m a 
   } deriving (Functor, Applicative, Monad, MonadReader DormouseConfig, MonadIO, MonadThrow)
 
 instance (MonadIO m, MonadThrow m) => MonadDormouse (DormouseT m) where
-  type MonadHttpConstraint (DormouseT m) tag acceptTag = UsingNetworkHttpClient tag acceptTag
-  send = sendHttp
+  type MonadHttpConstraint (DormouseT m) tag acceptTag = IOImpl.UsingNetworkHttpClient tag acceptTag
+  send = IOImpl.sendHttp
 
 type Dormouse a = DormouseT IO a
 

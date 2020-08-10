@@ -11,7 +11,6 @@ module Dormouse.Types
   , HttpResponse(..)
   , SomeDormouseException(..)
   , UnexpectedStatusCode(..)
-  , UriException(..)
   ) where
 
 import Control.Exception.Safe (Exception(..))
@@ -20,21 +19,22 @@ import Data.Typeable (Typeable, cast)
 import Dormouse.Payload
 import Dormouse.Headers
 import Dormouse.Methods
+import Dormouse.Uri.Types 
 import qualified Data.ByteString as SB
-import Text.URI (URI)
 
-data HttpRequest method tag acceptTag = HttpPayload tag => HttpRequest 
+
+data HttpRequest scheme method tag acceptTag = HttpPayload tag => HttpRequest 
   { method :: HttpMethod method
-  , url :: URI
+  , url :: Uri Absolute scheme
   , headers :: [(HeaderName, SB.ByteString)]
   , body :: RawPayload tag
   }
 
-instance (Show (RawPayload tag), HttpPayload tag) => Show (HttpRequest method tag acceptTag) where
+instance (Show (RawPayload tag), HttpPayload tag) => Show (HttpRequest scheme method tag acceptTag) where
   show (HttpRequest {method = method, url = url, headers = headers, body = body}) = 
     "Http Request { method: " <> show method <> " url:" <> show url <> " " <> "headers: " <> show headers <> " body: " <> show body <> " }"
 
-instance Eq (RawPayload tag) => Eq (HttpRequest method tag acceptTag) where
+instance Eq (RawPayload tag) => Eq (HttpRequest scheme method tag acceptTag) where
   (==) (HttpRequest {method = method1, url = url1, headers = headers1, body = body1}) (HttpRequest {method = method2, url = url2, headers = headers2, body = body2}) =
     methodAsByteString method1 == methodAsByteString method2 && url1 == url2 && headers1 == headers2 && body1 == body2
 
@@ -63,17 +63,6 @@ instance Show (UnexpectedStatusCode a) where
 
 instance Typeable a => Exception (UnexpectedStatusCode a) where
   toException     = toException . SomeDormouseException
-  fromException x = do
-    SomeDormouseException a <- fromException x
-    cast a
-
-data UriException = UriException {uriExceptionUri :: URI, uriExceptionMessage :: Text}
-
-instance Show (UriException) where
-  show (UriException { uriExceptionUri = message, uriExceptionMessage = uri }) = "Failed to parse uri: " <> show uri <> " message: " <> show message
-
-instance Exception (UriException) where
-  toException    = toException . SomeDormouseException
   fromException x = do
     SomeDormouseException a <- fromException x
     cast a
