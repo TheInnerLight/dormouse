@@ -7,6 +7,7 @@ module Dormouse.Class
   ) where
 
 import Data.Kind (Constraint)
+import Dormouse.Payload
 import Dormouse.Types
 import Network.HTTP.Client (Manager)
 
@@ -18,6 +19,6 @@ class HasDormouseConfig a where
 instance HasDormouseConfig DormouseConfig where
   getDormouseConfig = id
 
-class MonadDormouse m where 
+class Monad m => MonadDormouse m where 
   type MonadHttpConstraint m tag acceptTag :: Constraint
-  send :: MonadHttpConstraint m tag acceptTag => HttpRequest method tag acceptTag -> m (HttpResponse acceptTag)
+  send :: (MonadHttpConstraint m tag acceptTag, HttpPayload acceptTag) => HttpRequest scheme method tag acceptTag -> m (HttpResponse acceptTag)
