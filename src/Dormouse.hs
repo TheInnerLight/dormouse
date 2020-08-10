@@ -34,6 +34,9 @@ module Dormouse
   , runDormouse
   , C.newManager
   , TLS.tlsManagerSettings
+  , (//)
+  , (?:)
+  , (=:)
   ) where
 
 import Control.Applicative ((<|>))
@@ -59,7 +62,7 @@ import GHC.TypeLits
 import qualified Network.HTTP.Client as C
 import qualified Network.HTTP.Client.TLS as TLS
 import qualified Network.HTTP.Types.Status as NC
-import URI.ByteString (URI, URIRef(..), Absolute, Host(..), Scheme(..), Port(..), Authority(..), Query(..))
+import Text.URI (URI)
 
 emptyPayloadReq :: (RequestPayloadConstraint EmptyPayload (), HttpPayload EmptyPayload) => HttpMethod method -> URI -> HttpRequest method EmptyPayload acceptTag
 emptyPayloadReq method url = HttpRequest 

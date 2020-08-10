@@ -6,7 +6,7 @@ module Dormouse.UriSpec
 
 import Test.Hspec
 import Dormouse.Uri
-import URI.ByteString.QQ (uri)
+import Text.URI.QQ (uri)
 import qualified Network.HTTP.Client as C
 
 tests :: IO()

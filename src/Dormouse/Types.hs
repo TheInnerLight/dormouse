@@ -21,7 +21,7 @@ import Dormouse.Payload
 import Dormouse.Headers
 import Dormouse.Methods
 import qualified Data.ByteString as SB
-import URI.ByteString (URI)
+import Text.URI (URI)
 
 data HttpRequest method tag acceptTag = HttpPayload tag => HttpRequest 
   { method :: HttpMethod method

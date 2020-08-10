@@ -6,7 +6,7 @@ import Control.Monad.IO.Class
 import Dormouse
 import Data.Aeson.TH
 import GHC.Generics (Generic)
-import URI.ByteString.QQ (uri)
+import Text.URI.QQ (uri, queryKey, queryValue)
 import Web.FormUrlEncoded (ToForm(..), FromForm(..))
 
 data UserDetails = UserDetails 

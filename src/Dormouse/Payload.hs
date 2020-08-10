@@ -5,7 +5,6 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 
-
 module Dormouse.Payload
   ( LBSRawPayload(..)
   , HasAcceptHeader(..)
