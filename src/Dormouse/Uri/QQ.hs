@@ -8,7 +8,6 @@ module Dormouse.Uri.QQ
   , absoluteUri
   , relativeUri
   ) where
-
 import Data.Bifunctor
 import Data.Text (pack)
 import Dormouse.Uri
@@ -36,7 +35,10 @@ https = QuasiQuoter
       case res of
         Left err -> fail $ show err
         Right x -> [| (x :: Uri 'Absolute "https") |]
-  , quotePat = error "Not supported"
+  , quotePat = \s ->
+      case parseHttpsUri (pack s) of
+        Left err -> fail $ show err
+        Right x  -> appE [|(==)|] (lift x) `viewP` [p|True|]
   , quoteType = error "Not supported"
   , quoteDec =error "Not supported"
   }

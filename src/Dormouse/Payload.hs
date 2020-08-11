@@ -3,11 +3,9 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE AllowAmbiguousTypes #-}
 
 module Dormouse.Payload
-  ( LBSRawPayload(..)
-  , HasAcceptHeader(..)
+  ( HasAcceptHeader(..)
   , HasContentType(..)
   , EmptyPayload(..)
   , HttpPayload(..)
@@ -26,12 +24,11 @@ import Data.Aeson (FromJSON, ToJSON, Value, encode, fromEncoding, eitherDecode, 
 import Data.Functor.Const
 import Data.Proxy
 import Data.Text (Text, pack)
+import Dormouse.Backend
 import GHC.Exts
 import qualified Data.ByteString  as SB
 import qualified Data.ByteString.Lazy as LB
 import qualified Web.FormUrlEncoded as W
-
-newtype LBSRawPayload = LBSRawPayload {unLBSRawPayload :: LB.ByteString} deriving (Eq, Show)
 
 class HasAcceptHeader tag where
   acceptHeader :: Proxy tag -> Maybe SB.ByteString
@@ -39,12 +36,20 @@ class HasAcceptHeader tag where
 class HasContentType tag where
   contentType :: Proxy tag -> Maybe SB.ByteString
 
-class (HasContentType tag, HasAcceptHeader tag) => HttpPayload tag where
+-- | HttpPayload relates a payload tag to low level request and response representations and the constraints required to encode and decode to/from that type
+class (RequestBackend (RawReqPayload(tag)), ResponseBackend (RawRespPayload(tag)), HasContentType tag, HasAcceptHeader tag) => HttpPayload tag where
+  -- | 'RawReqPayload' is the low level representation used for HTTP requests.
+  type RawReqPayload tag :: *
+  -- | 'RawRespPayload' is the low level representation used for HTTP responses.
+  type RawRespPayload tag :: *
+  -- | 'RequestPayloadConstraint' describes the constraints on `b` such that it can be encoded as the low level representation
   type RequestPayloadConstraint tag b :: Constraint
+  -- | `ResponsePayloadConstraint' describes the constraints on `b` such that it can be decoded from the low level representation.
   type ResponsePayloadConstraint tag b :: Constraint
-  type RawPayload tag :: *
-  createRequestPayload :: RequestPayloadConstraint tag b => Proxy tag -> b -> RawPayload tag
-  extractResponsePayload :: (ResponsePayloadConstraint tag b, MonadThrow m) => Proxy tag -> RawPayload tag -> m b
+  -- | Generates a low level payload representation from the supplied content
+  createRequestPayload :: RequestPayloadConstraint tag b => Proxy tag -> b -> RawReqPayload tag
+  -- | Generates high level content from the supplied low level payload representation
+  extractResponsePayload :: (ResponsePayloadConstraint tag b, MonadThrow m) => Proxy tag -> RawRespPayload tag -> m b
 
 data JsonLbsPayload = JsonPayload
 
@@ -57,7 +62,8 @@ instance HasContentType JsonLbsPayload where
 instance HttpPayload JsonLbsPayload where
   type RequestPayloadConstraint JsonLbsPayload b = ToJSON b
   type ResponsePayloadConstraint JsonLbsPayload b = FromJSON b
-  type RawPayload JsonLbsPayload = LB.ByteString
+  type RawReqPayload JsonLbsPayload = LB.ByteString
+  type RawRespPayload JsonLbsPayload = LB.ByteString
   createRequestPayload _ b = encode b
   extractResponsePayload _ lbs = either (throw . DecodingException . pack) return $ eitherDecode lbs
 
@@ -75,7 +81,8 @@ instance HasContentType OctetStreamPayload where
 instance HttpPayload OctetStreamPayload where
   type RequestPayloadConstraint OctetStreamPayload b = b ~ LB.ByteString
   type ResponsePayloadConstraint OctetStreamPayload b = b ~ LB.ByteString
-  type RawPayload OctetStreamPayload = LB.ByteString
+  type RawReqPayload OctetStreamPayload = LB.ByteString
+  type RawRespPayload OctetStreamPayload = LB.ByteString
   createRequestPayload _ b = b
   extractResponsePayload _ b = return b
 
@@ -93,7 +100,8 @@ instance HasContentType UrlFormPayload where
 instance HttpPayload UrlFormPayload where
   type RequestPayloadConstraint UrlFormPayload b = W.ToForm b
   type ResponsePayloadConstraint UrlFormPayload b = W.FromForm b
-  type RawPayload UrlFormPayload = LB.ByteString
+  type RawReqPayload UrlFormPayload = LB.ByteString
+  type RawRespPayload UrlFormPayload = LB.ByteString
   createRequestPayload _ b = W.urlEncodeAsForm b
   extractResponsePayload _ lbs = either (throw . DecodingException) return $ W.urlDecodeAsForm lbs
 
@@ -116,7 +124,8 @@ instance HasContentType EmptyPayload where
 instance HttpPayload EmptyPayload where
   type RequestPayloadConstraint EmptyPayload b = b ~ ()
   type ResponsePayloadConstraint EmptyPayload b = b ~ ()
-  type RawPayload EmptyPayload = LB.ByteString
+  type RawReqPayload EmptyPayload = LB.ByteString
+  type RawRespPayload EmptyPayload = LB.ByteString
   createRequestPayload _ b = LB.empty
   extractResponsePayload _ _ = return ()
 

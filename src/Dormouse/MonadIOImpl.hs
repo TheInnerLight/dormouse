@@ -3,8 +3,7 @@
 {-# LANGUAGE TypeFamilies #-}
 
 module Dormouse.MonadIOImpl
-  ( UsingNetworkHttpClient
-  , sendHttp
+  ( sendHttp
   ) where
 
 import Control.Exception.Safe (MonadThrow(..), throw, Exception(..), SomeException)
@@ -24,14 +23,12 @@ import qualified Network.HTTP.Client as C
 import qualified Network.HTTP.Client.TLS as TLS
 import qualified Network.HTTP.Types.Status as NC
 
-type UsingNetworkHttpClient tag acceptTag = (Typeable acceptTag, (RequestBackend (RawPayload tag)), ResponseBackend (RawPayload acceptTag))
-
-sendHttp :: (HasDormouseConfig env, MonadReader env m, MonadIO m, MonadThrow m, UsingNetworkHttpClient tag acceptTag, HttpPayload acceptTag) => HttpRequest scheme method tag acceptTag -> m (HttpResponse acceptTag)
+sendHttp :: (HasDormouseConfig env, MonadReader env m, MonadIO m, MonadThrow m, HttpPayload tag, HttpPayload acceptTag) => HttpRequest scheme method tag acceptTag -> m (HttpResponse acceptTag)
 sendHttp HttpRequest {method = method, url = url, body = rawBody, headers = headers} = do
   manager <- fmap clientManager $ reader (getDormouseConfig)
   initialRequest <- parseRequestFromUri url
-  let request = initialRequest { C.method = methodAsByteString method, C.requestBody = writeResponseBody rawBody, C.requestHeaders = headers }
-  response <- liftIO $ C.withResponse request manager readResponseBody
+  let request = initialRequest { C.method = methodAsByteString method, C.requestBody = writeRequestBody rawBody, C.requestHeaders = headers }
+  response <- liftIO $ C.withResponse request manager (\resp -> fmap (\body' -> resp {C.responseBody = body'}) $ readResponseBody . C.responseBody $ resp )
   let resp = HttpResponse 
        { statusCode = NC.statusCode . C.responseStatus $ response
        , headers = C.responseHeaders response
@@ -39,4 +36,4 @@ sendHttp HttpRequest {method = method, url = url, body = rawBody, headers = head
        }
   case statusCode resp of
     Successful -> return resp
-    _          -> throw $ UnexpectedStatusCode (statusCode resp) resp
+    _          -> throw $ UnexpectedStatusCode (statusCode resp)

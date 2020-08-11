@@ -27,24 +27,24 @@ data HttpRequest scheme method tag acceptTag = HttpPayload tag => HttpRequest
   { method :: HttpMethod method
   , url :: Uri Absolute scheme
   , headers :: [(HeaderName, SB.ByteString)]
-  , body :: RawPayload tag
+  , body :: RawReqPayload tag
   }
 
-instance (Show (RawPayload tag), HttpPayload tag) => Show (HttpRequest scheme method tag acceptTag) where
+instance (Show (RawReqPayload tag), HttpPayload tag) => Show (HttpRequest scheme method tag acceptTag) where
   show (HttpRequest {method = method, url = url, headers = headers, body = body}) = 
     "Http Request { method: " <> show method <> " url:" <> show url <> " " <> "headers: " <> show headers <> " body: " <> show body <> " }"
 
-instance Eq (RawPayload tag) => Eq (HttpRequest scheme method tag acceptTag) where
+instance Eq (RawReqPayload tag) => Eq (HttpRequest scheme method tag acceptTag) where
   (==) (HttpRequest {method = method1, url = url1, headers = headers1, body = body1}) (HttpRequest {method = method2, url = url2, headers = headers2, body = body2}) =
     methodAsByteString method1 == methodAsByteString method2 && url1 == url2 && headers1 == headers2 && body1 == body2
 
 data HttpResponse tag = HttpPayload tag =>  HttpResponse
   { statusCode :: Int
   , headers :: [(HeaderName, SB.ByteString)]
-  , body :: RawPayload tag
+  , body :: RawRespPayload tag
   }
 
-instance Show (RawPayload tag) => Show (HttpResponse tag) where
+instance Show (RawRespPayload tag) => Show (HttpResponse tag) where
   show (HttpResponse {statusCode = statusCode, headers = headers, body = rawBody}) = 
     "Http Response { statusCode: " <> show statusCode <> " headers: " <> show headers <> " body: " <> show rawBody <> " }"
 
@@ -56,12 +56,12 @@ instance Show SomeDormouseException where
 
 instance Exception SomeDormouseException
 
-data UnexpectedStatusCode a = UnexpectedStatusCode { uscStatusCode :: Int, uscResponse :: HttpResponse a }
+data UnexpectedStatusCode = UnexpectedStatusCode { uscStatusCode :: Int }
 
-instance Show (UnexpectedStatusCode a) where
-  show (UnexpectedStatusCode { uscStatusCode = statusCode, uscResponse = resp }) = "Server returned unexpected status code: " <> show statusCode
+instance Show (UnexpectedStatusCode) where
+  show (UnexpectedStatusCode { uscStatusCode = statusCode }) = "Server returned unexpected status code: " <> show statusCode
 
-instance Typeable a => Exception (UnexpectedStatusCode a) where
+instance Exception (UnexpectedStatusCode) where
   toException     = toException . SomeDormouseException
   fromException x = do
     SomeDormouseException a <- fromException x

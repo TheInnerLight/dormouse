@@ -1,4 +1,6 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DisambiguateRecordFields #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
@@ -48,16 +50,16 @@ instance Exception (UriException) where
     cast a
 
 (//) :: Uri ref scheme -> Text -> Uri ref scheme
-(//) (AbsoluteUri scheme maybeAuth (Path {unPath = elems}) queryParams fragment) text = (AbsoluteUri scheme maybeAuth (Path {unPath = PathSegment text : elems}) queryParams fragment)
-(//) (RelativeUri (Path {unPath = elems}) queryParams fragment) text                  = (RelativeUri (Path {unPath = PathSegment text : elems}) queryParams fragment)
+(//) (AbsoluteUri AbsUri {uriPath = path, .. }) text = AbsoluteUri $ AbsUri {uriPath = (Path {unPath =  (unPath path) ++ [PathSegment text] }), ..}
+(//) (RelativeUri RelUri {uriPath = path, .. }) text = RelativeUri $ RelUri {uriPath = (Path {unPath =  (unPath path) ++ [PathSegment text] }), ..}
 
 ensureSchemeSymbol :: (KnownSymbol s, MonadThrow m) => Proxy s -> Uri ref scheme -> m (Uri 'Absolute s)
-ensureSchemeSymbol prox (uri @ (AbsoluteUri scheme auth path queryParams fragment)) =  
+ensureSchemeSymbol prox (uri @ (AbsoluteUri (u @ AbsUri {uriScheme = scheme, ..}))) =  
   if (symbolVal prox == (unpack $ unScheme scheme)) then 
-    return $ AbsoluteUri scheme auth path queryParams fragment
+    return $ AbsoluteUri u
   else
     throw UriException { uriExceptionMessage = "Supplied Uri had a scheme of " <> (unScheme scheme) <> " which does not match the desired scheme of " <> (pack $ symbolVal prox) }
-ensureSchemeSymbol prox (uri @ (RelativeUri _ _ _)) = throw UriException { uriExceptionMessage = "Provided URI was a Relative URI" }
+ensureSchemeSymbol prox (uri @ (RelativeUri _)) = throw UriException { uriExceptionMessage = "Provided URI was a Relative URI" }
 ensureSchemeSymbol prox (AbsOrRelUri underlying) = ensureSchemeSymbol prox underlying
 
 ensureHttp :: MonadThrow m => Uri ref scheme -> m (Uri 'Absolute "http")
@@ -85,7 +87,7 @@ parseHttpsUri text = do
   return httpsUri
 
 parseRequestFromUri :: MonadThrow m => Uri 'Absolute scheme -> m C.Request
-parseRequestFromUri (uri @ (AbsoluteUri scheme maybeAuth path queryParams fragment)) = do
+parseRequestFromUri (uri @ (AbsoluteUri AbsUri {uriScheme = scheme, uriAuthority = maybeAuth, uriPath = path, uriQuery = queryParams, uriFragment = fragment})) = do
   authority <- maybe (throw $ UriException { uriExceptionMessage = "Uri had no valid authority"} ) return maybeAuth
   let host = T.urlEncode False . encodeUtf8 . unHost . authorityHost $ authority
   let isSecure = (unScheme scheme) == "https"

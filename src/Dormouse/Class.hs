@@ -1,3 +1,4 @@
+{-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE TypeFamilies #-}
 
 module Dormouse.Class
@@ -7,6 +8,7 @@ module Dormouse.Class
   ) where
 
 import Data.Kind (Constraint)
+import Dormouse.Backend
 import Dormouse.Payload
 import Dormouse.Types
 import Network.HTTP.Client (Manager)
@@ -19,6 +21,7 @@ class HasDormouseConfig a where
 instance HasDormouseConfig DormouseConfig where
   getDormouseConfig = id
 
-class Monad m => MonadDormouse m where 
-  type MonadHttpConstraint m tag acceptTag :: Constraint
-  send :: (MonadHttpConstraint m tag acceptTag, HttpPayload acceptTag) => HttpRequest scheme method tag acceptTag -> m (HttpResponse acceptTag)
+-- | MonadDormouse describes the capability to send HTTP requests and receive an HTTP response
+class Monad m => MonadDormouse m where
+  -- | Sends a supplied HTTP request and retrieves a response within the supplied monad 'm'
+  send :: (HttpPayload tag, HttpPayload acceptTag) => HttpRequest scheme method tag acceptTag -> m (HttpResponse acceptTag)

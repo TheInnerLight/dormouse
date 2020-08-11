@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DisambiguateRecordFields #-}
 {-# LANGUAGE LambdaCase #-}
 
 module Dormouse.Uri.Parser
@@ -147,7 +148,7 @@ pPathAbsAuth :: Parser (Path Absolute)
 pPathAbsAuth = fmap (Path) (pPathsAbEmpty <|> pPathsAbsolute <|> pPathsEmpty)
 
 pPathAbsNoAuth :: Parser (Path Absolute)
-pPathAbsNoAuth = fmap (Path) (pPathsAbEmpty <|> pPathsAbsolute <|> pPathsRootless <|> pPathsEmpty)
+pPathAbsNoAuth = fmap (Path) (pPathsAbsolute <|> pPathsRootless <|> pPathsEmpty)
 
 pPathRel :: Parser (Path Relative)
 pPathRel = fmap (Path) (pPathsAbsolute <|> pPathsNoScheme <|> pPathsRootless <|> pPathsEmpty)
@@ -181,7 +182,8 @@ pRelativeUri = do
   path <- pPathRel
   query <- pQuery
   fragment <- pFragment
-  return $ RelativeUri path query fragment
+  _ <- endOfInput
+  return $ RelativeUri $ RelUri {uriPath = path, uriQuery = query, uriFragment = fragment}
 
 pAbsoluteUri :: Parser (Uri Absolute scheme)
 pAbsoluteUri = do
@@ -189,7 +191,8 @@ pAbsoluteUri = do
   path <- if isJust authority then pPathAbsAuth else pPathAbsNoAuth
   query <- pQuery
   fragment <- pFragment
-  return $ AbsoluteUri scheme authority path query fragment
+  _ <- endOfInput
+  return $ AbsoluteUri $ AbsUri {uriScheme = scheme, uriAuthority = authority, uriPath = path, uriQuery = query, uriFragment = fragment }
 
 pUri :: Parser (Uri Unknown scheme)
 pUri = fmap AbsOrRelUri pAbsoluteUri <|> fmap AbsOrRelUri pRelativeUri
