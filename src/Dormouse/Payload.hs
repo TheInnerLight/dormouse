@@ -11,30 +11,37 @@ module Dormouse.Payload
   , HttpPayload(..)
   , DecodingException(..)
   , JsonLbsPayload
-  , OctetStreamPayload
   , UrlFormPayload
+  , ResponsePayload(..)
   , json
-  , octetStream
   , urlForm
   , noBody
   ) where
 
 import Control.Exception.Safe (Exception, MonadThrow(..), throw)
+import Control.Monad.IO.Class
 import Data.Aeson (FromJSON, ToJSON, Value, encode, fromEncoding, eitherDecode, eitherDecodeStrict)
 import Data.Functor.Const
 import Data.Proxy
 import Data.Text (Text, pack)
+import Data.Word (Word8)
 import Dormouse.Backend
 import GHC.Exts
 import qualified Data.ByteString  as SB
 import qualified Data.ByteString.Lazy as LB
 import qualified Web.FormUrlEncoded as W
+import Streamly
+import qualified Streamly.Prelude as S
+import qualified Streamly.External.ByteString.Lazy as SEBL
+import Streamly.Internal.Memory.Array.Types (Array(..))
 
 class HasAcceptHeader tag where
   acceptHeader :: Proxy tag -> Maybe SB.ByteString
 
 class HasContentType tag where
   contentType :: Proxy tag -> Maybe SB.ByteString
+
+newtype ResponsePayload = ResponsePayload (SerialT IO (Array Word8))
 
 -- | HttpPayload relates a payload tag to low level request and response representations and the constraints required to encode and decode to/from that type
 class (RequestBackend (RawReqPayload(tag)), ResponseBackend (RawRespPayload(tag)), HasContentType tag, HasAcceptHeader tag) => HttpPayload tag where
@@ -49,7 +56,7 @@ class (RequestBackend (RawReqPayload(tag)), ResponseBackend (RawRespPayload(tag)
   -- | Generates a low level payload representation from the supplied content
   createRequestPayload :: RequestPayloadConstraint tag b => Proxy tag -> b -> RawReqPayload tag
   -- | Generates high level content from the supplied low level payload representation
-  extractResponsePayload :: (ResponsePayloadConstraint tag b, MonadThrow m) => Proxy tag -> RawRespPayload tag -> m b
+  extractResponsePayload :: (ResponsePayloadConstraint tag b, MonadIO m, MonadThrow m) => Proxy tag -> SerialT IO (Array Word8) -> m b
 
 data JsonLbsPayload = JsonPayload
 
@@ -65,29 +72,12 @@ instance HttpPayload JsonLbsPayload where
   type RawReqPayload JsonLbsPayload = LB.ByteString
   type RawRespPayload JsonLbsPayload = LB.ByteString
   createRequestPayload _ b = encode b
-  extractResponsePayload _ lbs = either (throw . DecodingException . pack) return $ eitherDecode lbs
+  extractResponsePayload _ stream = do
+    lbs <- liftIO $ SEBL.fromChunksIO stream
+    either (throw . DecodingException . pack) return . eitherDecode $ lbs
 
 json :: Proxy JsonLbsPayload
 json = Proxy :: Proxy JsonLbsPayload
-
-data OctetStreamPayload = OctetStreamPayload
-
-instance HasAcceptHeader OctetStreamPayload where
-  acceptHeader _ = Just "application/octet-stream"
-
-instance HasContentType OctetStreamPayload where
-  contentType _ = Just "application/octet-stream"
-
-instance HttpPayload OctetStreamPayload where
-  type RequestPayloadConstraint OctetStreamPayload b = b ~ LB.ByteString
-  type ResponsePayloadConstraint OctetStreamPayload b = b ~ LB.ByteString
-  type RawReqPayload OctetStreamPayload = LB.ByteString
-  type RawRespPayload OctetStreamPayload = LB.ByteString
-  createRequestPayload _ b = b
-  extractResponsePayload _ b = return b
-
-octetStream :: Proxy OctetStreamPayload
-octetStream = Proxy :: Proxy OctetStreamPayload
 
 data UrlFormPayload = UrlFormPayload
 
@@ -103,7 +93,9 @@ instance HttpPayload UrlFormPayload where
   type RawReqPayload UrlFormPayload = LB.ByteString
   type RawRespPayload UrlFormPayload = LB.ByteString
   createRequestPayload _ b = W.urlEncodeAsForm b
-  extractResponsePayload _ lbs = either (throw . DecodingException) return $ W.urlDecodeAsForm lbs
+  extractResponsePayload _ stream = do
+    lbs <- liftIO $ SEBL.fromChunksIO stream
+    either (throw . DecodingException) return $ W.urlDecodeAsForm lbs
 
 urlForm :: Proxy UrlFormPayload
 urlForm = Proxy :: Proxy UrlFormPayload
@@ -127,7 +119,7 @@ instance HttpPayload EmptyPayload where
   type RawReqPayload EmptyPayload = LB.ByteString
   type RawRespPayload EmptyPayload = LB.ByteString
   createRequestPayload _ b = LB.empty
-  extractResponsePayload _ _ = return ()
+  extractResponsePayload _ stream = liftIO $ S.drain stream
 
 noBody :: Proxy EmptyPayload
 noBody = Proxy :: Proxy EmptyPayload

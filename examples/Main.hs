@@ -39,9 +39,11 @@ main = do
     let userDetails = UserDetails { name = "James T. Kirk", nickname = "Jim", email = "james.t.kirk@starfleet.com"}
     let req = accept json $ supplyBody json userDetails $ post [https|https://postman-echo.com/post|]
     let req' = accept json $ supplyBody urlForm userDetails $ post [https|https://postman-echo.com/post?ship=enterprise|]
-    resp <- send req
-    (response :: EchoedJson UserDetails) <- decodeBody resp
-    liftIO $ print response
-    (response' :: EchoedForm UserDetails) <- expect req'
-    liftIO $ print response'
+    -- resp <- send req
+    -- (response :: EchoedJson UserDetails) <- decodeBodyAs json resp
+    -- liftIO $ print response
+    -- (response' :: EchoedForm UserDetails) <- expectAs json req'
+    -- liftIO $ print response'
+    (test :: HttpResponse (EchoedJson UserDetails)) <- expect req
+    liftIO $ print test
     return ()

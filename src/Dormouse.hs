@@ -25,9 +25,10 @@ module Dormouse
   , post
   , put
   , supplyBody
-  , decodeBody
-  , decodeBodyAs
+--  , decodeBody
+--  , decodeBodyAs
   , accept
+  , expectAs
   , expect
   , runDormouseT
   , runDormouse
@@ -98,16 +99,16 @@ supplyBody prox a (HttpRequest {headers = headers, body = _, ..}) =
     , ..
     }
 
--- | Decode the body of an HTTP response to some type `b`
-decodeBody :: (ResponsePayloadConstraint tag b, HttpPayload tag, MonadThrow m, RawRespPayload tag ~ rawBody) => HttpResponse tag -> m b
-decodeBody (hr@HttpResponse {body = x}) = extractResponsePayload (proxyOfResp hr) x
-  where 
-    proxyOfResp :: HttpResponse tag -> Proxy tag
-    proxyOfResp _ = Proxy
+-- -- | Decode the body of an HTTP response to some type `b`
+-- decodeBody :: (MonadIO m, MonadThrow m, ResponsePayloadConstraint tag b, HttpPayload tag) => HttpResponse -> m b
+-- decodeBody (hr@HttpResponse {body = x}) = extractResponsePayload (proxyOfResp hr) x
+--   where 
+--     proxyOfResp :: HttpResponse -> Proxy tag
+--     proxyOfResp _ = Proxy
 
 -- | Decode the body of an HTTP response to some type `b` with a supplied tag indicating how the response should be decoded
-decodeBodyAs :: (ResponsePayloadConstraint tag b, HttpPayload tag, MonadThrow m, RawRespPayload tag ~ rawBody) => Proxy tag -> HttpResponse tag -> m b
-decodeBodyAs proxy (hr@HttpResponse {body = x}) = extractResponsePayload proxy x
+--decodeBodyAs :: (MonadIO m, MonadThrow m, ResponsePayloadConstraint tag b, HttpPayload tag, RawRespPayload tag ~ rawBody) => Proxy tag -> HttpResponse -> m b
+--decodeBodyAs proxy (hr@HttpResponse {body = x}) = extractResponsePayload proxy x
 
 -- | Apply an accept header derived from the supplied tag proxy and add a type hint to the request, indicating how the response should be decodable
 accept :: (HttpPayload acceptTag) => Proxy acceptTag -> HttpRequest scheme method tag acceptTag -> HttpRequest scheme method tag acceptTag
@@ -115,12 +116,16 @@ accept prox (h@HttpRequest { headers = oldHeaders}) = h { headers = oldHeaders <
   where 
     newHeaders = foldMap (\v -> [("Accept" :: HeaderName, v)]) $ acceptHeader prox
 
--- | Send an HTTP request, expecting the response body to be decodable to a specific type `b`
-expect :: (MonadDormouse m, HttpPayload tag, HttpPayload acceptTag, MonadThrow m, ResponsePayloadConstraint acceptTag b) => HttpRequest scheme method tag acceptTag -> m b
-expect r = do
-  resp <- send r
-  b <- decodeBody resp
-  return b
+expect :: (ResponsePayloadConstraint acceptTag b, MonadDormouse m, HttpPayload tag, HttpPayload acceptTag, HttpPayload acceptTag) => HttpRequest scheme method tag acceptTag -> m (HttpResponse b)
+expect r = expectAs (proxyOfReq r) r
+  where 
+    proxyOfReq :: HttpRequest scheme method tag acceptTag -> Proxy accep
+    proxyOfReq _ = Proxy
+
+expectAs :: (ResponsePayloadConstraint acceptTag b, MonadDormouse m, HttpPayload tag, HttpPayload acceptTag, HttpPayload acceptTag) => Proxy acceptTag -> HttpRequest scheme method tag acceptTag -> m (HttpResponse b)
+expectAs tag r = do
+  resp <- send r (extractResponsePayload tag)
+  return resp
 
 -- | The DormouseT Monad Transformer
 newtype DormouseT m a = DormouseT 

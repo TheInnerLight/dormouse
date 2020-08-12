@@ -38,15 +38,11 @@ instance Eq (RawReqPayload tag) => Eq (HttpRequest scheme method tag acceptTag) 
   (==) (HttpRequest {method = method1, url = url1, headers = headers1, body = body1}) (HttpRequest {method = method2, url = url2, headers = headers2, body = body2}) =
     methodAsByteString method1 == methodAsByteString method2 && url1 == url2 && headers1 == headers2 && body1 == body2
 
-data HttpResponse tag = HttpPayload tag =>  HttpResponse
+data HttpResponse b = HttpResponse
   { statusCode :: Int
   , headers :: [(HeaderName, SB.ByteString)]
-  , body :: RawRespPayload tag
-  }
-
-instance Show (RawRespPayload tag) => Show (HttpResponse tag) where
-  show (HttpResponse {statusCode = statusCode, headers = headers, body = rawBody}) = 
-    "Http Response { statusCode: " <> show statusCode <> " headers: " <> show headers <> " body: " <> show rawBody <> " }"
+  , body :: b
+  } deriving (Show, Eq)
 
 
 data SomeDormouseException = forall e . Exception e => SomeDormouseException e
