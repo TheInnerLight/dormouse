@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: aca5fad41c05dfc23b6a1f3f3341f7b0ad69e6ca66963477255ae26ea98ffd6b
+-- hash: 51f4489aae6f52bac861e0c91cf71a2daabdfe3fd00e073e507ef381912d1b64
 
 name:           dormouse
 version:        0.1.0.0
@@ -28,7 +28,6 @@ source-repository head
 library
   exposed-modules:
       Dormouse
-      Dormouse.Backend
       Dormouse.Class
       Dormouse.Headers
       Dormouse.Methods
@@ -57,6 +56,8 @@ library
     , http-types >=0.12.3 && <0.13
     , mtl >=2.2.2 && <3
     , safe-exceptions >=0.1.7 && <0.2.0
+    , streamly >=0.7.2 && <0.8
+    , streamly-bytestring >=0.1.2 && <0.2
     , template-haskell >=2.15.0 && <3.0.0
     , text >=1.2.3 && <2.0.0
   default-language: Haskell2010
@@ -83,6 +84,8 @@ executable dormouse-examples
     , http-types >=0.12.3 && <0.13
     , mtl >=2.2.2 && <3
     , safe-exceptions >=0.1.7 && <0.2.0
+    , streamly >=0.7.2 && <0.8
+    , streamly-bytestring >=0.1.2 && <0.2
     , template-haskell >=2.15.0 && <3.0.0
     , text >=1.2.3 && <2.0.0
   default-language: Haskell2010
@@ -113,6 +116,8 @@ test-suite dormouse-test
     , http-types >=0.12.3 && <0.13
     , mtl >=2.2.2 && <3
     , safe-exceptions >=0.1.7 && <0.2.0
+    , streamly >=0.7.2 && <0.8
+    , streamly-bytestring >=0.1.2 && <0.2
     , template-haskell >=2.15.0 && <3.0.0
     , text >=1.2.3 && <2.0.0
   default-language: Haskell2010

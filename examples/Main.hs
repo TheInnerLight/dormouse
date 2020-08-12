@@ -38,10 +38,9 @@ main = do
   runDormouse (DormouseConfig { clientManager = manager }) $ do
     let userDetails = UserDetails { name = "James T. Kirk", nickname = "Jim", email = "james.t.kirk@starfleet.com"}
     let req = accept json $ supplyBody json userDetails $ post [https|https://postman-echo.com/post|]
-    let req' = accept json $ supplyBody urlForm userDetails $ post [https|https://postman-echo.com/post?ship=enterprise|]
-    resp <- send req
-    (response :: EchoedJson UserDetails) <- decodeBody resp
+    let req' = supplyBody urlForm userDetails $ post [https|https://postman-echo.com/post?ship=enterprise|]
+    response :: HttpResponse (EchoedJson UserDetails) <- expect req
     liftIO $ print response
-    (response' :: EchoedForm UserDetails) <- expect req'
+    response' :: HttpResponse (EchoedForm UserDetails) <- expectAs json req'
     liftIO $ print response'
     return ()

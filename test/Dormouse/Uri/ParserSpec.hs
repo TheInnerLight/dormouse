@@ -50,7 +50,7 @@ uriWithHostUsernamePasswordAndPath = AbsOrRelUri $ AbsoluteUri $ AbsUri
 uriWithHostPathAndPort :: Uri 'Unknown a
 uriWithHostPathAndPort = AbsOrRelUri $ AbsoluteUri $ AbsUri
   { uriScheme = Scheme "https"
-  , uriAuthority = Just $ Authority {authorityUserInfo = Nothing, authorityHost = "www.example.com", authorityPort = Just 123}
+  , uriAuthority = Just $ Authority { authorityUserInfo = Nothing, authorityHost = "www.example.com", authorityPort = Just 123 }
   , uriPath = Path ["forum", "questions", ""]
   , uriQuery = Nothing
   , uriFragment = Nothing
@@ -59,7 +59,7 @@ uriWithHostPathAndPort = AbsOrRelUri $ AbsoluteUri $ AbsUri
 uriWithHostPathQueryAndFragment :: Uri 'Unknown a
 uriWithHostPathQueryAndFragment = AbsOrRelUri $ AbsoluteUri $ AbsUri
   { uriScheme = Scheme "https"
-  , uriAuthority = Just $ Authority {authorityUserInfo = Nothing, authorityHost = "www.example.com", authorityPort = Nothing}
+  , uriAuthority = Just $ Authority { authorityUserInfo = Nothing, authorityHost = "www.example.com", authorityPort = Nothing }
   , uriPath = Path ["forum", "questions", ""]
   , uriQuery = Just $ Query "tag=networking&order=newest"
   , uriFragment = Just $ Fragment "top"
@@ -68,7 +68,7 @@ uriWithHostPathQueryAndFragment = AbsOrRelUri $ AbsoluteUri $ AbsUri
 ldapUri :: Uri 'Unknown a
 ldapUri = AbsOrRelUri $ AbsoluteUri $ AbsUri
   { uriScheme = Scheme "ldap"
-  , uriAuthority = Just $ Authority {authorityUserInfo = Nothing, authorityHost = "192.168.0.1", authorityPort = Nothing}
+  , uriAuthority = Just $ Authority { authorityUserInfo = Nothing, authorityHost = "192.168.0.1", authorityPort = Nothing }
   , uriPath = Path [PathSegment "c=GB"]
   , uriQuery = Just $ Query "objectClass?one"
   , uriFragment = Nothing

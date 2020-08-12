@@ -33,6 +33,8 @@ dependencies:
 - text >= 1.2.3 && < 2.0.0
 - mtl >= 2.2.2 && < 3
 - template-haskell >= 2.15.0 && < 3.0.0
+- streamly >= 0.7.2 && < 0.8
+- streamly-bytestring >= 0.1.2 && < 0.2
 
 library:
   source-dirs: src
