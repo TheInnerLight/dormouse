@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 6a26859f5abcb1e70adf8b02802135cbfc7ccd1a7d62f4b0c3e027a6c371b520
+-- hash: 51f4489aae6f52bac861e0c91cf71a2daabdfe3fd00e073e507ef381912d1b64
 
 name:           dormouse
 version:        0.1.0.0
@@ -28,7 +28,6 @@ source-repository head
 library
   exposed-modules:
       Dormouse
-      Dormouse.Backend
       Dormouse.Class
       Dormouse.Headers
       Dormouse.Methods
