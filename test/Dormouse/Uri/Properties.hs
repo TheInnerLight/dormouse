@@ -47,17 +47,12 @@ instance Arbitrary NonSchemeByteString where
     bs <- case failure of
           InvalidSchemeChar -> do
             let c = suchThat arbitrary (\x -> (not $ isSchemeChar x) && x /= ':' && C.isAscii x)
-            len <- choose (5, 5)
+            len <- choose (1, 10)
             vectorOf len c
-          NonAsciiFirstChar -> do
+          _ -> do
             let c = suchThat arbitrary isSchemeChar
-            len <- choose (15, 15)
+            len <- choose (0, 10)
             vectorOf len c
-          NoTrailingSemicolon -> do
-            let c = suchThat arbitrary isSchemeChar
-            len <- choose (10, 10)
-            vectorOf len c
-
     let built = case failure of
           NoTrailingSemicolon -> first : bs
           _                   -> first : bs ++ [':']
