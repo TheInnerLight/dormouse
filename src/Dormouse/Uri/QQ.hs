@@ -23,7 +23,10 @@ http = QuasiQuoter
       case res of
         Left err -> fail $ show err
         Right x -> [| x |]
-  , quotePat = error "Not supported"
+  , quotePat = \s ->
+      case parseHttpUri (pack s) of
+        Left err -> fail $ show err
+        Right x  -> appE [|(==)|] [| (x :: Uri 'Absolute "http") |] `viewP` [p|True|]
   , quoteType = error "Not supported"
   , quoteDec =error "Not supported"
   }
@@ -38,7 +41,7 @@ https = QuasiQuoter
   , quotePat = \s ->
       case parseHttpsUri (pack s) of
         Left err -> fail $ show err
-        Right x  -> appE [|(==)|] (lift x) `viewP` [p|True|]
+        Right x  -> appE [|(==)|] [| (x :: Uri 'Absolute "https") |] `viewP` [p|True|]
   , quoteType = error "Not supported"
   , quoteDec =error "Not supported"
   }
@@ -50,7 +53,10 @@ absoluteUri = QuasiQuoter
       case res of
         Left err -> fail $ show err
         Right x -> [| x :: Uri 'Absolute scheme |]
-  , quotePat = error "Not supported"
+  , quotePat = \s ->
+      case parseAbsoluteUri (pack s) of
+        Left err -> fail $ show err
+        Right x  -> appE [|(==)|] [| (x :: Uri 'Absolute scheme) |] `viewP` [p|True|]
   , quoteType = error "Not supported"
   , quoteDec =error "Not supported"
   }
@@ -62,7 +68,10 @@ relativeUri = QuasiQuoter
       case res of
         Left err -> fail $ show err
         Right x -> [| x :: Uri 'Relative scheme |]
-  , quotePat = error "Not supported"
+  , quotePat = \s ->
+      case parseRelativeUri (pack s) of
+        Left err -> fail $ show err
+        Right x  -> appE [|(==)|] [| (x :: Uri 'Relative scheme) |] `viewP` [p|True|]
   , quoteType = error "Not supported"
   , quoteDec =error "Not supported"
   }

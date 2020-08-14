@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ddaf4e54085f787bac73ee45d8dd06baa1fbff05b8a4e662ce518ea578338fca
+-- hash: 2e739d3bb3ab5a7c1683ed468c459cb75077abc24f6d1746666fb1c7ebf7272b
 
 name:           dormouse
 version:        0.1.0.0
@@ -102,6 +102,7 @@ test-suite dormouse-test
       Dormouse.StatusSpec
       Dormouse.Uri.ParserSpec
       Dormouse.Uri.Properties
+      Dormouse.Uri.QQSpec
       Dormouse.Uri.QuerySpec
       Dormouse.UriSpec
       Paths_dormouse

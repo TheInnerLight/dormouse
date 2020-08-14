@@ -97,7 +97,6 @@ parseRequestFromUri (uri @ (AbsoluteUri AbsUri {uriScheme = scheme, uriAuthority
   let host = T.urlEncode False . encodeUtf8 . unHost . authorityHost $ authority
   let isSecure = (unScheme scheme) == "https"
   let port = maybe (if isSecure then 443 else 80) id (authorityPort authority)
-  --let pathText = fmap unPathSegment $ unPath path
   let queryText = maybe "" (id) $ queryParams
   return $ C.defaultRequest
     { C.host = host

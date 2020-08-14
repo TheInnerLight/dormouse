@@ -46,4 +46,3 @@ tests = hspec $
     it "generates a request with the correct query params (unicode)" $ do
       req <- parseRequestFromUri [https|https://google.com?test=%F0%9F%98%80|]
       C.queryString req `shouldBe` "?test=%F0%9F%98%80"
-      
