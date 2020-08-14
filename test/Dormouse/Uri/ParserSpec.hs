@@ -8,7 +8,12 @@ module Dormouse.Uri.ParserSpec
   ) where
 
 import Test.Hspec
-import Data.Attoparsec.Text
+import Test.QuickCheck
+import Data.Attoparsec.ByteString.Char8
+import Data.Either (isLeft)
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
+import Dormouse.Uri.Properties
 import Dormouse.Uri.Types
 import Dormouse.Uri.Parser
 
@@ -65,6 +70,34 @@ uriWithHostPathQueryAndFragment = AbsOrRelUri $ AbsoluteUri $ AbsUri
   , uriFragment = Just $ Fragment "top"
   }
 
+uriWithUnicodeInQuery :: Uri 'Unknown a
+uriWithUnicodeInQuery = AbsOrRelUri $ AbsoluteUri $ AbsUri
+  { uriScheme = Scheme "https"
+  , uriAuthority = Just $ Authority { authorityUserInfo = Nothing, authorityHost = "www.example.com", authorityPort = Nothing }
+  , uriPath = Path ["forum", "questions", ""]
+  , uriQuery = Just $ Query "tag=networking&order=newest😀"
+  , uriFragment = Nothing
+  }
+
+uriWithSpacesInQuery :: Uri 'Unknown a
+uriWithSpacesInQuery = AbsOrRelUri $ AbsoluteUri $ AbsUri
+  { uriScheme = Scheme "https"
+  , uriAuthority = Just $ Authority { authorityUserInfo = Nothing, authorityHost = "www.example.com", authorityPort = Nothing }
+  , uriPath = Path ["forum", "questions", ""]
+  , uriQuery = Just $ Query "tag=with space"
+  , uriFragment = Nothing
+  }
+
+
+uriWithUnicodeInFragment :: Uri 'Unknown a
+uriWithUnicodeInFragment = AbsOrRelUri $ AbsoluteUri $ AbsUri
+  { uriScheme = Scheme "https"
+  , uriAuthority = Just $ Authority { authorityUserInfo = Nothing, authorityHost = "www.example.com", authorityPort = Nothing }
+  , uriPath = Path ["forum", "questions", ""]
+  , uriQuery = Nothing
+  , uriFragment = Just $ "😀😀😀"
+  }
+
 ldapUri :: Uri 'Unknown a
 ldapUri = AbsOrRelUri $ AbsoluteUri $ AbsUri
   { uriScheme = Scheme "ldap"
@@ -83,8 +116,18 @@ telUri = AbsOrRelUri $ AbsoluteUri $ AbsUri
   , uriFragment = Nothing
   }
 
+
 tests :: IO()
-tests = hspec $
+tests = hspec $ do
+  describe "pScheme" $ do
+    it "returns the matching scheme for all valid scheme chars" $ property $ \schemeText' ->
+      let schemeText = unSchemeByteString schemeText'
+          res = parseOnly pScheme schemeText in
+      res === (Right . Scheme . T.init . T.toLower $ TE.decodeUtf8 schemeText)
+    it "fails for invalid scheme chars" $ property $ \schemeText' ->
+      let schemeText = unNonSchemeByteString schemeText'
+          res = parseOnly pScheme schemeText in
+      isLeft res === True
   describe "parseURI" $ do
     it "generates uri components correctly for uri with scheme, host and path" $ do
       let res = parseOnly pUri "http://google.com/test1/test2"
@@ -104,6 +147,15 @@ tests = hspec $
     it "generates uri components correctly for uri with host, username, path, port, query and fragment" $ do
       let res = parseOnly pUri "https://www.example.com/forum/questions/?tag=networking&order=newest#top"
       res `shouldBe` (Right uriWithHostPathQueryAndFragment)
+    it "generates uri components correctly when there is percent encoded unicode in the query" $ do
+      let res = parseOnly pUri "https://www.example.com/forum/questions/?tag=networking&order=newest%F0%9F%98%80"
+      res `shouldBe` (Right uriWithUnicodeInQuery)
+    it "generates uri components correctly when there are spaces in the query" $ do
+      let res = parseOnly pUri "https://www.example.com/forum/questions/?tag=with%20space"
+      res `shouldBe` (Right uriWithSpacesInQuery)
+    it "generates uri components correctly when there is percent encoded unicode in the fragment" $ do
+      let res = parseOnly pUri "https://www.example.com/forum/questions/#%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80"
+      res `shouldBe` (Right uriWithUnicodeInFragment)
     it "generates uri components correctly for ldap uri" $ do
       let res = parseOnly pUri "ldap://192.168.0.1/c=GB?objectClass?one"
       res `shouldBe` (Right ldapUri)

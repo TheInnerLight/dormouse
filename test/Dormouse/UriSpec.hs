@@ -34,9 +34,16 @@ tests = hspec $
     it "generates a request on the supplied port for an https url with a provided port" $ do
       req <- parseRequestFromUri [https|https://google.com:8443|]
       C.port req `shouldBe` 8443
-    it "generates a request with the correct path" $ do
+    it "generates a request with the correct path (simple)" $ do
       req <- parseRequestFromUri [https|https://google.com/my/path/is/great|]
       C.path req `shouldBe` "/my/path/is/great"
-    it "generates a request with the correct query params" $ do
+    it "generates a request with the correct path (unicode)" $ do
+      req <- parseRequestFromUri [https|https://google.com/my/path/is/great%F0%9F%98%88|]
+      C.path req `shouldBe` "/my/path/is/great%F0%9F%98%88"
+    it "generates a request with the correct query params (simple)" $ do
       req <- parseRequestFromUri [https|https://google.com?test=abc|]
       C.queryString req `shouldBe` "?test=abc"
+    it "generates a request with the correct query params (unicode)" $ do
+      req <- parseRequestFromUri [https|https://google.com?test=%F0%9F%98%80|]
+      C.queryString req `shouldBe` "?test=%F0%9F%98%80"
+      

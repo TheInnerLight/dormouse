@@ -9,7 +9,7 @@ module Dormouse.Uri.QQ
   , relativeUri
   ) where
 import Data.Bifunctor
-import Data.Text (pack)
+import Data.ByteString.Char8 (pack)
 import Dormouse.Uri
 import Dormouse.Uri.Types
 import Language.Haskell.TH.Quote 

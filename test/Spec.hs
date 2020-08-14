@@ -1,9 +1,11 @@
-import qualified Dormouse.StatusSpec as StatusSpecTests
-import qualified Dormouse.UriSpec as UriSpecTests
-import qualified Dormouse.Uri.ParserSpec as UriParserSpecTests
+import qualified Dormouse.StatusSpec as StatusSpec
+import qualified Dormouse.UriSpec as UriSpec
+import qualified Dormouse.Uri.ParserSpec as UriParserSpec
+import qualified Dormouse.Uri.QuerySpec as UriQuerySpec
 
 main :: IO ()
 main = do
-  StatusSpecTests.tests
-  UriSpecTests.tests
-  UriParserSpecTests.tests
+  StatusSpec.tests
+  UriSpec.tests
+  UriParserSpec.tests
+  UriQuerySpec.tests
