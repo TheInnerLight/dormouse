@@ -11,8 +11,7 @@ import qualified Data.ByteString.Char8 as B8
 import qualified Data.Char as C
 import Dormouse.Uri.RFC3986
 import Test.QuickCheck
-import Test.QuickCheck.Gen
-import Test.QuickCheck.Instances.ByteString
+import Test.QuickCheck.Instances.ByteString ()
 
 newtype SchemeByteString = SchemeByteString { unSchemeByteString :: B.ByteString }
   deriving (Eq, Show)
@@ -21,8 +20,8 @@ instance Arbitrary SchemeByteString where
   arbitrary = do
     let c = suchThat arbitrary isSchemeChar
     first <- suchThat arbitrary isAsciiAlpha
-    length <- choose (0, 20)
-    bs <- vectorOf length c
+    len <- choose (0, 20)
+    bs <- vectorOf len c
     return . SchemeByteString . B8.pack $ (first : bs ++ [':'])
 
 newtype NonSchemeByteString = NonSchemeByteString { unNonSchemeByteString :: B.ByteString }
@@ -37,6 +36,7 @@ schemeFailureMode :: Int -> SchemeFailureMode
 schemeFailureMode 1 = NonAsciiFirstChar
 schemeFailureMode 2 = InvalidSchemeChar
 schemeFailureMode 3 = NoTrailingSemicolon
+schemeFailureMode _ = undefined
 
 instance Arbitrary NonSchemeByteString where
   arbitrary = do
