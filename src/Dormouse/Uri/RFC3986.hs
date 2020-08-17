@@ -10,6 +10,7 @@ module Dormouse.Uri.RFC3986
   , isPasswordChar
   , isRegNameChar
   , isPathChar
+  , isPathCharNoColon
   , isQueryChar
   , isFragmentChar
   ) where
@@ -48,6 +49,9 @@ isRegNameChar c = isUnreserved c || isSubDelim c
 
 isPathChar :: Char -> Bool
 isPathChar c = isUnreserved c || isSubDelim c || c == ':' || c == '@'
+
+isPathCharNoColon :: Char -> Bool
+isPathCharNoColon c = isUnreserved c || isSubDelim c || c == '@'
 
 isQueryChar :: Char -> Bool
 isQueryChar c = isPathChar c || c == '?' || c == '/'

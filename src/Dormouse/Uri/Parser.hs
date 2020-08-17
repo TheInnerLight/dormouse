@@ -7,6 +7,19 @@ module Dormouse.Uri.Parser
   , pAbsoluteUri
   , pRelativeUri
   , pScheme
+  , pUsername
+  , pPassword
+  , pUserInfo
+  , pIPv4
+  , pRegName
+  , pHost
+  , pPort
+  , pAuthority
+  , pPathAbsAuth
+  , pPathAbsNoAuth
+  , pPathRel
+  , pQuery
+  , pFragment
   ) where
 
 import Control.Applicative ((<|>))
@@ -72,8 +85,8 @@ pRegName = do
   xs <- many1' (satisfy isRegNameChar <|> pPercentEnc)
   return . repack $ xs
 
-pIPV4 :: Parser T.Text
-pIPV4 = do
+pIPv4 :: Parser T.Text
+pIPv4 = do
   oct1 <- pOctet
   _ <- char '.'
   oct2 <- pOctet
@@ -85,12 +98,12 @@ pIPV4 = do
   where
     pOctet :: Parser Int
     pOctet = decimal >>= \case
-      i | i > 256 -> fail "IPv4 Octects must be in range 0-256"
+      i | i > 255 -> fail "IPv4 Octects must be in range 0-255"
       i           -> return i
 
 pHost :: Parser Host
 pHost = do
-  hostText <- pIPV4 <|> pRegName
+  hostText <- pIPv4 <|> pRegName
   return . Host  $ hostText
 
 pUserInfo :: Parser UserInfo
@@ -100,22 +113,35 @@ pUserInfo = do
   _ <- char '@'
   return $ UserInfo { userInfoUsername = username, userInfoPassword = password }
 
+pPort :: Parser Int
+pPort = 
+  (char ':' *> decimal) >>= \case
+    i | i > 65535 -> fail "Port must be in the range 0-65535"
+    i             -> return i
+
 pAuthority :: Parser Authority
 pAuthority = do
   _ <- string "//"
   authUserInfo <- pMaybe pUserInfo
   authHost <- pHost
-  authPort <- pMaybe (char ':' *> decimal)
+  authPort <- pMaybe pPort
+  _ <- peekChar >>= \case
+    Nothing                                   -> return ()
+    Just c | c == '/' || c == '?' || c == '#' -> return ()
+    _                                         -> fail "Invalid authority termination character, must be /, ?, # or end of input"
   return Authority { authorityUserInfo = authUserInfo, authorityHost = authHost, authorityPort = authPort}
 
 pPathChar :: Parser Char 
 pPathChar = satisfy isPathChar <|> pPercentEnc
 
+pPathCharNc :: Parser Char 
+pPathCharNc = satisfy isPathCharNoColon <|> pPercentEnc
+
 pSegmentNz :: Parser PathSegment 
 pSegmentNz = fmap (PathSegment . repack) $ many1' pPathChar
 
 pSegmentNzNc :: Parser PathSegment 
-pSegmentNzNc = fmap (PathSegment . repack) $ many1' (pUnreserved <|> pPercentEnc <|> pSubDelim <|> char '@')
+pSegmentNzNc = fmap (PathSegment . repack) $ many1' pPathCharNc
 
 pSegment :: Parser PathSegment
 pSegment = fmap (PathSegment . repack) $ many' pPathChar
@@ -152,17 +178,24 @@ pPathAbsNoAuth :: Parser (Path Absolute)
 pPathAbsNoAuth = fmap (Path) (pPathsAbsolute <|> pPathsRootless <|> pPathsEmpty)
 
 pPathRel :: Parser (Path Relative)
-pPathRel = fmap (Path) (pPathsAbsolute <|> pPathsNoScheme <|> pPathsRootless <|> pPathsEmpty)
+pPathRel = fmap (Path) (pPathsAbsolute <|> pPathsNoScheme <|> pPathsEmpty)
 
-pQuery :: Parser (Maybe Query)
-pQuery = 
-  let maybeQueryText = pMaybe (char '?' *> (many1' (satisfy isQueryChar <|> pPercentEnc))) in
-  fmap (fmap (Query . repack)) $ maybeQueryText
+pQuery :: Parser (Query)
+pQuery = do
+  queryText <- (char '?' *> (many1' (satisfy isQueryChar <|> pPercentEnc)))
+  _ <- peekChar >>= \case
+    Nothing           -> return ()
+    Just c | c == '#' -> return ()
+    c                 -> fail $ "Invalid query termination character: " <> show c <> ", must be # or end of input"
+  return . Query . repack $ queryText
 
-pFragment :: Parser (Maybe Fragment)
-pFragment = 
-  let maybeQueryText = pMaybe (char '#' *> (many1' (satisfy isFragmentChar <|> pPercentEnc))) in
-  fmap (fmap (Fragment . repack)) $ maybeQueryText
+pFragment :: Parser (Fragment)
+pFragment = do
+  fragmentText <- (char '#' *> (many1' (satisfy isFragmentChar <|> pPercentEnc)))
+  _ <- peekChar >>= \case
+    Nothing           -> return ()
+    c                 -> fail $ "Invalid fragment termination character: " <> show c <> ", must be end of input"
+  return . Fragment . repack $ fragmentText
 
 pScheme :: Parser Scheme
 pScheme = do
@@ -180,8 +213,8 @@ pAbsolutePart = do
 pRelativeUri :: Parser (Uri Relative scheme)
 pRelativeUri = do
   path <- pPathRel
-  query <- pQuery
-  fragment <- pFragment
+  query <- pMaybe pQuery
+  fragment <- pMaybe pFragment
   _ <- endOfInput
   return $ RelativeUri $ RelUri {uriPath = path, uriQuery = query, uriFragment = fragment}
 
@@ -189,8 +222,8 @@ pAbsoluteUri :: Parser (Uri Absolute scheme)
 pAbsoluteUri = do
   (scheme, authority) <- pAbsolutePart
   path <- if isJust authority then pPathAbsAuth else pPathAbsNoAuth
-  query <- pQuery
-  fragment <- pFragment
+  query <- pMaybe pQuery
+  fragment <- pMaybe pFragment
   _ <- endOfInput
   return $ AbsoluteUri $ AbsUri {uriScheme = scheme, uriAuthority = authority, uriPath = path, uriQuery = query, uriFragment = fragment }
 

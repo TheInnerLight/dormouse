@@ -4,6 +4,7 @@
 module Dormouse.Uri.Encode
   ( encodeQuery
   , encodePath
+  , encodeUnless
   ) where
 
 import Data.Char (chr)

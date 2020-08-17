@@ -72,7 +72,7 @@ tests = do
       it "submits the correct json body for a json request" $ do
         hedgehog $ do
           arbJson <- forAll . genJsonValue $ jsonGenRanges
-          let req = accept noBody $ supplyBody json arbJson $ post [https|https://postman-echo.com/post|]
+          let req = accept noBody $ supplyBody json arbJson $ post [https|https://testing123.com|]
           _ :: HttpResponse () <- liftIO $ runTestM testEnv $ expect req
           lbs <- liftIO $ readMVar sentJson'
           let expected = encode arbJson
@@ -81,7 +81,7 @@ tests = do
         hedgehog $ do
           arbJson <- forAll . genJsonValue $ jsonGenRanges
           _ <- liftIO $ swapMVar returnJson' $ Just (encode arbJson)
-          let req = accept json $ supplyBody json () $ post [https|https://postman-echo.com/post|]
+          let req = accept json $ supplyBody json () $ post [https|https://testing123.com|]
           r :: HttpResponse Value <- liftIO $ runTestM testEnv $ expect req
           let actualJson = responseBody r
           actualJson === arbJson
@@ -89,7 +89,7 @@ tests = do
       it "submits the correct json body for a json request" $ do
         hedgehog $ do
           arbJson <- forAll . genJsonValue $ jsonGenRanges
-          let req = supplyBody json arbJson $ post [https|https://postman-echo.com/post|]
+          let req = supplyBody json arbJson $ post [https|https://testing123.com|]
           _ :: HttpResponse () <- liftIO $ runTestM testEnv $ expectAs noBody req
           lbs <- liftIO $ readMVar sentJson'
           let expected = encode arbJson
@@ -98,7 +98,7 @@ tests = do
         hedgehog $ do
           arbJson <- forAll . genJsonValue $ jsonGenRanges
           _ <- liftIO $ swapMVar returnJson' $ Just (encode arbJson)
-          let req = supplyBody json () $ post [https|https://postman-echo.com/post|]
+          let req = supplyBody json () $ post [https|https://testing123.com|]
           r :: HttpResponse Value <- liftIO $ runTestM testEnv $ expectAs json req
           let actualJson = responseBody r
           actualJson === arbJson
