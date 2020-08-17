@@ -40,9 +40,11 @@ class HasAcceptHeader tag where
 class HasContentType tag where
   contentType :: Proxy tag -> Maybe SB.ByteString
 
-data RequestPayload 
+data RequestPayload
+  -- | DefinedContentLength represents a payload where the size of the message is known in advance and the content length header can be computed
   = DefinedContentLength Word64 (SerialT IO (Array Word8))
-  | ChunkedTransfer (SerialT IO (Array Word8))
+  -- | ChunkedTransfer represents a payload with indertiminate length, to be sent using chunked transfer encoding
+  | ChunkedTransfer (SerialT IO (Array Word8))  
 
 -- | HttpPayload relates a payload tag to low level request and response representations and the constraints required to encode and decode to/from that type
 class (HasContentType tag, HasAcceptHeader tag) => HttpPayload tag where
