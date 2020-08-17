@@ -8,14 +8,18 @@ module Dormouse.Uri.ParserSpec
   ) where
 
 import Test.Hspec
-import Test.QuickCheck
+import Test.Hspec.Hedgehog
 import Data.Attoparsec.ByteString.Char8
 import Data.Either (isLeft)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
-import Dormouse.Uri.Properties
+import Dormouse.Generators.UriComponents 
 import Dormouse.Uri.Types
 import Dormouse.Uri.Parser
+import Hedgehog
+import qualified Hedgehog.Gen as Gen
+import qualified Hedgehog.Range as Range
+
 
 uriWithHostAndPath :: Uri 'Unknown a
 uriWithHostAndPath = AbsOrRelUri $ AbsoluteUri $ AbsUri
@@ -120,13 +124,13 @@ telUri = AbsOrRelUri $ AbsoluteUri $ AbsUri
 tests :: IO()
 tests = hspec $ do
   describe "pScheme" $ do
-    it "returns the matching scheme for all valid scheme chars" $ property $ \schemeText' ->
-      let schemeText = unSchemeByteString schemeText'
-          res = parseOnly pScheme schemeText in
+    it "returns the matching scheme for all valid scheme chars" $ hedgehog $ do
+      schemeText <- forAll genValidScheme
+      let res = parseOnly pScheme schemeText
       res === (Right . Scheme . T.init . T.toLower $ TE.decodeUtf8 schemeText)
-    it "fails for invalid scheme chars" $ property $ \schemeText' ->
-      let schemeText = unNonSchemeByteString schemeText'
-          res = parseOnly pScheme schemeText in
+    it "fails for invalid scheme chars" $ hedgehog $ do
+      schemeText <- forAll genInvalidScheme
+      let res = parseOnly pScheme schemeText
       isLeft res === True
   describe "parseURI" $ do
     it "generates uri components correctly for uri with scheme, host and path" $ do

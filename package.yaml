@@ -62,9 +62,12 @@ tests:
     - -Wall
     dependencies:
     - hspec >= 2.0.0
-    - QuickCheck >= 2.13.1 && < 3
-    - quickcheck-instances >= 0.3.23 && < 0.4
+    - hedgehog >= 1.0.1 && < 2
+    - hspec-hedgehog >= 0.0.1.2 && < 0.1
+    - scientific >= 0.3.6.2 && < 0.4
+    - vector >= 0.12.0.3 && < 0.13
     - dormouse
+    
 
 default-extensions:
   - OverloadedStrings

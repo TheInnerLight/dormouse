@@ -31,24 +31,6 @@ uriLookingUpTheEnterprise = AbsoluteUri $ AbsUri
   , uriFragment = Nothing
   }
 
-uriUnicodeInPathText :: Uri 'Absolute a
-uriUnicodeInPathText = AbsoluteUri $ AbsUri
-  { uriScheme = Scheme "http"
-  , uriAuthority = Just $ Authority {authorityUserInfo = Nothing, authorityHost = Host "starfleet.com", authorityPort = Nothing}
-  , uriPath = Path ["ship"]
-  , uriQuery = Just $ "happy=😄"
-  , uriFragment = Nothing
-  }
-
-uriSpacesInPathText :: Uri 'Absolute a
-uriSpacesInPathText = AbsoluteUri $ AbsUri
-  { uriScheme = Scheme "http"
-  , uriAuthority = Just $ Authority {authorityUserInfo = Nothing, authorityHost = Host "starfleet.com", authorityPort = Nothing}
-  , uriPath = Path ["test"]
-  , uriQuery = Just $ "test=      dsfsdfdsf      "
-  , uriFragment = Nothing
-  }
-
 tests :: IO()
 tests = hspec $
   describe "build query" $ do
@@ -58,10 +40,5 @@ tests = hspec $
     it "generates correct uri using the URI builder syntax with int components" $ do
       let actualUri = [http|http://starfleet.com|] </> "ship" ? ("registry" =: (1701 :: Int))
       actualUri `shouldBe` uriLookingUpTheEnterprise
-    it "generates correct uri using the URI builder syntax with unicode in path text" $ do
-      let actualUri = [http|http://starfleet.com|] </> "ship" ? ("happy" =: ("😄" :: T.Text))
-      actualUri `shouldBe` uriUnicodeInPathText
-    it "generates correct uri using the URI builder syntax with spaces in path text" $ do
-      let actualUri = [http|http://starfleet.com|] </> "test" ? ("test" =: ("      dsfsdfdsf      " :: T.Text))
-      actualUri `shouldBe` uriSpacesInPathText
+
 
