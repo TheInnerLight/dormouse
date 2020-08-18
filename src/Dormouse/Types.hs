@@ -22,14 +22,14 @@ import Dormouse.Uri.Types
 import qualified Data.ByteString as SB
 
 data HttpRequest scheme method body contentTag acceptTag = HttpRequest 
-  { requestMethod :: HttpMethod method
-  , requestUri :: Uri Absolute scheme
+  { requestMethod :: !(HttpMethod method)
+  , requestUri :: !(Uri Absolute scheme)
   , requestHeaders :: [(HeaderName, SB.ByteString)]
   , requestBody :: body
   } deriving (Eq, Show)
 
 data HttpResponse b = HttpResponse
-  { responseStatusCode :: Int
+  { responseStatusCode :: !Int
   , responseHeaders :: [(HeaderName, SB.ByteString)]
   , responseBody :: b
   } deriving (Show, Eq)

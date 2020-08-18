@@ -61,7 +61,7 @@ instance Show Host where
   show host = unpack $ unHost host
 
 data Authority = Authority 
-  { authorityUserInfo ::  Maybe UserInfo
+  { authorityUserInfo :: Maybe UserInfo
   , authorityHost :: Host
   , authorityPort :: Maybe Int
   } deriving (Eq, Show, Lift)

@@ -38,7 +38,7 @@ import qualified Hedgehog.Range as Range
 
 genPercentEncoded :: Gen B.ByteString
 genPercentEncoded = do
-  char <- Gen.filter (not . C.isControl) Gen.unicode
+  char <- Gen.filter C.isPrint Gen.unicode
   let t = T.pack $ [char]
   let percentEncoded = encodeUnless (const False) t
   return $ percentEncoded
@@ -92,7 +92,7 @@ genInvalidUsername = do
   valids <- Gen.list (Range.constant 0 15) genUsernameChar
   fmap (B.intercalate "") $ Gen.shuffle $ invalids ++ valids
   where
-    genInvalidUsernameChar = fmap (B8.pack . return) $ Gen.filter (not . isUsernameChar) Gen.ascii
+    genInvalidUsernameChar = fmap (B8.pack . return) $ Gen.filter (\x -> (not $ isUsernameChar x) && x /= '%'  && C.isPrint x) Gen.ascii
 
 genPasswordChar :: Gen B.ByteString
 genPasswordChar = Gen.frequency [(1, genPercentEncoded), (25, fmap (B8.pack . return) $ Gen.filter isPasswordChar Gen.ascii)]
@@ -108,12 +108,12 @@ genInvalidPassword = do
   valids <- Gen.list (Range.constant 0 15) genPasswordChar
   fmap (B.intercalate "") $ Gen.shuffle $ invalids ++ valids
   where
-    genInvalidPasswordChar = fmap (B8.pack . return) $ Gen.filter (not . isPasswordChar) Gen.ascii
+    genInvalidPasswordChar = fmap (B8.pack . return) $ Gen.filter (\x -> (not $ isPasswordChar x) && x /= '%' && C.isPrint x) Gen.ascii
 
 genValidUserInfo :: Gen B.ByteString
 genValidUserInfo = do
   username <- genValidUsername
-  maybePassword <- Gen.maybe $ genValidPassword
+  maybePassword <- Gen.maybe genValidPassword
   let passwordSuffix = maybe B.empty (B.cons $ c2w ':') maybePassword
   return $ B.append (B.append username passwordSuffix) "@"
 
@@ -122,24 +122,24 @@ data UserInfoFailureMode
   | InvalidPassword
   | MissingAtSuffix
 
-userInfoFailureMore :: Int -> UserInfoFailureMode
-userInfoFailureMore 1 = InvalidUsername
-userInfoFailureMore 2 = InvalidPassword
-userInfoFailureMore 3 = MissingAtSuffix
-userInfoFailureMore _ = undefined
+userInfoFailureMode :: Int -> UserInfoFailureMode
+userInfoFailureMode 1 = InvalidUsername
+userInfoFailureMode 2 = InvalidPassword
+userInfoFailureMode 3 = MissingAtSuffix
+userInfoFailureMode _ = undefined
 
 genInvalidUserInfo :: Gen B.ByteString
 genInvalidUserInfo = do
-  failureMode <- fmap userInfoFailureMore $ Gen.element [1..3]
+  failureMode <- fmap userInfoFailureMode $ Gen.element [1..3]
   username <- case failureMode of
-    InvalidUsername -> genInvalidUsername
+    InvalidUsername -> Gen.filter (B.all (\x -> w2c x /= ':')) genInvalidUsername -- if the username is supposed to be invalid, ensure that ':' is not present, otherwise the user info could be interpreted as valid if valid chars precede the ':'
     _               -> genValidUsername
   maybePassword <- case failureMode of 
     InvalidPassword -> fmap Just genInvalidPassword
     _               -> Gen.maybe $ genValidPassword
   let passwordSuffix = maybe B.empty (B.cons $ c2w ':') maybePassword
-      complete = case failureMode of
-        MissingAtSuffix -> B.append (B.append username passwordSuffix) "*"
+  let complete = case failureMode of
+        MissingAtSuffix -> B.append (B.append username passwordSuffix) "#"
         _               -> B.append (B.append username passwordSuffix) "@"
   return complete
 

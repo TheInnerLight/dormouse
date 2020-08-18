@@ -44,7 +44,6 @@ runTestM deps app = flip runReaderT deps $ unTestM app
 extricateRequestStream :: RequestPayload -> SerialT IO (Array Word8)
 extricateRequestStream (DefinedContentLength _ s) = s
 extricateRequestStream (ChunkedTransfer s) = s
-
 instance MonadDormouse TestM where
   send req requestWriter responseBuilder = do
     testEnv <- ask
