@@ -31,8 +31,13 @@ isRedirect x = x >= 300 && x < 400
 isClientError x = x >= 400 && x < 500
 isServerError x = x >= 500 && x < 600
 
+-- | Matches for 1XX http status codes
 pattern Informational <- (isInformational -> True)
+-- | Matches for 2XX http status codes
 pattern Successful <- (isSuccessful -> True)
+-- | Matches for 3XX http status codes
 pattern Redirect <- (isRedirect -> True)
+-- | Matches for 4XX http status codes
 pattern ClientError <- (isClientError -> True)
+-- | Matches for 5XX http status codes
 pattern ServerError <- (isServerError -> True)

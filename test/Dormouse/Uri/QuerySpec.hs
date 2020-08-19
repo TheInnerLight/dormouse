@@ -10,6 +10,7 @@ module Dormouse.Uri.QuerySpec
 import qualified Data.Text as T
 import Test.Hspec
 import Dormouse.Uri
+import Dormouse.Uri.Builder
 import Dormouse.Uri.QQ
 
 

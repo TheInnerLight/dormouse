@@ -14,10 +14,7 @@ module Dormouse.Uri
   , parseRelativeUri
   , parseHttpUri
   , parseHttpsUri
-  , (</>)
-  , (?)
-  , (&)
-  , (=:)
+  , IsQueryVal(..)
   ) where
 
 import Data.Bifunctor (first)
@@ -54,10 +51,6 @@ instance Exception (UriException) where
     SomeDormouseException a <- fromException x
     cast a
 
-(</>) :: Uri ref scheme -> Text -> Uri ref scheme
-(</>) (AbsoluteUri AbsUri {uriPath = path, .. }) text = AbsoluteUri $ AbsUri {uriPath = (Path {unPath =  (unPath path) ++ [PathSegment text] }), ..}
-(</>) (RelativeUri RelUri {uriPath = path, .. }) text = RelativeUri $ RelUri {uriPath = (Path {unPath =  (unPath path) ++ [PathSegment text] }), ..}
-
 ensureSchemeSymbol :: (KnownSymbol s, MonadThrow m) => Proxy s -> Uri ref scheme -> m (Uri 'Absolute s)
 ensureSchemeSymbol prox (uri @ (AbsoluteUri (u @ AbsUri {uriScheme = scheme, ..}))) =  
   if (symbolVal prox == (unpack $ unScheme scheme)) then 
@@ -67,24 +60,30 @@ ensureSchemeSymbol prox (uri @ (AbsoluteUri (u @ AbsUri {uriScheme = scheme, ..}
 ensureSchemeSymbol prox (uri @ (RelativeUri _)) = throw UriException { uriExceptionMessage = "Provided URI was a Relative URI" }
 ensureSchemeSymbol prox (AbsOrRelUri underlying) = ensureSchemeSymbol prox underlying
 
+-- | Ensure that the supplied Uri uses the "http" scheme, throwing a 'UriException 'in 'm' if this is not the case
 ensureHttp :: MonadThrow m => Uri ref scheme -> m (Uri 'Absolute "http")
 ensureHttp uri = ensureSchemeSymbol (Proxy :: Proxy "http") uri
 
+-- | Ensure that the supplied Uri uses the "https" scheme, throwing a 'UriException 'in 'm' if this is not the case
 ensureHttps :: MonadThrow m => Uri ref scheme -> m (Uri 'Absolute "https")
 ensureHttps uri = ensureSchemeSymbol (Proxy :: Proxy "https") uri
 
+-- | Parse an ascii bytestring as an absolute uri, throwing a 'UriException 'in 'm' if this fails
 parseAbsoluteUri :: MonadThrow m => SB.ByteString -> m (Uri 'Absolute scheme)
 parseAbsoluteUri bs = either (throw . UriException . pack) (return) $ parseOnly pAbsoluteUri bs
 
+-- | Parse an ascii bytestring as a relative uri, throwing a 'UriException 'in 'm' if this fails
 parseRelativeUri :: MonadThrow m => SB.ByteString -> m (Uri 'Relative scheme)
 parseRelativeUri bs = either (throw . UriException . pack) (return) $ parseOnly pRelativeUri bs
 
+-- | Parse an ascii bytestring as an http uri, throwing a 'UriException 'in 'm' if this fails
 parseHttpUri :: MonadThrow m => SB.ByteString -> m (Uri 'Absolute "http")
 parseHttpUri text = do
   uri <- parseAbsoluteUri text
   httpUri <- ensureHttp uri
   return httpUri
 
+-- | Parse an ascii bytestring as an https uri, throwing a 'UriException 'in 'm' if this fails
 parseHttpsUri :: MonadThrow m => SB.ByteString -> m (Uri 'Absolute "https")
 parseHttpsUri text = do
   uri <- parseAbsoluteUri text

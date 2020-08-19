@@ -1,15 +1,23 @@
-cabal-version: 1.12
+cabal-version: 1.18
 
 -- This file has been generated from package.yaml by hpack version 0.33.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 20f187fb48c009ab51d706e1367d943235a79bf21da1a9e1bc4556134eb79c40
+-- hash: cf83db3e1a93a9ae1b8f030c12290cdd28c522dfb5e9a293bce5401e84dad53c
 
 name:           dormouse
 version:        0.1.0.0
 synopsis:       Simple, Type-Safe, Testable HTTP Client
-description:    Please see the README on GitHub at <https://github.com/githubuser/dormouse#readme>
+description:    An HTTP client designed to be productive, easy to use, easy to test, flexible and safe!
+                .
+                It was designed with the following objectives in mind:
+                .
+                  - HTTP requests and responses should be modelled by a simple, immutable Haskell Record.
+                  - Real HTTP requests should be easily mockable so you can test that you are both generating the correct requests and your response handling logic is correct.
+                  - Illegal requests are unrepresentable, such as HTTP GET requests with a content body.
+                  - It is possible to enforce a protocol (e.g. https) at the type level.
+                  - Large request and response bodies can be handled via streaming.
 category:       Web
 homepage:       https://github.com/githubuser/dormouse#readme
 bug-reports:    https://github.com/githubuser/dormouse/issues
@@ -22,6 +30,8 @@ build-type:     Simple
 extra-source-files:
     README.md
     ChangeLog.md
+extra-doc-files:
+    README.md
 
 source-repository head
   type: git
@@ -38,6 +48,7 @@ library
       Dormouse.Status
       Dormouse.Types
       Dormouse.Uri
+      Dormouse.Uri.Builder
       Dormouse.Uri.Encode
       Dormouse.Uri.Parser
       Dormouse.Uri.QQ

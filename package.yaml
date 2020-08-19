@@ -10,6 +10,9 @@ extra-source-files:
 - README.md
 - ChangeLog.md
 
+extra-doc-files:
+- README.md
+
 # Metadata used when publishing your package
 synopsis:            Simple, Type-Safe, Testable HTTP Client
 category:            Web
@@ -17,7 +20,16 @@ category:            Web
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/githubuser/dormouse#readme>
+description: | 
+  An HTTP client designed to be productive, easy to use, easy to test, flexible and safe!
+  
+  It was designed with the following objectives in mind:
+       
+    - HTTP requests and responses should be modelled by a simple, immutable Haskell Record.
+    - Real HTTP requests should be easily mockable so you can test that you are both generating the correct requests and your response handling logic is correct.
+    - Illegal requests are unrepresentable, such as HTTP GET requests with a content body.
+    - It is possible to enforce a protocol (e.g. https) at the type level.
+    - Large request and response bodies can be handled via streaming.
 
 dependencies:
 - base >= 4.7 && < 5

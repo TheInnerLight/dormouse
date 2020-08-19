@@ -2,18 +2,13 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TypeApplications #-}
 
 module Dormouse
-  ( module Dormouse.Class
-  , module Dormouse.Headers 
-  , module Dormouse.Methods
-  , module Dormouse.Payload
-  , module Dormouse.Status
-  , module Dormouse.Types
-  , module Dormouse.Uri
+  ( module Dormouse.Types
   , DormouseT
   , Dormouse
   , delete
@@ -30,6 +25,38 @@ module Dormouse
   , runDormouse
   , C.newManager
   , TLS.tlsManagerSettings
+  , MonadDormouse(..)
+  , HasDormouseConfig(..)
+  , DormouseConfig(..)
+  , HeaderName
+  , HasHeaders(..)
+  , HttpMethod(..)
+  , AllowedBody(..)
+  , methodAsByteString
+  , HasAcceptHeader(..)
+  , HasContentType(..)
+  , EmptyPayload(..)
+  , HttpPayload(..)
+  , DecodingException(..)
+  , JsonLbsPayload
+  , UrlFormPayload
+  , RequestPayload(..)
+  , json
+  , urlForm
+  , noBody
+  , pattern Informational
+  , pattern Successful
+  , pattern Redirect
+  , pattern ClientError
+  , pattern ServerError
+  , ensureHttp
+  , ensureHttps
+  , parseAbsoluteUri
+  , parseRelativeUri
+  , parseHttpUri
+  , parseHttpsUri
+  , IsQueryVal(..)
+  , Uri
   ) where
 
 import Control.Applicative ((<|>))
@@ -50,6 +77,7 @@ import Dormouse.Methods
 import Dormouse.Status
 import Dormouse.Types
 import Dormouse.Uri
+import Dormouse.Uri.Types
 import qualified Dormouse.MonadIOImpl as IOImpl
 import qualified Network.HTTP.Client as C
 import qualified Network.HTTP.Client.TLS as TLS

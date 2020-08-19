@@ -116,6 +116,10 @@ data RelUri = RelUri
   , uriFragment :: Maybe Fragment
   } deriving (Eq, Show, Lift)
 
+-- | A Uniform Resource Identifier (URI) is a compact sequence of characters that identifies an abstract or physical resource.
+-- It is defined according to RFC 3986 (<https://tools.ietf.org/html/rfc3986>).  URIs can be absolute (i.e. defined against a
+-- specific scheme) or relative.  The `ref` type parameter supports encoding, at the type level, whether a given URI is absolute
+-- or relative while the `scheme` type parameter allows the scheme to be known at the type level (such that e.g. https can be enforced.)
 data Uri (ref :: UriReference) (scheme :: Symbol) where 
   AbsoluteUri :: AbsUri -> Uri Absolute scheme
   RelativeUri :: RelUri -> Uri Relative scheme
