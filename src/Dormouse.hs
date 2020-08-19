@@ -55,37 +55,38 @@ import qualified Network.HTTP.Client as C
 import qualified Network.HTTP.Client.TLS as TLS
 import qualified Network.HTTP.Types.Status as NC
 
-emptyPayloadReq :: (RequestPayloadConstraint EmptyPayload (), HttpPayload EmptyPayload) => HttpMethod method -> Uri Absolute scheme -> HttpRequest scheme method () EmptyPayload acceptTag
-emptyPayloadReq method uri = HttpRequest 
+-- | Create an HTTP request with the supplied URI and supplied method, containing no body and no headers
+makeRequest :: (RequestPayloadConstraint EmptyPayload (), HttpPayload EmptyPayload) => HttpMethod method -> Uri Absolute scheme -> HttpRequest scheme method () EmptyPayload acceptTag
+makeRequest method uri = HttpRequest 
   { requestMethod = method
   , requestUri = uri
   , requestHeaders = Map.empty
   , requestBody = ()
   }
 
--- | Basic template for an HTTP DELETE request to a supplied URI, contains no body and no headers
+-- | Create an HTTP DELETE request with the supplied URI, containing no body and no headers
 delete :: Uri Absolute scheme -> HttpRequest scheme "DELETE" () EmptyPayload acceptTag
-delete = emptyPayloadReq DELETE
+delete = makeRequest DELETE
 
--- | Basic template for an HTTP GET request to a supplied URI, contains no body and no headers
+-- | Create an HTTP GET request with the supplied URI, containing no body and no headers
 get :: Uri Absolute scheme -> HttpRequest scheme "GET" () EmptyPayload acceptTag
-get = emptyPayloadReq GET
+get = makeRequest GET
 
--- | Basic template for an HTTP HEAD request to a supplied URI, contains no body and no headers
+-- | Create an HTTP HEAD request with the supplied URI, containing no body and no headers
 head :: Uri Absolute scheme -> HttpRequest scheme "HEAD" () EmptyPayload acceptTag
-head = emptyPayloadReq HEAD
+head = makeRequest HEAD
 
--- | Basic template for an HTTP PATCH request to a supplied URI, contains no body and no headers
+-- | Create an HTTP PATCH request with the supplied URI, containing no body and no headers
 patch :: Uri Absolute scheme -> HttpRequest scheme "PATCH" () EmptyPayload acceptTag
-patch = emptyPayloadReq PATCH
+patch = makeRequest PATCH
 
--- | Basic template for an HTTP POST request to a supplied URI, contains no body and no headers
+-- | Create an HTTP POST request with the supplied URI, containing no body and no headers
 post :: Uri Absolute scheme -> HttpRequest scheme "POST" () EmptyPayload acceptTag
-post = emptyPayloadReq POST
+post = makeRequest POST
 
--- | Basic template for an HTTP PUT request to a supplied URI, contains no body and no headers
+-- | Create an HTTP PUT request with the supplied URI, containing no body and no headers
 put :: Uri Absolute scheme -> HttpRequest scheme "PUT" () EmptyPayload acceptTag
-put = emptyPayloadReq PUT
+put = makeRequest PUT
 
 -- | Supply a body to an HTTP request using the supplied tag to indicate how the request should be encoded
 supplyBody :: (AllowedBody method b, HttpPayload contentTag) => Proxy contentTag -> b -> HttpRequest scheme method b' contentTag' acceptTag -> HttpRequest scheme method b contentTag acceptTag
@@ -96,6 +97,7 @@ supplyBody prox b (r@HttpRequest { requestHeaders = headers, requestBody = _, ..
     , ..
     }
 
+-- | Supply a header to an HTTP request
 supplyHeader :: (HeaderName, B.ByteString) -> HttpRequest scheme method b contentTag acceptTag -> HttpRequest scheme method b contentTag acceptTag
 supplyHeader (k, v) r = r { requestHeaders = Map.insert k v $ requestHeaders r }
 
@@ -103,12 +105,14 @@ supplyHeader (k, v) r = r { requestHeaders = Map.insert k v $ requestHeaders r }
 accept :: (HttpPayload acceptTag) => Proxy acceptTag -> HttpRequest scheme method b' contentTag acceptTag -> HttpRequest scheme method b' contentTag acceptTag
 accept prox r = maybe r (\v -> supplyHeader ("Accept", v) r) $ acceptHeader prox 
 
+-- | Make the supplied HTTP request, expecting an HTTP response with body type `b' to be delivered in some 'MonadDormouse m'
 expect :: (RequestPayloadConstraint contentTag b, ResponsePayloadConstraint acceptTag b', MonadDormouse m, HttpPayload contentTag, HttpPayload acceptTag) => HttpRequest scheme method b contentTag acceptTag -> m (HttpResponse b')
 expect r = expectAs (proxyOfReq r) r
   where 
     proxyOfReq :: HttpRequest scheme method b contentTag acceptTag -> Proxy acceptTag
     proxyOfReq _ = Proxy
 
+-- | Make the supplied HTTP request, expecting an HTTP response in the supplied format with body type `b' to be delivered in some 'MonadDormouse m'
 expectAs :: (RequestPayloadConstraint contentTag b, ResponsePayloadConstraint acceptTag b', MonadDormouse m, HttpPayload contentTag, HttpPayload acceptTag) => Proxy acceptTag -> HttpRequest scheme method b contentTag acceptTag -> m (HttpResponse b')
 expectAs tag r = do
   resp <- send r (createRequestPayload (contentTypeProx r)) (extractResponsePayload tag)
@@ -125,6 +129,7 @@ newtype DormouseT m a = DormouseT
 instance (MonadIO m, MonadThrow m) => MonadDormouse (DormouseT m) where
   send = IOImpl.sendHttp
 
+-- | A simple monad that allows you to run Dormouse
 type Dormouse a = DormouseT IO a
 
 -- | Run a DormouseT using the supplied 'DormouseConfig' to generate a result in the underlying monad 'm'

@@ -4,11 +4,13 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2b2a5bc760320fdd2510415278a81c4daca6e1e01cf3b4401ebc39e6f33af994
+-- hash: 20f187fb48c009ab51d706e1367d943235a79bf21da1a9e1bc4556134eb79c40
 
 name:           dormouse
 version:        0.1.0.0
+synopsis:       Simple, Type-Safe, Testable HTTP Client
 description:    Please see the README on GitHub at <https://github.com/githubuser/dormouse#readme>
+category:       Web
 homepage:       https://github.com/githubuser/dormouse#readme
 bug-reports:    https://github.com/githubuser/dormouse/issues
 author:         Phil Curzon
