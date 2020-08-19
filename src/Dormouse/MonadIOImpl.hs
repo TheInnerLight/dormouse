@@ -10,6 +10,7 @@ import Control.Monad.IO.Class
 import Control.Monad.Reader
 import Data.IORef
 import Data.Kind (Constraint)
+import qualified Data.Map.Strict as Map
 import Data.Typeable (Typeable, cast)
 import Data.Word (Word8)
 import Data.ByteString as B
@@ -50,7 +51,7 @@ sendHttp HttpRequest { requestMethod = method, requestUri = uri, requestBody = b
   manager <- fmap clientManager $ reader (getDormouseConfig)
   initialRequest <- parseRequestFromUri uri
   let requestPayload = requestWriter body
-  let request = initialRequest { C.method = methodAsByteString method, C.requestBody = translateRequestBody requestPayload, C.requestHeaders = headers }
+  let request = initialRequest { C.method = methodAsByteString method, C.requestBody = translateRequestBody requestPayload, C.requestHeaders = Map.toList headers }
   response <- liftIO $ C.withResponse request manager (\resp -> do
       let serialBodyStream :: SerialT (IO) (Array Word8) = S.map (\(b,_) -> b) $ S.takeWhile (\(_, l) -> l > 0 ) $ S.map (\bs -> (SEB.toArray bs, B.length bs))  $ S.repeatM (C.brRead $ C.responseBody resp )
       blug <- responseBuilder serialBodyStream
@@ -58,7 +59,7 @@ sendHttp HttpRequest { requestMethod = method, requestUri = uri, requestBody = b
       ) 
   let resp = HttpResponse 
        { responseStatusCode = NC.statusCode . C.responseStatus $ response
-       , responseHeaders = C.responseHeaders response
+       , responseHeaders = Map.fromList $ C.responseHeaders response
        , responseBody = C.responseBody response
        }
   case responseStatusCode resp of

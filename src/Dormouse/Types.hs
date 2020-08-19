@@ -20,19 +20,28 @@ import Dormouse.Headers
 import Dormouse.Methods
 import Dormouse.Uri.Types 
 import qualified Data.ByteString as SB
+import qualified Data.Map.Strict as Map
 
 data HttpRequest scheme method body contentTag acceptTag = HttpRequest 
   { requestMethod :: !(HttpMethod method)
   , requestUri :: !(Uri Absolute scheme)
-  , requestHeaders :: [(HeaderName, SB.ByteString)]
+  , requestHeaders :: Map.Map HeaderName SB.ByteString
   , requestBody :: body
   } deriving (Eq, Show)
 
+instance HasHeaders (HttpRequest scheme method body contentTag acceptTag) where
+  getHeaders = requestHeaders
+  getHeaderValue key = Map.lookup key . requestHeaders
+
 data HttpResponse b = HttpResponse
   { responseStatusCode :: !Int
-  , responseHeaders :: [(HeaderName, SB.ByteString)]
+  , responseHeaders :: Map.Map HeaderName SB.ByteString
   , responseBody :: b
   } deriving (Show, Eq)
+
+instance HasHeaders (HttpResponse b) where
+  getHeaders = responseHeaders
+  getHeaderValue key = Map.lookup key . responseHeaders
 
 data SomeDormouseException = forall e . Exception e => SomeDormouseException e
 

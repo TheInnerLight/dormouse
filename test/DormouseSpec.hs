@@ -12,6 +12,7 @@ import Control.Exception.Safe (MonadThrow, Exception(..), throwString)
 import Control.Monad.IO.Class
 import Control.Monad.Reader
 import Data.Aeson (encode, Value)
+import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as LB
@@ -48,15 +49,15 @@ instance MonadDormouse TestM where
   send req requestWriter responseBuilder = do
     testEnv <- ask
     reqLbs <- liftIO . SEBL.fromChunksIO . extricateRequestStream . requestWriter $ requestBody req
-    _ <- liftIO $ swapMVar (sentContentType testEnv) . getHeaderValue "Content-Type" $ requestHeaders req
-    _ <- liftIO $ swapMVar (sentAcceptHeader testEnv) . getHeaderValue "Accept" $ requestHeaders req
+    _ <- liftIO $ swapMVar (sentContentType testEnv) . getHeaderValue "Content-Type" $ req
+    _ <- liftIO $ swapMVar (sentAcceptHeader testEnv) . getHeaderValue "Accept" $ req
     _ <- liftIO $ swapMVar (sentJson testEnv) $ Just reqLbs
     maybeResponseJson <- liftIO . readMVar $ returnJson testEnv
     let respLbs = maybe (encode ()) id maybeResponseJson
     resp <- liftIO $ responseBuilder . SEBL.toChunks $ respLbs
     pure HttpResponse
       { responseStatusCode = 200
-      , responseHeaders = []
+      , responseHeaders = Map.empty
       , responseBody = resp
       }
 
