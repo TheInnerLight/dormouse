@@ -160,7 +160,7 @@ instance (MonadIO m, MonadThrow m) => MonadDormouse (DormouseT m) where
 -- | A simple monad that allows you to run Dormouse
 type Dormouse a = DormouseT IO a
 
--- | Run a DormouseT using the supplied 'DormouseConfig' to generate a result in the underlying monad 'm'
+-- | Run a DormouseT using the supplied 'DormouseConfig' to generate a result in the underlying monad @m@
 runDormouseT :: DormouseConfig -> DormouseT m a -> m a
 runDormouseT config dormouseT = runReaderT (unDormouseT dormouseT) config
 
