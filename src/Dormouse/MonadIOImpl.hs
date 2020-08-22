@@ -49,7 +49,7 @@ translateRequestBody (ChunkedTransfer stream)           = C.RequestBodyStreamChu
 sendHttp :: (HasDormouseConfig env, MonadReader env m, MonadIO m, MonadThrow m) => HttpRequest scheme method a contentTag acceptTag -> (a -> RequestPayload) -> (SerialT IO (Array Word8) -> IO b) -> m (HttpResponse b)
 sendHttp HttpRequest { requestMethod = method, requestUri = uri, requestBody = body, requestHeaders = headers} requestWriter responseBuilder = do
   manager <- fmap clientManager $ reader (getDormouseConfig)
-  initialRequest <- parseRequestFromUri uri
+  let initialRequest = genClientRequestFromUrl uri
   let requestPayload = requestWriter body
   let request = initialRequest { C.method = methodAsByteString method, C.requestBody = translateRequestBody requestPayload, C.requestHeaders = Map.toList headers }
   response <- liftIO $ C.withResponse request manager (\resp -> do

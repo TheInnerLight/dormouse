@@ -26,7 +26,7 @@ import qualified Data.Map.Strict as Map
 -- describing the HTTP verb associated with the request, @contentTag@ describing the type of content being sen and @acceptTag@ describing the type of content desired
 data HttpRequest scheme method body contentTag acceptTag = HttpRequest 
   { requestMethod :: !(HttpMethod method)
-  , requestUri :: !(Uri Absolute scheme)
+  , requestUri :: !(Url scheme)
   , requestHeaders :: Map.Map HeaderName SB.ByteString
   , requestBody :: body
   } deriving (Eq, Show)

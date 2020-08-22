@@ -3,7 +3,7 @@ version:             0.1.0.0
 github:              "githubuser/dormouse"
 license:             BSD3
 author:              Phil Curzon
-maintainer:          "example@example.com"
+maintainer:          "phil@novelfs.org"
 copyright:           "2020 Phil Curzon"
 
 extra-source-files:
@@ -51,6 +51,20 @@ dependencies:
 
 library:
   source-dirs: src
+  exposed-modules:
+    - Dormouse
+    - Dormouse.Class
+    - Dormouse.Headers
+    - Dormouse.MonadIOImpl
+    - Dormouse.Uri.RFC3986
+    - Dormouse.Status
+    - Dormouse.Uri
+    - Dormouse.Uri.Builder
+    - Dormouse.Uri.Encode
+    - Dormouse.Uri.Parser
+    - Dormouse.Uri.Query
+    - Dormouse.Uri.QQ
+    - Dormouse.Uri.Types
 
 executables:
   dormouse-examples:

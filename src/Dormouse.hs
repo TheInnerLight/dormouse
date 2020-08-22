@@ -51,12 +51,13 @@ module Dormouse
   , pattern ServerError
   , ensureHttp
   , ensureHttps
-  , parseAbsoluteUri
-  , parseRelativeUri
-  , parseHttpUri
-  , parseHttpsUri
+  , parseUri
+  , parseHttpUrl
+  , parseHttpsUrl
   , IsQueryVal(..)
-  , Uri
+  , Uri(..)
+  , Url
+  , AnyUrl(..)
   ) where
 
 import Control.Applicative ((<|>))
@@ -84,7 +85,7 @@ import qualified Network.HTTP.Client.TLS as TLS
 import qualified Network.HTTP.Types.Status as NC
 
 -- | Create an HTTP request with the supplied URI and supplied method, containing no body and no headers
-makeRequest :: (RequestPayloadConstraint EmptyPayload (), HttpPayload EmptyPayload) => HttpMethod method -> Uri Absolute scheme -> HttpRequest scheme method () EmptyPayload acceptTag
+makeRequest :: (RequestPayloadConstraint EmptyPayload (), HttpPayload EmptyPayload) => HttpMethod method -> Url scheme -> HttpRequest scheme method () EmptyPayload acceptTag
 makeRequest method uri = HttpRequest 
   { requestMethod = method
   , requestUri = uri
@@ -93,27 +94,27 @@ makeRequest method uri = HttpRequest
   }
 
 -- | Create an HTTP DELETE request with the supplied URI, containing no body and no headers
-delete :: Uri Absolute scheme -> HttpRequest scheme "DELETE" () EmptyPayload acceptTag
+delete :: Url scheme -> HttpRequest scheme "DELETE" () EmptyPayload acceptTag
 delete = makeRequest DELETE
 
 -- | Create an HTTP GET request with the supplied URI, containing no body and no headers
-get :: Uri Absolute scheme -> HttpRequest scheme "GET" () EmptyPayload acceptTag
+get :: Url scheme -> HttpRequest scheme "GET" () EmptyPayload acceptTag
 get = makeRequest GET
 
 -- | Create an HTTP HEAD request with the supplied URI, containing no body and no headers
-head :: Uri Absolute scheme -> HttpRequest scheme "HEAD" () EmptyPayload acceptTag
+head :: Url scheme -> HttpRequest scheme "HEAD" () EmptyPayload acceptTag
 head = makeRequest HEAD
 
 -- | Create an HTTP PATCH request with the supplied URI, containing no body and no headers
-patch :: Uri Absolute scheme -> HttpRequest scheme "PATCH" () EmptyPayload acceptTag
+patch :: Url scheme -> HttpRequest scheme "PATCH" () EmptyPayload acceptTag
 patch = makeRequest PATCH
 
 -- | Create an HTTP POST request with the supplied URI, containing no body and no headers
-post :: Uri Absolute scheme -> HttpRequest scheme "POST" () EmptyPayload acceptTag
+post :: Url scheme -> HttpRequest scheme "POST" () EmptyPayload acceptTag
 post = makeRequest POST
 
 -- | Create an HTTP PUT request with the supplied URI, containing no body and no headers
-put :: Uri Absolute scheme -> HttpRequest scheme "PUT" () EmptyPayload acceptTag
+put :: Url scheme -> HttpRequest scheme "PUT" () EmptyPayload acceptTag
 put = makeRequest PUT
 
 -- | Supply a body to an HTTP request using the supplied tag to indicate how the request should be encoded

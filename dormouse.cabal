@@ -4,7 +4,7 @@ cabal-version: 1.18
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: cf83db3e1a93a9ae1b8f030c12290cdd28c522dfb5e9a293bce5401e84dad53c
+-- hash: 84325d1249530c2c6b5ae774c90686dc10b3a34b1db9a23e3123412ea39c004f
 
 name:           dormouse
 version:        0.1.0.0
@@ -22,7 +22,7 @@ category:       Web
 homepage:       https://github.com/githubuser/dormouse#readme
 bug-reports:    https://github.com/githubuser/dormouse/issues
 author:         Phil Curzon
-maintainer:     example@example.com
+maintainer:     phil@novelfs.org
 copyright:      2020 Phil Curzon
 license:        BSD3
 license-file:   LICENSE
@@ -42,20 +42,20 @@ library
       Dormouse
       Dormouse.Class
       Dormouse.Headers
-      Dormouse.Methods
       Dormouse.MonadIOImpl
-      Dormouse.Payload
+      Dormouse.Uri.RFC3986
       Dormouse.Status
-      Dormouse.Types
       Dormouse.Uri
       Dormouse.Uri.Builder
       Dormouse.Uri.Encode
       Dormouse.Uri.Parser
-      Dormouse.Uri.QQ
       Dormouse.Uri.Query
-      Dormouse.Uri.RFC3986
+      Dormouse.Uri.QQ
       Dormouse.Uri.Types
   other-modules:
+      Dormouse.Methods
+      Dormouse.Payload
+      Dormouse.Types
       Paths_dormouse
   hs-source-dirs:
       src

@@ -210,15 +210,15 @@ pAbsolutePart = do
   authority <- pMaybe pAuthority
   return (scheme, authority)
 
-pRelativeUri :: Parser (Uri Relative scheme)
+pRelativeUri :: Parser Uri
 pRelativeUri = do
   path <- pPathRel
   query <- pMaybe pQuery
   fragment <- pMaybe pFragment
   _ <- endOfInput
-  return $ RelativeUri $ RelUri {uriPath = path, uriQuery = query, uriFragment = fragment}
+  return $ RelativeUri $ RelUri { uriPath = path, uriQuery = query, uriFragment = fragment }
 
-pAbsoluteUri :: Parser (Uri Absolute scheme)
+pAbsoluteUri :: Parser Uri
 pAbsoluteUri = do
   (scheme, authority) <- pAbsolutePart
   path <- if isJust authority then pPathAbsAuth else pPathAbsNoAuth
@@ -227,5 +227,5 @@ pAbsoluteUri = do
   _ <- endOfInput
   return $ AbsoluteUri $ AbsUri {uriScheme = scheme, uriAuthority = authority, uriPath = path, uriQuery = query, uriFragment = fragment }
 
-pUri :: Parser (Uri Unknown scheme)
-pUri = fmap AbsOrRelUri pAbsoluteUri <|> fmap AbsOrRelUri pRelativeUri
+pUri :: Parser Uri
+pUri = pAbsoluteUri <|> pRelativeUri

@@ -1,19 +1,19 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DisambiguateRecordFields #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
 
 module Dormouse.Uri
-  ( parseRequestFromUri
+  ( genClientRequestFromUrl
   , module Dormouse.Uri.Types
   , ensureHttp
   , ensureHttps
-  , parseAbsoluteUri
-  , parseRelativeUri
-  , parseHttpUri
-  , parseHttpsUri
+  , parseUri
+  , parseHttpUrl
+  , parseHttpsUrl
   , IsQueryVal(..)
   ) where
 
@@ -51,56 +51,61 @@ instance Exception (UriException) where
     SomeDormouseException a <- fromException x
     cast a
 
-ensureSchemeSymbol :: (KnownSymbol s, MonadThrow m) => Proxy s -> Uri ref scheme -> m (Uri 'Absolute s)
-ensureSchemeSymbol prox (uri @ (AbsoluteUri (u @ AbsUri {uriScheme = scheme, ..}))) =  
-  if (symbolVal prox == (unpack $ unScheme scheme)) then 
-    return $ AbsoluteUri u
-  else
-    throw UriException { uriExceptionMessage = "Supplied Uri had a scheme of " <> (unScheme scheme) <> " which does not match the desired scheme of " <> (pack $ symbolVal prox) }
-ensureSchemeSymbol prox (uri @ (RelativeUri _)) = throw UriException { uriExceptionMessage = "Provided URI was a Relative URI" }
-ensureSchemeSymbol prox (AbsOrRelUri underlying) = ensureSchemeSymbol prox underlying
+-- | Ensure that the supplied Url uses the _http_ scheme, throwing a 'UriException' in @m@ if this is not the case
+ensureHttp :: MonadThrow m => AnyUrl -> m (Url "http")
+ensureHttp (AnyUrl (HttpUrl u)) = return $ HttpUrl u
+ensureHttp (AnyUrl (HttpsUrl u)) = throw $ UriException "Supplied url was an https url, not an http url"
 
--- | Ensure that the supplied Uri uses the _http_ scheme, throwing a 'UriException' in @m@ if this is not the case
-ensureHttp :: MonadThrow m => Uri ref scheme -> m (Uri 'Absolute "http")
-ensureHttp uri = ensureSchemeSymbol (Proxy :: Proxy "http") uri
+-- | Ensure that the supplied Url uses the _https_ scheme, throwing a 'UriException' in @m@ if this is not the case
+ensureHttps :: MonadThrow m => AnyUrl -> m (Url "https")
+ensureHttps (AnyUrl (HttpsUrl u)) = return $ HttpsUrl u
+ensureHttps (AnyUrl (HttpUrl u)) = throw $ UriException "Supplied url was an http url, not an https url"
 
--- | Ensure that the supplied Uri uses the _https_ scheme, throwing a 'UriException' in @m@ if this is not the case
-ensureHttps :: MonadThrow m => Uri ref scheme -> m (Uri 'Absolute "https")
-ensureHttps uri = ensureSchemeSymbol (Proxy :: Proxy "https") uri
+-- | Ensure that the supplied Uri is a Url
+ensureUrl :: MonadThrow m => Uri -> m AnyUrl
+ensureUrl (AbsoluteUri AbsUri {uriScheme = scheme, uriAuthority = maybeAuthority, uriPath = path, uriQuery = query, uriFragment = fragment}) = do
+  authority <- maybe (throw $ UriException "Supplied Uri had no authority component") return maybeAuthority
+  case unScheme scheme of
+    "http"  -> return $ AnyUrl $ HttpUrl UrlComponents { urlAuthority = authority, urlPath = path, urlQuery = query, urlFragment = fragment }
+    "https" -> return $ AnyUrl $ HttpsUrl UrlComponents { urlAuthority = authority, urlPath = path, urlQuery = query, urlFragment = fragment }
+    s       -> throw $ UriException ("Supplied Uri had a scheme of " <> pack (show s) <> " which was not http or https.")
 
 -- | Parse an ascii 'ByteString' as an absolute uri, throwing a 'UriException' in @m@ if this fails
-parseAbsoluteUri :: MonadThrow m => SB.ByteString -> m (Uri 'Absolute scheme)
-parseAbsoluteUri bs = either (throw . UriException . pack) (return) $ parseOnly pAbsoluteUri bs
+parseUri :: MonadThrow m => SB.ByteString -> m Uri
+parseUri bs = either (throw . UriException . pack) (return) $ parseOnly pUri bs
 
--- | Parse an ascii 'ByteString' as a relative uri, throwing a 'UriException' in @m@ if this fails
-parseRelativeUri :: MonadThrow m => SB.ByteString -> m (Uri 'Relative scheme)
-parseRelativeUri bs = either (throw . UriException . pack) (return) $ parseOnly pRelativeUri bs
+-- | Parse an ascii 'ByteString' as a url, throwing a 'UriException' in @m@ if this fails
+parseUrl :: MonadThrow m => SB.ByteString -> m AnyUrl
+parseUrl bs = do
+  uri <- parseUri bs
+  ensureUrl uri
+  
+-- | Parse an ascii 'ByteString' as an http url, throwing a 'UriException' in @m@ if this fails
+parseHttpUrl :: MonadThrow m => SB.ByteString -> m (Url "http")
+parseHttpUrl text = do 
+  anyUrl <- parseUrl text
+  ensureHttp anyUrl
 
--- | Parse an ascii 'ByteString' as an http uri, throwing a 'UriException' in @m@ if this fails
-parseHttpUri :: MonadThrow m => SB.ByteString -> m (Uri 'Absolute "http")
-parseHttpUri text = do
-  uri <- parseAbsoluteUri text
-  httpUri <- ensureHttp uri
-  return httpUri
+-- | Parse an ascii 'ByteString' as an https url, throwing a 'UriException' in @m@ if this fails
+parseHttpsUrl :: MonadThrow m => SB.ByteString -> m (Url "https")
+parseHttpsUrl text = do 
+  anyUrl <- parseUrl text
+  ensureHttps anyUrl
 
--- | Parse an ascii 'ByteString' as an https uri, throwing a 'UriException' in @m@ if this fails
-parseHttpsUri :: MonadThrow m => SB.ByteString -> m (Uri 'Absolute "https")
-parseHttpsUri text = do
-  uri <- parseAbsoluteUri text
-  httpsUri <- ensureHttps uri
-  return httpsUri
-
-parseRequestFromUri :: MonadThrow m => Uri 'Absolute scheme -> m C.Request
-parseRequestFromUri (uri @ (AbsoluteUri AbsUri {uriScheme = scheme, uriAuthority = maybeAuth, uriPath = path, uriQuery = queryParams, uriFragment = fragment})) = do
-  authority <- maybe (throw $ UriException { uriExceptionMessage = "Uri had no valid authority"} ) return maybeAuth
+genClientRequestFromUrlComponents :: Bool -> UrlComponents -> C.Request
+genClientRequestFromUrlComponents isSecure (UrlComponents {urlAuthority = authority, urlPath = path, urlQuery = queryParams, urlFragment = fragment}) =
   let host = T.urlEncode False . encodeUtf8 . unHost . authorityHost $ authority
-  let isSecure = (unScheme scheme) == "https"
-  let port = maybe (if isSecure then 443 else 80) id (authorityPort authority)
-  let queryText = maybe "" (id) $ queryParams
-  return $ C.defaultRequest
+      port = maybe (if isSecure then 443 else 80) id (authorityPort authority)
+      queryText = maybe "" (id) $ queryParams in
+  C.defaultRequest
     { C.host = host
     , C.path = encodePath path
     , C.secure = isSecure
     , C.port = fromIntegral port
     , C.queryString = encodeQuery queryText
     }
+
+
+genClientRequestFromUrl :: Url scheme -> C.Request
+genClientRequestFromUrl (HttpsUrl uc) = genClientRequestFromUrlComponents True uc
+genClientRequestFromUrl (HttpUrl uc)  = genClientRequestFromUrlComponents False uc

@@ -14,8 +14,8 @@ type HeaderName = CI SB.ByteString
 
 -- | Describes something which has headers
 class HasHeaders a where
-  -- | Retrieve all of the headers which `a` has.
+  -- | Retrieve all of the headers which @a@ has.
   getHeaders :: a -> Map.Map HeaderName SB.ByteString
-  -- | Try to retrieve a specific header from `a` with the supplied `HeaderName`
+  -- | Try to retrieve a specific header from @a@ with the supplied `HeaderName`
   getHeaderValue :: HeaderName -> a -> Maybe SB.ByteString
 

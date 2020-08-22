@@ -16,6 +16,7 @@ import qualified Data.Text.Encoding as E
 import Dormouse.Uri.Types
 import Dormouse.Uri.RFC3986
 
+-- | Percent encode a word8 as an ascii 'Bytestring'
 percentEncode :: Word8 -> B.ByteString
 percentEncode w = 
   let h = w `div` 16
@@ -26,6 +27,7 @@ percentEncode w =
      | x < 10    = 48+x
      | otherwise = 55+x
 
+-- | Percent encode all chars in the supplied text except for those which satsify the supplied predicate
 encodeUnless :: (Char -> Bool)  -> T.Text -> B.ByteString
 encodeUnless isAllowedChar = B.concatMap pEncodeQuery . E.encodeUtf8
   where
@@ -34,8 +36,10 @@ encodeUnless isAllowedChar = B.concatMap pEncodeQuery . E.encodeUtf8
       | isAllowedChar (chr $ fromEnum c) = B.singleton c
       | otherwise                         = percentEncode c
 
+-- | Generate an ascii `Bytestring` from a supplied Query by percent encoding all of the invalid octets
 encodeQuery :: Query -> B.ByteString
 encodeQuery = B.append "?" . encodeUnless isQueryChar . unQuery
 
+-- | Generate an ascii `Bytestring` from a supplied Path by percent encoding all of the invalid octets
 encodePath :: Path 'Absolute -> B.ByteString
 encodePath =  B.append "/" . B.intercalate "/" . fmap (encodeUnless isPathChar . unPathSegment) . unPath

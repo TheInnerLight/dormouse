@@ -21,6 +21,9 @@ module Dormouse.Uri.Types
   , Uri(..)
   , AbsUri(..)
   , RelUri(..)
+  , UrlComponents(..)
+  , Url(..)
+  , AnyUrl(..)
   ) where
 
 import Control.Exception.Safe (MonadThrow, throw, Exception(..))
@@ -102,6 +105,13 @@ newtype Scheme = Scheme { unScheme :: Text } deriving (Eq, Lift)
 instance Show Scheme where
   show scheme = unpack . unScheme $ scheme
 
+data UrlComponents = UrlComponents
+  { urlAuthority :: Authority
+  , urlPath :: Path Absolute
+  , urlQuery :: Maybe Query
+  , urlFragment :: Maybe Fragment
+  } deriving (Eq, Show, Lift)
+
 data AbsUri = AbsUri
   { uriScheme :: Scheme
   , uriAuthority :: Maybe Authority
@@ -118,26 +128,29 @@ data RelUri = RelUri
 
 -- | A Uniform Resource Identifier (URI) is a compact sequence of characters that identifies an abstract or physical resource.
 -- It is defined according to RFC 3986 (<https://tools.ietf.org/html/rfc3986>).  URIs can be absolute (i.e. defined against a
--- specific scheme) or relative.  The `ref` type parameter supports encoding, at the type level, whether a given URI is absolute
--- or relative while the `scheme` type parameter allows the scheme to be known at the type level (such that e.g. https can be enforced.)
-data Uri (ref :: UriReference) (scheme :: Symbol) where 
-  AbsoluteUri :: AbsUri -> Uri Absolute scheme
-  RelativeUri :: RelUri -> Uri Relative scheme
-  AbsOrRelUri :: Uri r s -> Uri Unknown scheme
+-- specific scheme) or relative.
+data Uri 
+  = AbsoluteUri AbsUri
+  | RelativeUri RelUri
+  deriving (Lift, Eq, Show)
 
-instance Lift (Uri ref scheme) where
-  lift (AbsoluteUri u)      = [| AbsoluteUri u |]
-  lift (RelativeUri u)      = [| RelativeUri u |]
-  lift (AbsOrRelUri absUri) = [| AbsOrRelUri |]
+-- | A 'Url' is defined here as an absolute URI in the _http_ or _https_.  Authority components are requried by the http/https
+-- Uri schemes.
+data Url (scheme :: Symbol) where
+  HttpUrl  :: UrlComponents -> Url "http"
+  HttpsUrl :: UrlComponents -> Url "https"
 
-instance Show (Uri ref scheme) where
-  show (AbsoluteUri u) = show u
-  show (RelativeUri u) = show u
-  show (AbsOrRelUri absUri) = show absUri
+instance Eq (Url scheme) where
+  (==) (HttpUrl u1)  (HttpUrl u2)  = show u1 == show u2
+  (==) (HttpsUrl u1) (HttpsUrl u2) = show u1 == show u2
 
-instance Eq (Uri ref scheme) where
-  (==) (AbsoluteUri u1) (AbsoluteUri u2) = u1 == u2
-  (==) (RelativeUri u1) (RelativeUri u2) = u1 == u2
-  (==) (AbsOrRelUri (AbsoluteUri u1)) (AbsOrRelUri (AbsoluteUri u2)) = u1 == u2
-  (==) (AbsOrRelUri (RelativeUri u1)) (AbsOrRelUri (RelativeUri u2)) = u1 == u2
-  (==) _ _ = False
+instance Show (Url scheme) where
+  show (HttpUrl wu)  = show "http " <> show wu
+  show (HttpsUrl wu) = show "https " <> show wu
+
+instance Lift (Url scheme) where
+  lift (HttpUrl uc)  = [| HttpUrl uc |]
+  lift (HttpsUrl uc) = [| HttpsUrl uc |]
+
+-- | `AnyUrl` is a wrapper aroud `Url` which allows either _http_ or _https_ urls to be contained.
+data AnyUrl = forall scheme. AnyUrl (Url scheme)
