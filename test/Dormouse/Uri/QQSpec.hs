@@ -7,8 +7,8 @@ module Dormouse.Uri.QQSpec
   ) where
 
 import Test.Hspec
-import Dormouse.Uri
 import Dormouse.Uri.QQ
+import Dormouse.Url.QQ
 
 tests :: IO()
 tests = hspec $ do

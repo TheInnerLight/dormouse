@@ -5,13 +5,11 @@ module Dormouse.MonadIOImpl
   ( sendHttp
   ) where
 
-import Control.Exception.Safe (MonadThrow(..), throw, Exception(..), SomeException)
+import Control.Exception.Safe (MonadThrow, throw)
 import Control.Monad.IO.Class
 import Control.Monad.Reader
 import Data.IORef
-import Data.Kind (Constraint)
 import qualified Data.Map.Strict as Map
-import Data.Typeable (Typeable, cast)
 import Data.Word (Word8)
 import Data.ByteString as B
 import Dormouse.Class
@@ -20,20 +18,16 @@ import Dormouse.Payload
 import Dormouse.Status
 import Dormouse.Types
 import Dormouse.Uri
-import Network.HTTP.Client (Manager)
 import qualified Network.HTTP.Client as C
-import qualified Network.HTTP.Client.TLS as TLS
 import qualified Network.HTTP.Types.Status as NC
 import Streamly
 import qualified Streamly.Prelude as S
-import qualified Streamly.Internal.Prelude as SS
-import Data.ByteString.Lazy.Internal (ByteString(..))
 import qualified Streamly.External.ByteString as SEB
 import Streamly.Internal.Memory.Array.Types (Array(..))
 
 givesPopper :: SerialT IO (Array Word8) -> C.GivesPopper ()
-givesPopper stream k = do
-  streamState <- newIORef stream
+givesPopper initialStream k = do
+  streamState <- newIORef initialStream
   let popper = do
         stream <- readIORef streamState
         test <- S.uncons stream
@@ -49,7 +43,7 @@ translateRequestBody (ChunkedTransfer stream)           = C.RequestBodyStreamChu
 sendHttp :: (HasDormouseConfig env, MonadReader env m, MonadIO m, MonadThrow m) => HttpRequest scheme method a contentTag acceptTag -> (a -> RequestPayload) -> (SerialT IO (Array Word8) -> IO b) -> m (HttpResponse b)
 sendHttp HttpRequest { requestMethod = method, requestUri = uri, requestBody = body, requestHeaders = headers} requestWriter responseBuilder = do
   manager <- fmap clientManager $ reader (getDormouseConfig)
-  let initialRequest = genClientRequestFromUrl uri
+  let initialRequest = createRequest uri
   let requestPayload = requestWriter body
   let request = initialRequest { C.method = methodAsByteString method, C.requestBody = translateRequestBody requestPayload, C.requestHeaders = Map.toList headers }
   response <- liftIO $ C.withResponse request manager (\resp -> do

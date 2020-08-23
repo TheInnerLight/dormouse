@@ -7,7 +7,6 @@ module Dormouse.Headers
 import qualified Data.ByteString  as SB
 import Data.CaseInsensitive  (CI)
 import qualified Data.Map.Strict as Map
-import Data.Foldable
 
 -- | The name of an HTTP Header.  Header names are case insensitive.
 type HeaderName = CI SB.ByteString

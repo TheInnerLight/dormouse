@@ -10,8 +10,9 @@ module Dormouse.Uri.QuerySpec
 import qualified Data.Text as T
 import Test.Hspec
 import Dormouse.Uri
-import Dormouse.Uri.Builder
-import Dormouse.Uri.QQ
+import Dormouse.Url
+import Dormouse.Url.Builder
+import Dormouse.Url.QQ
 
 uriWithDestructSequence :: Url "http"
 uriWithDestructSequence = HttpUrl $ UrlComponents

@@ -1,18 +1,19 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE RecordWildCards #-}
   
-module Dormouse.Uri.Builder 
+module Dormouse.Url.Builder 
   ( (</>)
-  ,  (?)
+  , (?)
   , (&)
   , (=:)
   ) where
 
 import Data.Foldable  
 import qualified Data.Sequence as SQ
-import Data.Text (Text, unpack, pack)
+import Data.Text (Text)
 import Dormouse.Uri.Query
 import Dormouse.Uri.Types
+import Dormouse.Url.Types
 
 -- | Combine a Url with a new text path component
 (</>) :: Url scheme -> Text -> Url scheme
@@ -27,8 +28,8 @@ import Dormouse.Uri.Types
 (?) :: Url scheme -> QueryBuilder -> Url scheme
 (?) uri b = 
   case uri of 
-    HttpUrl (UrlComponents { urlQuery = q, .. }) -> HttpUrl $ UrlComponents { urlQuery = Just $ foldl' folder "" $ unQueryBuilder b  , .. }
-    HttpsUrl (UrlComponents { urlQuery = q, .. }) -> HttpsUrl $ UrlComponents { urlQuery = Just $ foldl' folder "" $ unQueryBuilder b  , .. }
+    HttpUrl (UrlComponents { .. }) -> HttpUrl $ UrlComponents { urlQuery = Just $ foldl' folder "" $ unQueryBuilder b  , .. }
+    HttpsUrl (UrlComponents { .. }) -> HttpsUrl $ UrlComponents { urlQuery = Just $ foldl' folder "" $ unQueryBuilder b  , .. }
   where 
     folder "" (QueryParam key val)  = Query $ key <> "=" <> val
     folder acc (QueryParam key val) = Query $ unQuery acc <> "&" <> key <> "=" <> val

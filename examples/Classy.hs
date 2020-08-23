@@ -11,7 +11,7 @@ import Dormouse
 import Dormouse.Class
 import Data.Aeson.TH
 import GHC.Generics (Generic)
-import Dormouse.Uri.QQ
+import Dormouse.Url.QQ
 import Web.FormUrlEncoded (ToForm(..), FromForm(..))
 import Language.Haskell.TH
 

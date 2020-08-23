@@ -31,7 +31,7 @@ module Dormouse
   , HeaderName
   , HasHeaders(..)
   , HttpMethod(..)
-  , AllowedBody(..)
+  , AllowedBody
   , methodAsByteString
   , HasAcceptHeader(..)
   , HasContentType(..)
@@ -54,23 +54,20 @@ module Dormouse
   , parseUri
   , parseHttpUrl
   , parseHttpsUrl
+  , QueryBuilder
   , IsQueryVal(..)
   , Uri(..)
   , Url
   , AnyUrl(..)
+  , IsUrl
   ) where
 
-import Control.Applicative ((<|>))
-import Control.Exception.Safe (MonadThrow(..), throw, Exception(..), SomeException)
+import Control.Exception.Safe (MonadThrow)
 import Control.Monad.IO.Class
 import Control.Monad.Reader
-import Data.Kind (Constraint)
 import qualified Data.Map.Strict as Map
-import Data.Typeable (Typeable, cast)
 import qualified Data.ByteString as B
-import qualified Data.ByteString.Lazy as LB
 import Data.Proxy
-import Data.Text (Text)
 import Dormouse.Class
 import Dormouse.Headers
 import Dormouse.Payload
@@ -78,48 +75,47 @@ import Dormouse.Methods
 import Dormouse.Status
 import Dormouse.Types
 import Dormouse.Uri
-import Dormouse.Uri.Types
+import Dormouse.Url
 import qualified Dormouse.MonadIOImpl as IOImpl
 import qualified Network.HTTP.Client as C
 import qualified Network.HTTP.Client.TLS as TLS
-import qualified Network.HTTP.Types.Status as NC
 
 -- | Create an HTTP request with the supplied URI and supplied method, containing no body and no headers
-makeRequest :: (RequestPayloadConstraint EmptyPayload (), HttpPayload EmptyPayload) => HttpMethod method -> Url scheme -> HttpRequest scheme method () EmptyPayload acceptTag
-makeRequest method uri = HttpRequest 
+makeRequest :: (RequestPayloadConstraint EmptyPayload (), HttpPayload EmptyPayload, IsUrl url) => HttpMethod method -> url -> HttpRequest url method () EmptyPayload acceptTag
+makeRequest method url = HttpRequest 
   { requestMethod = method
-  , requestUri = uri
+  , requestUri = url
   , requestHeaders = Map.empty
   , requestBody = ()
   }
 
 -- | Create an HTTP DELETE request with the supplied URI, containing no body and no headers
-delete :: Url scheme -> HttpRequest scheme "DELETE" () EmptyPayload acceptTag
+delete :: IsUrl url => url -> HttpRequest url "DELETE" () EmptyPayload acceptTag
 delete = makeRequest DELETE
 
 -- | Create an HTTP GET request with the supplied URI, containing no body and no headers
-get :: Url scheme -> HttpRequest scheme "GET" () EmptyPayload acceptTag
+get :: IsUrl url => url  -> HttpRequest url "GET" () EmptyPayload acceptTag
 get = makeRequest GET
 
 -- | Create an HTTP HEAD request with the supplied URI, containing no body and no headers
-head :: Url scheme -> HttpRequest scheme "HEAD" () EmptyPayload acceptTag
+head :: IsUrl url => url  -> HttpRequest url "HEAD" () EmptyPayload acceptTag
 head = makeRequest HEAD
 
 -- | Create an HTTP PATCH request with the supplied URI, containing no body and no headers
-patch :: Url scheme -> HttpRequest scheme "PATCH" () EmptyPayload acceptTag
+patch :: IsUrl url => url  -> HttpRequest url "PATCH" () EmptyPayload acceptTag
 patch = makeRequest PATCH
 
 -- | Create an HTTP POST request with the supplied URI, containing no body and no headers
-post :: Url scheme -> HttpRequest scheme "POST" () EmptyPayload acceptTag
+post :: IsUrl url => url  -> HttpRequest url "POST" () EmptyPayload acceptTag
 post = makeRequest POST
 
 -- | Create an HTTP PUT request with the supplied URI, containing no body and no headers
-put :: Url scheme -> HttpRequest scheme "PUT" () EmptyPayload acceptTag
+put :: IsUrl url => url  -> HttpRequest url "PUT" () EmptyPayload acceptTag
 put = makeRequest PUT
 
 -- | Supply a body to an HTTP request using the supplied tag to indicate how the request should be encoded
 supplyBody :: (AllowedBody method b, HttpPayload contentTag) => Proxy contentTag -> b -> HttpRequest scheme method b' contentTag' acceptTag -> HttpRequest scheme method b contentTag acceptTag
-supplyBody prox b (r@HttpRequest { requestHeaders = headers, requestBody = _, ..}) =
+supplyBody prox b (HttpRequest { requestHeaders = headers, requestBody = _, ..}) =
   HttpRequest 
     { requestHeaders = foldMap (\v -> Map.insert ("Content-Type" :: HeaderName) v headers) $ contentType prox
     , requestBody = b

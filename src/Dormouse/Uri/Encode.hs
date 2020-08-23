@@ -8,7 +8,6 @@ module Dormouse.Uri.Encode
   ) where
 
 import Data.Char (chr)
-import qualified Data.List as L
 import Data.Word (Word8)
 import qualified Data.ByteString as B
 import qualified Data.Text as T

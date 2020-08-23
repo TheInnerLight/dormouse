@@ -4,7 +4,7 @@ cabal-version: 1.18
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 84325d1249530c2c6b5ae774c90686dc10b3a34b1db9a23e3123412ea39c004f
+-- hash: 2a8fa176f9550164228b7e7e95979066b683b7b71d5285e95285f1d08d43529c
 
 name:           dormouse
 version:        0.1.0.0
@@ -44,22 +44,27 @@ library
       Dormouse.Headers
       Dormouse.MonadIOImpl
       Dormouse.Uri.RFC3986
-      Dormouse.Status
-      Dormouse.Uri
-      Dormouse.Uri.Builder
-      Dormouse.Uri.Encode
-      Dormouse.Uri.Parser
-      Dormouse.Uri.Query
+      Dormouse.Url.Builder
       Dormouse.Uri.QQ
-      Dormouse.Uri.Types
+      Dormouse.Url.QQ
   other-modules:
       Dormouse.Methods
       Dormouse.Payload
+      Dormouse.Status
       Dormouse.Types
+      Dormouse.Uri
+      Dormouse.Uri.Encode
+      Dormouse.Uri.Parser
+      Dormouse.Uri.Query
+      Dormouse.Uri.Types
+      Dormouse.Url
+      Dormouse.Url.Class
+      Dormouse.Url.Types
       Paths_dormouse
   hs-source-dirs:
       src
   default-extensions: OverloadedStrings MultiParamTypeClasses ScopedTypeVariables FlexibleContexts
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall
   build-depends:
       aeson >=1.4.2 && <2.0.0
     , attoparsec >=0.13.2.4 && <0.14
@@ -87,7 +92,7 @@ executable dormouse-examples
   hs-source-dirs:
       examples
   default-extensions: OverloadedStrings MultiParamTypeClasses ScopedTypeVariables FlexibleContexts
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall
   build-depends:
       aeson >=1.4.2 && <2.0.0
     , attoparsec >=0.13.2.4 && <0.14
@@ -112,16 +117,37 @@ test-suite dormouse-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Dormouse
+      Dormouse.Class
+      Dormouse.Headers
+      Dormouse.Methods
+      Dormouse.MonadIOImpl
+      Dormouse.Payload
+      Dormouse.Status
+      Dormouse.Types
+      Dormouse.Uri
+      Dormouse.Uri.Encode
+      Dormouse.Uri.Parser
+      Dormouse.Uri.QQ
+      Dormouse.Uri.Query
+      Dormouse.Uri.RFC3986
+      Dormouse.Uri.Types
+      Dormouse.Url
+      Dormouse.Url.Builder
+      Dormouse.Url.Class
+      Dormouse.Url.QQ
+      Dormouse.Url.Types
       Dormouse.Generators.Json
       Dormouse.Generators.UriComponents
       Dormouse.StatusSpec
       Dormouse.Uri.ParserSpec
       Dormouse.Uri.QQSpec
       Dormouse.Uri.QuerySpec
-      Dormouse.UriSpec
+      Dormouse.UrlSpec
       DormouseSpec
       Paths_dormouse
   hs-source-dirs:
+      src
       test
   default-extensions: OverloadedStrings MultiParamTypeClasses ScopedTypeVariables FlexibleContexts
   ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall
@@ -132,7 +158,6 @@ test-suite dormouse-test
     , bytestring >=0.10.8 && <0.11.0
     , case-insensitive >=1.2.1.0 && <2.0.0
     , containers >=0.6.2.1 && <0.7
-    , dormouse
     , hedgehog >=1.0.1 && <2
     , hspec >=2.0.0
     , hspec-hedgehog >=0.0.1.2 && <0.1

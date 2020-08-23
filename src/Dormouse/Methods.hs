@@ -6,7 +6,7 @@
 
 module Dormouse.Methods
   ( HttpMethod(..)
-  , AllowedBody(..)
+  , AllowedBody
   , methodAsByteString
   ) where
 

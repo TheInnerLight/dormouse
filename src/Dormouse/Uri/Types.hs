@@ -21,17 +21,11 @@ module Dormouse.Uri.Types
   , Uri(..)
   , AbsUri(..)
   , RelUri(..)
-  , UrlComponents(..)
-  , Url(..)
-  , AnyUrl(..)
   ) where
 
-import Control.Exception.Safe (MonadThrow, throw, Exception(..))
-import Data.Proxy
 import Data.String (IsString(..))
 import qualified Data.List as L
 import Data.Text (Text, unpack, pack)
-import GHC.TypeLits
 import Language.Haskell.TH.Syntax (Lift(..))
 
 newtype Username = Username { unUsername :: Text } deriving (Eq, Lift)
@@ -105,23 +99,16 @@ newtype Scheme = Scheme { unScheme :: Text } deriving (Eq, Lift)
 instance Show Scheme where
   show scheme = unpack . unScheme $ scheme
 
-data UrlComponents = UrlComponents
-  { urlAuthority :: Authority
-  , urlPath :: Path Absolute
-  , urlQuery :: Maybe Query
-  , urlFragment :: Maybe Fragment
-  } deriving (Eq, Show, Lift)
-
 data AbsUri = AbsUri
   { uriScheme :: Scheme
   , uriAuthority :: Maybe Authority
-  , uriPath :: Path Absolute
+  , uriPath :: Path 'Absolute
   , uriQuery :: Maybe Query
   , uriFragment :: Maybe Fragment
   } deriving (Eq, Show, Lift)
 
 data RelUri = RelUri
-  { uriPath :: Path Relative
+  { uriPath :: Path 'Relative
   , uriQuery :: Maybe Query
   , uriFragment :: Maybe Fragment
   } deriving (Eq, Show, Lift)
@@ -134,23 +121,4 @@ data Uri
   | RelativeUri RelUri
   deriving (Lift, Eq, Show)
 
--- | A 'Url' is defined here as an absolute URI in the _http_ or _https_.  Authority components are requried by the http/https
--- Uri schemes.
-data Url (scheme :: Symbol) where
-  HttpUrl  :: UrlComponents -> Url "http"
-  HttpsUrl :: UrlComponents -> Url "https"
 
-instance Eq (Url scheme) where
-  (==) (HttpUrl u1)  (HttpUrl u2)  = show u1 == show u2
-  (==) (HttpsUrl u1) (HttpsUrl u2) = show u1 == show u2
-
-instance Show (Url scheme) where
-  show (HttpUrl wu)  = show "http " <> show wu
-  show (HttpsUrl wu) = show "https " <> show wu
-
-instance Lift (Url scheme) where
-  lift (HttpUrl uc)  = [| HttpUrl uc |]
-  lift (HttpsUrl uc) = [| HttpsUrl uc |]
-
--- | `AnyUrl` is a wrapper aroud `Url` which allows either _http_ or _https_ urls to be contained.
-data AnyUrl = forall scheme. AnyUrl (Url scheme)
