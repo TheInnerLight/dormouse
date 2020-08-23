@@ -3,15 +3,14 @@
 Dormouse is an HTTP client that will help you REST.
 
 ```haskell
-{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE DataKinds #-}
 
 import Control.Monad.IO.Class
 import Dormouse
-import Data.Aeson.TH
-import Dormouse.Uri.QQ
-import Language.Haskell.TH
+import Data.Aeson.TH 
+import Dormouse.Url.QQ
 
 data UserDetails = UserDetails 
   { name :: String
@@ -21,11 +20,11 @@ data UserDetails = UserDetails
 
 deriveJSON defaultOptions ''UserDetails
 
-data Echoed a = Echoed 
-  { echoeddata :: a
+data EchoedJson a = EchoedJson 
+  { echoedjson :: a
   } deriving (Eq, Show)
 
-deriveJSON defaultOptions {fieldLabelModifier = drop 6} ''Echoed
+deriveJSON defaultOptions {fieldLabelModifier = drop 6} ''EchoedJson
 
 main :: IO ()
 main = do
