@@ -56,14 +56,12 @@ library:
     - Dormouse.Class
     - Dormouse.Headers
     - Dormouse.MonadIOImpl
+    - Dormouse.Status
     - Dormouse.Uri.RFC3986
     - Dormouse.Url.Builder
     - Dormouse.Uri.QQ
     - Dormouse.Url.QQ
   ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
     - -Wall
   
 executables:

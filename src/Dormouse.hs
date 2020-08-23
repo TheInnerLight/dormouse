@@ -44,11 +44,6 @@ module Dormouse
   , json
   , urlForm
   , noBody
-  , pattern Informational
-  , pattern Successful
-  , pattern Redirect
-  , pattern ClientError
-  , pattern ServerError
   , ensureHttp
   , ensureHttps
   , parseUri
@@ -72,7 +67,6 @@ import Dormouse.Class
 import Dormouse.Headers
 import Dormouse.Payload
 import Dormouse.Methods
-import Dormouse.Status
 import Dormouse.Types
 import Dormouse.Uri
 import Dormouse.Url
