@@ -5,12 +5,11 @@
 module Dormouse.Uri.QQ
   ( uri
   ) where
-import Data.Bifunctor
+  
 import Data.ByteString.Char8 (pack)
 import Dormouse.Uri
 import Language.Haskell.TH.Quote 
 import Language.Haskell.TH 
-import Language.Haskell.TH.Syntax
 
 uri :: QuasiQuoter
 uri = QuasiQuoter 

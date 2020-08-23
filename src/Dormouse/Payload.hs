@@ -18,10 +18,9 @@ module Dormouse.Payload
   , noBody
   ) where
 
-import Control.Exception.Safe (Exception, MonadThrow(..), throw)
+import Control.Exception.Safe (Exception, MonadThrow, throw)
 import Control.Monad.IO.Class
-import Data.Aeson (FromJSON, ToJSON, Value, encode, fromEncoding, eitherDecode, eitherDecodeStrict)
-import Data.Functor.Const
+import Data.Aeson (FromJSON, ToJSON, encode, eitherDecode)
 import Data.Proxy
 import Data.Text (Text, pack)
 import Data.Word (Word8, Word64)
