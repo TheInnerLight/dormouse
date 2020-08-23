@@ -5,6 +5,7 @@
 module Dormouse.Url.QQ
   ( http
   , https
+  , url
   ) where
 
 import Data.ByteString.Char8 (pack)
@@ -38,6 +39,21 @@ https = QuasiQuoter
       case parseHttpsUrl (pack s) of
         Left err -> fail $ show err
         Right x  -> appE [|(==)|] [| (x :: Url "https") |] `viewP` [p|True|]
+  , quoteType = error "Not supported"
+  , quoteDec =error "Not supported"
+  }
+
+url :: QuasiQuoter
+url = QuasiQuoter 
+  { quoteExp = \s -> 
+      let res = parseUrl $ pack s in
+      case res of
+        Left err -> fail $ show err
+        Right x -> [| (x : AnyUrl) |]
+  , quotePat = \s ->
+      case parseUrl (pack s) of
+        Left err -> fail $ show err
+        Right x  -> appE [|(==)|] [| (x :: AnyUrl) |] `viewP` [p|True|]
   , quoteType = error "Not supported"
   , quoteDec =error "Not supported"
   }

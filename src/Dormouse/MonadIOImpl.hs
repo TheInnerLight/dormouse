@@ -45,9 +45,15 @@ translateRequestBody :: RequestPayload -> C.RequestBody
 translateRequestBody (DefinedContentLength size stream) = C.RequestBodyStream (fromIntegral size) (givesPopper stream)
 translateRequestBody (ChunkedTransfer stream)           = C.RequestBodyStreamChunked (givesPopper stream)
 
-genClientRequestFromUrlComponents :: UrlScheme -> UrlComponents -> C.Request
-genClientRequestFromUrlComponents scheme (UrlComponents {urlAuthority = authority, urlPath = path, urlQuery = queryParams, urlFragment = _} ) =
-  let host = T.urlEncode False . encodeUtf8 . unHost . authorityHost $ authority
+genClientRequestFromUrlComponents :: AnyUrl -> C.Request
+genClientRequestFromUrlComponents url =
+  let (scheme, comps) = case url of
+        AnyUrl (HttpUrl uc)  -> (HttpScheme, uc)
+        AnyUrl (HttpsUrl uc) -> (HttpsScheme, uc)
+      authority = urlAuthority comps
+      path = urlPath comps
+      queryParams = urlQuery comps
+      host = T.urlEncode False . encodeUtf8 . unHost . authorityHost $ authority
       (isSecure, port) = case scheme of
         HttpScheme -> (False, maybe 80 id $ authorityPort authority)
         HttpsScheme -> (True, maybe 443 id $  authorityPort authority)
@@ -60,11 +66,10 @@ genClientRequestFromUrlComponents scheme (UrlComponents {urlAuthority = authorit
     , C.queryString = encodeQuery queryText
     }
 
-sendHttp :: (HasDormouseConfig env, MonadReader env m, MonadIO m, MonadThrow m) => HttpRequest scheme method a contentTag acceptTag -> (a -> RequestPayload) -> (SerialT IO (Array Word8) -> IO b) -> m (HttpResponse b)
-sendHttp HttpRequest { requestMethod = method, requestUri = uri, requestBody = body, requestHeaders = headers} requestWriter responseBuilder = do
+sendHttp :: (HasDormouseConfig env, MonadReader env m, MonadIO m, MonadThrow m) => HttpRequest url method a contentTag acceptTag -> (a -> RequestPayload) -> (SerialT IO (Array Word8) -> IO b) -> m (HttpResponse b)
+sendHttp HttpRequest { requestMethod = method, requestUri = url, requestBody = body, requestHeaders = headers} requestWriter responseBuilder = do
   manager <- fmap clientManager $ reader (getDormouseConfig)
-  let (scheme, comps) = createRequest uri
-  let initialRequest = genClientRequestFromUrlComponents scheme comps
+  let initialRequest = genClientRequestFromUrlComponents $ asAnyUrl url
   let requestPayload = requestWriter body
   let request = initialRequest { C.method = methodAsByteString method, C.requestBody = translateRequestBody requestPayload, C.requestHeaders = Map.toList headers }
   response <- liftIO $ C.withResponse request manager (\resp -> do

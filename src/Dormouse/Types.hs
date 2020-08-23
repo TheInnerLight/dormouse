@@ -44,7 +44,7 @@ instance Show body => Show (HttpRequest url method body contentTag acceptTag) wh
         , "}"
         ]
 
-instance HasHeaders (HttpRequest scheme method body contentTag acceptTag) where
+instance HasHeaders (HttpRequest url method body contentTag acceptTag) where
   getHeaders = requestHeaders
   getHeaderValue key = Map.lookup key . requestHeaders
 

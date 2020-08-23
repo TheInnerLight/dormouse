@@ -47,6 +47,7 @@ module Dormouse
   , ensureHttp
   , ensureHttps
   , parseUri
+  , parseUrl
   , parseHttpUrl
   , parseHttpsUrl
   , QueryBuilder
@@ -108,7 +109,7 @@ put :: IsUrl url => url  -> HttpRequest url "PUT" () EmptyPayload acceptTag
 put = makeRequest PUT
 
 -- | Supply a body to an HTTP request using the supplied tag to indicate how the request should be encoded
-supplyBody :: (AllowedBody method b, HttpPayload contentTag) => Proxy contentTag -> b -> HttpRequest scheme method b' contentTag' acceptTag -> HttpRequest scheme method b contentTag acceptTag
+supplyBody :: (AllowedBody method b, HttpPayload contentTag) => Proxy contentTag -> b -> HttpRequest url method b' contentTag' acceptTag -> HttpRequest url method b contentTag acceptTag
 supplyBody prox b (HttpRequest { requestHeaders = headers, requestBody = _, ..}) =
   HttpRequest 
     { requestHeaders = foldMap (\v -> Map.insert ("Content-Type" :: HeaderName) v headers) $ contentType prox
@@ -117,27 +118,27 @@ supplyBody prox b (HttpRequest { requestHeaders = headers, requestBody = _, ..})
     }
 
 -- | Supply a header to an HTTP request
-supplyHeader :: (HeaderName, B.ByteString) -> HttpRequest scheme method b contentTag acceptTag -> HttpRequest scheme method b contentTag acceptTag
+supplyHeader :: (HeaderName, B.ByteString) -> HttpRequest url method b contentTag acceptTag -> HttpRequest url method b contentTag acceptTag
 supplyHeader (k, v) r = r { requestHeaders = Map.insert k v $ requestHeaders r }
 
 -- | Apply an accept header derived from the supplied tag proxy and add a type hint to the request, indicating how the response should be decodable
-accept :: (HttpPayload acceptTag) => Proxy acceptTag -> HttpRequest scheme method b' contentTag acceptTag -> HttpRequest scheme method b' contentTag acceptTag
+accept :: (HttpPayload acceptTag) => Proxy acceptTag -> HttpRequest url method b' contentTag acceptTag -> HttpRequest url method b' contentTag acceptTag
 accept prox r = maybe r (\v -> supplyHeader ("Accept", v) r) $ acceptHeader prox 
 
 -- | Make the supplied HTTP request, expecting an HTTP response with body type `b' to be delivered in some 'MonadDormouse m'
-expect :: (RequestPayloadConstraint contentTag b, ResponsePayloadConstraint acceptTag b', MonadDormouse m, HttpPayload contentTag, HttpPayload acceptTag) => HttpRequest scheme method b contentTag acceptTag -> m (HttpResponse b')
+expect :: (RequestPayloadConstraint contentTag b, ResponsePayloadConstraint acceptTag b', MonadDormouse m, HttpPayload contentTag, HttpPayload acceptTag) => HttpRequest url method b contentTag acceptTag -> m (HttpResponse b')
 expect r = expectAs (proxyOfReq r) r
   where 
-    proxyOfReq :: HttpRequest scheme method b contentTag acceptTag -> Proxy acceptTag
+    proxyOfReq :: HttpRequest url method b contentTag acceptTag -> Proxy acceptTag
     proxyOfReq _ = Proxy
 
 -- | Make the supplied HTTP request, expecting an HTTP response in the supplied format with body type `b' to be delivered in some 'MonadDormouse m'
-expectAs :: (RequestPayloadConstraint contentTag b, ResponsePayloadConstraint acceptTag b', MonadDormouse m, HttpPayload contentTag, HttpPayload acceptTag) => Proxy acceptTag -> HttpRequest scheme method b contentTag acceptTag -> m (HttpResponse b')
+expectAs :: (RequestPayloadConstraint contentTag b, ResponsePayloadConstraint acceptTag b', MonadDormouse m, HttpPayload contentTag, HttpPayload acceptTag) => Proxy acceptTag -> HttpRequest url method b contentTag acceptTag -> m (HttpResponse b')
 expectAs tag r = do
   resp <- send r (createRequestPayload (contentTypeProx r)) (extractResponsePayload tag)
   return resp
   where 
-    contentTypeProx :: HttpRequest scheme method b contentTag acceptTag -> Proxy contentTag
+    contentTypeProx :: HttpRequest url method b contentTag acceptTag -> Proxy contentTag
     contentTypeProx _ = Proxy
 
 -- | The DormouseT Monad Transformer

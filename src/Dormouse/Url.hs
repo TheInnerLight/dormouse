@@ -10,6 +10,7 @@ module Dormouse.Url
   ( module Dormouse.Url.Types
   , ensureHttp
   , ensureHttps
+  , parseUrl
   , parseHttpUrl
   , parseHttpsUrl
   , QueryBuilder

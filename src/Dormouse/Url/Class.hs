@@ -7,11 +7,10 @@ module Dormouse.Url.Class
 import Dormouse.Url.Types
 
 class (Eq url, Show url) => IsUrl url where
-  createRequest :: url -> (UrlScheme, UrlComponents)
+  asAnyUrl :: url -> AnyUrl
 
 instance IsUrl (Url scheme) where
-  createRequest (HttpUrl uc)  = (HttpScheme, uc)
-  createRequest (HttpsUrl uc) = (HttpsScheme, uc)
+  asAnyUrl = AnyUrl
 
 instance IsUrl (AnyUrl) where
-  createRequest (AnyUrl u) = createRequest u
+  asAnyUrl (AnyUrl u) = asAnyUrl u
