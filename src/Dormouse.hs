@@ -54,7 +54,7 @@ module Dormouse
   , Uri(..)
   , Url
   , AnyUrl(..)
-  , IsUrl
+  , IsUrl(..)
   ) where
 
 import Control.Exception.Safe (MonadThrow)

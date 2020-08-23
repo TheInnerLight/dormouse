@@ -4,7 +4,7 @@ cabal-version: 1.18
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 45ff24ef1691da9cf82c100e00f5aca42a8c1b74995462be72c12d5c1dd3f8f5
+-- hash: 395834f35b0394b31f77adf545f4395553cac919e43750c77fafc29b95cd9a82
 
 name:           dormouse
 version:        0.1.0.0
@@ -40,7 +40,6 @@ source-repository head
 library
   exposed-modules:
       Dormouse
-      Dormouse.Class
       Dormouse.Headers
       Dormouse.MonadIOImpl
       Dormouse.Status
@@ -49,6 +48,7 @@ library
       Dormouse.Uri.QQ
       Dormouse.Url.QQ
   other-modules:
+      Dormouse.Class
       Dormouse.Methods
       Dormouse.Payload
       Dormouse.Types

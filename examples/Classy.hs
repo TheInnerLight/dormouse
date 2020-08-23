@@ -8,7 +8,6 @@ module Classy where
 import Control.Exception.Safe (MonadThrow)
 import Control.Monad.IO.Class
 import Dormouse
-import Dormouse.Class
 import Data.Aeson.TH
 import GHC.Generics (Generic)
 import Dormouse.Url.QQ

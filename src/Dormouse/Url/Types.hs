@@ -8,6 +8,7 @@
 
 module Dormouse.Url.Types
   ( UrlComponents(..)
+  , UrlScheme(..)
   , Url(..)
   , AnyUrl(..)
   ) where
@@ -22,6 +23,10 @@ data UrlComponents = UrlComponents
   , urlQuery :: Maybe Query
   , urlFragment :: Maybe Fragment
   } deriving (Eq, Show, Lift)
+
+data UrlScheme
+  = HttpScheme
+  | HttpsScheme
 
 -- | A 'Url' is defined here as an absolute URI in the _http_ or _https_.  Authority components are requried by the http/https
 -- Uri schemes.
