@@ -4,7 +4,7 @@ cabal-version: 1.18
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 395834f35b0394b31f77adf545f4395553cac919e43750c77fafc29b95cd9a82
+-- hash: 9d0c564a9d97aab93345e58002d51d726c1bb0fe71050ed28bd5eeb90ba37af2
 
 name:           dormouse
 version:        0.1.0.0
@@ -72,35 +72,6 @@ library
     , bytestring >=0.10.8 && <0.11.0
     , case-insensitive >=1.2.1.0 && <2.0.0
     , containers >=0.6.2.1 && <0.7
-    , http-api-data >=0.4.1.1 && <0.5
-    , http-client >=0.6.4.1 && <0.7.0
-    , http-client-tls >=0.3.5.3 && <0.4
-    , http-types >=0.12.3 && <0.13
-    , mtl >=2.2.2 && <3
-    , safe-exceptions >=0.1.7 && <0.2.0
-    , streamly >=0.7.2 && <0.8
-    , streamly-bytestring >=0.1.2 && <0.2
-    , template-haskell >=2.15.0 && <3.0.0
-    , text >=1.2.3 && <2.0.0
-  default-language: Haskell2010
-
-executable dormouse-examples
-  main-is: Main.hs
-  other-modules:
-      Classy
-      Paths_dormouse
-  hs-source-dirs:
-      examples
-  default-extensions: OverloadedStrings MultiParamTypeClasses ScopedTypeVariables FlexibleContexts
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall
-  build-depends:
-      aeson >=1.4.2 && <2.0.0
-    , attoparsec >=0.13.2.4 && <0.14
-    , base >=4.7 && <5
-    , bytestring >=0.10.8 && <0.11.0
-    , case-insensitive >=1.2.1.0 && <2.0.0
-    , containers >=0.6.2.1 && <0.7
-    , dormouse
     , http-api-data >=0.4.1.1 && <0.5
     , http-client >=0.6.4.1 && <0.7.0
     , http-client-tls >=0.3.5.3 && <0.4
