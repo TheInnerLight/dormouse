@@ -36,7 +36,6 @@ executables:
     dependencies:
     - dormouse
    
-
 default-extensions:
   - OverloadedStrings
   - MultiParamTypeClasses
