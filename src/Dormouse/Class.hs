@@ -7,7 +7,6 @@ module Dormouse.Class
   , DormouseConfig(..)
   ) where
 
-import Data.Kind (Constraint)
 import Data.Word (Word8)
 import Dormouse.Payload
 import Dormouse.Types

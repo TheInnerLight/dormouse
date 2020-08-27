@@ -19,7 +19,7 @@ import qualified Data.ByteString.Lazy as LB
 import Data.Word (Word8)
 import Dormouse
 import Dormouse.Headers
-import Dormouse.Uri.QQ
+import Dormouse.Url.QQ
 import Dormouse.Generators.Json
 import Streamly
 import Streamly.Internal.Memory.Array.Types (Array(..))

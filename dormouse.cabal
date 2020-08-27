@@ -4,7 +4,7 @@ cabal-version: 1.18
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: cf83db3e1a93a9ae1b8f030c12290cdd28c522dfb5e9a293bce5401e84dad53c
+-- hash: 9d0c564a9d97aab93345e58002d51d726c1bb0fe71050ed28bd5eeb90ba37af2
 
 name:           dormouse
 version:        0.1.0.0
@@ -22,7 +22,7 @@ category:       Web
 homepage:       https://github.com/githubuser/dormouse#readme
 bug-reports:    https://github.com/githubuser/dormouse/issues
 author:         Phil Curzon
-maintainer:     example@example.com
+maintainer:     phil@novelfs.org
 copyright:      2020 Phil Curzon
 license:        BSD3
 license-file:   LICENSE
@@ -40,26 +40,31 @@ source-repository head
 library
   exposed-modules:
       Dormouse
-      Dormouse.Class
       Dormouse.Headers
-      Dormouse.Methods
       Dormouse.MonadIOImpl
-      Dormouse.Payload
       Dormouse.Status
+      Dormouse.Uri.RFC3986
+      Dormouse.Url.Builder
+      Dormouse.Uri.QQ
+      Dormouse.Url.QQ
+  other-modules:
+      Dormouse.Class
+      Dormouse.Methods
+      Dormouse.Payload
       Dormouse.Types
       Dormouse.Uri
-      Dormouse.Uri.Builder
       Dormouse.Uri.Encode
       Dormouse.Uri.Parser
-      Dormouse.Uri.QQ
       Dormouse.Uri.Query
-      Dormouse.Uri.RFC3986
       Dormouse.Uri.Types
-  other-modules:
+      Dormouse.Url
+      Dormouse.Url.Class
+      Dormouse.Url.Types
       Paths_dormouse
   hs-source-dirs:
       src
   default-extensions: OverloadedStrings MultiParamTypeClasses ScopedTypeVariables FlexibleContexts
+  ghc-options: -Wall
   build-depends:
       aeson >=1.4.2 && <2.0.0
     , attoparsec >=0.13.2.4 && <0.14
@@ -67,35 +72,6 @@ library
     , bytestring >=0.10.8 && <0.11.0
     , case-insensitive >=1.2.1.0 && <2.0.0
     , containers >=0.6.2.1 && <0.7
-    , http-api-data >=0.4.1.1 && <0.5
-    , http-client >=0.6.4.1 && <0.7.0
-    , http-client-tls >=0.3.5.3 && <0.4
-    , http-types >=0.12.3 && <0.13
-    , mtl >=2.2.2 && <3
-    , safe-exceptions >=0.1.7 && <0.2.0
-    , streamly >=0.7.2 && <0.8
-    , streamly-bytestring >=0.1.2 && <0.2
-    , template-haskell >=2.15.0 && <3.0.0
-    , text >=1.2.3 && <2.0.0
-  default-language: Haskell2010
-
-executable dormouse-examples
-  main-is: Main.hs
-  other-modules:
-      Classy
-      Paths_dormouse
-  hs-source-dirs:
-      examples
-  default-extensions: OverloadedStrings MultiParamTypeClasses ScopedTypeVariables FlexibleContexts
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
-  build-depends:
-      aeson >=1.4.2 && <2.0.0
-    , attoparsec >=0.13.2.4 && <0.14
-    , base >=4.7 && <5
-    , bytestring >=0.10.8 && <0.11.0
-    , case-insensitive >=1.2.1.0 && <2.0.0
-    , containers >=0.6.2.1 && <0.7
-    , dormouse
     , http-api-data >=0.4.1.1 && <0.5
     , http-client >=0.6.4.1 && <0.7.0
     , http-client-tls >=0.3.5.3 && <0.4
@@ -112,16 +88,37 @@ test-suite dormouse-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Dormouse
+      Dormouse.Class
+      Dormouse.Headers
+      Dormouse.Methods
+      Dormouse.MonadIOImpl
+      Dormouse.Payload
+      Dormouse.Status
+      Dormouse.Types
+      Dormouse.Uri
+      Dormouse.Uri.Encode
+      Dormouse.Uri.Parser
+      Dormouse.Uri.QQ
+      Dormouse.Uri.Query
+      Dormouse.Uri.RFC3986
+      Dormouse.Uri.Types
+      Dormouse.Url
+      Dormouse.Url.Builder
+      Dormouse.Url.Class
+      Dormouse.Url.QQ
+      Dormouse.Url.Types
       Dormouse.Generators.Json
       Dormouse.Generators.UriComponents
       Dormouse.StatusSpec
       Dormouse.Uri.ParserSpec
       Dormouse.Uri.QQSpec
       Dormouse.Uri.QuerySpec
-      Dormouse.UriSpec
+      Dormouse.UrlSpec
       DormouseSpec
       Paths_dormouse
   hs-source-dirs:
+      src
       test
   default-extensions: OverloadedStrings MultiParamTypeClasses ScopedTypeVariables FlexibleContexts
   ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall
@@ -132,7 +129,6 @@ test-suite dormouse-test
     , bytestring >=0.10.8 && <0.11.0
     , case-insensitive >=1.2.1.0 && <2.0.0
     , containers >=0.6.2.1 && <0.7
-    , dormouse
     , hedgehog >=1.0.1 && <2
     , hspec >=2.0.0
     , hspec-hedgehog >=0.0.1.2 && <0.1

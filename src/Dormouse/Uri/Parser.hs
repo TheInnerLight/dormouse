@@ -26,7 +26,6 @@ import Control.Applicative ((<|>))
 import Data.Attoparsec.ByteString.Char8 as A
 import Data.Char as C
 import Data.Bits (Bits, shiftL, (.|.))
-import Data.CaseInsensitive (CI, mk)
 import Data.Maybe (isJust)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -151,7 +150,7 @@ pPathsAbEmpty = many1' (char '/' *> pSegment)
 
 pPathsAbsolute :: Parser [PathSegment]
 pPathsAbsolute = do
-  slash <- char '/'
+  _ <- char '/'
   seg <- pSegmentNz
   comps <- many' (char '/' *> pSegment)
   return $ seg : comps
@@ -171,13 +170,13 @@ pPathsRootless = do
 pPathsEmpty :: Parser [PathSegment]
 pPathsEmpty = return []
 
-pPathAbsAuth :: Parser (Path Absolute)
+pPathAbsAuth :: Parser (Path 'Absolute)
 pPathAbsAuth = fmap (Path) (pPathsAbEmpty <|> pPathsAbsolute <|> pPathsEmpty)
 
-pPathAbsNoAuth :: Parser (Path Absolute)
+pPathAbsNoAuth :: Parser (Path 'Absolute)
 pPathAbsNoAuth = fmap (Path) (pPathsAbsolute <|> pPathsRootless <|> pPathsEmpty)
 
-pPathRel :: Parser (Path Relative)
+pPathRel :: Parser (Path 'Relative)
 pPathRel = fmap (Path) (pPathsAbsolute <|> pPathsNoScheme <|> pPathsEmpty)
 
 pQuery :: Parser (Query)
@@ -210,15 +209,15 @@ pAbsolutePart = do
   authority <- pMaybe pAuthority
   return (scheme, authority)
 
-pRelativeUri :: Parser (Uri Relative scheme)
+pRelativeUri :: Parser Uri
 pRelativeUri = do
   path <- pPathRel
   query <- pMaybe pQuery
   fragment <- pMaybe pFragment
   _ <- endOfInput
-  return $ RelativeUri $ RelUri {uriPath = path, uriQuery = query, uriFragment = fragment}
+  return $ RelativeUri $ RelUri { uriPath = path, uriQuery = query, uriFragment = fragment }
 
-pAbsoluteUri :: Parser (Uri Absolute scheme)
+pAbsoluteUri :: Parser Uri
 pAbsoluteUri = do
   (scheme, authority) <- pAbsolutePart
   path <- if isJust authority then pPathAbsAuth else pPathAbsNoAuth
@@ -227,5 +226,5 @@ pAbsoluteUri = do
   _ <- endOfInput
   return $ AbsoluteUri $ AbsUri {uriScheme = scheme, uriAuthority = authority, uriPath = path, uriQuery = query, uriFragment = fragment }
 
-pUri :: Parser (Uri Unknown scheme)
-pUri = fmap AbsOrRelUri pAbsoluteUri <|> fmap AbsOrRelUri pRelativeUri
+pUri :: Parser Uri
+pUri = pAbsoluteUri <|> pRelativeUri

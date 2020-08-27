@@ -12,9 +12,7 @@ module Dormouse.Uri.Query
   ) where
 
 import qualified Data.Text as T
-import Data.Sequence (Seq(..))
 import qualified Data.Sequence as SQ
-import Dormouse.Uri.Types
 
 data QueryComponent
   = QueryParam T.Text T.Text

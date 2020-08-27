@@ -1,5 +1,5 @@
 import qualified Dormouse.StatusSpec as StatusSpec
-import qualified Dormouse.UriSpec as UriSpec
+import qualified Dormouse.UrlSpec as UrlSpec
 import qualified Dormouse.Uri.ParserSpec as UriParserSpec
 import qualified Dormouse.Uri.QuerySpec as UriQuerySpec
 import qualified Dormouse.Uri.QQSpec as UriQQSpec
@@ -9,7 +9,7 @@ main :: IO ()
 main = do
   DormouseSpec.tests
   StatusSpec.tests
-  UriSpec.tests
+  UrlSpec.tests
   UriParserSpec.tests
   UriQuerySpec.tests
   UriQQSpec.tests

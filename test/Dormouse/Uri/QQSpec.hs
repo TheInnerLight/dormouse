@@ -7,60 +7,60 @@ module Dormouse.Uri.QQSpec
   ) where
 
 import Test.Hspec
-import Dormouse.Uri
 import Dormouse.Uri.QQ
+import Dormouse.Url.QQ
 
 tests :: IO()
 tests = hspec $ do
   describe "http pattern" $ do
     it "pattern matches correctly against a matching uri" $ do
-      let uri = [http|http://google.com|]
-      let matched = case uri of
+      let url = [http|http://google.com|]
+      let matched = case url of
             [http|http://google.com|] -> True
             _ -> False
       matched `shouldBe` True
-    it "pattern matche doesn't match a different uri" $ do
-      let uri = [http|http://google.com|]
-      let matched = case uri of
+    it "pattern match doesn't match a different uri" $ do
+      let url = [http|http://google.com|]
+      let matched = case url of
             [http|http://test.com|] -> True
             _ -> False
       matched `shouldBe` False
   describe "https pattern" $ do
     it "pattern matches correctly against a matching uri" $ do
-      let uri = [https|https://google.com|]
-      let matched = case uri of
+      let url = [https|https://google.com|]
+      let matched = case url of
             [https|https://google.com|] -> True
             _ -> False
       matched `shouldBe` True
     it "pattern match doesn't match a different uri" $ do
-      let uri = [https|https://google.com|]
-      let matched = case uri of
+      let url = [https|https://google.com|]
+      let matched = case url of
             [https|https://test.com|] -> True
             _ -> False
       matched `shouldBe` False
-  describe "absoluteUri pattern" $ do
+  describe "uri pattern" $ do
     it "pattern matches correctly against a matching uri" $ do
-      let uri = [absoluteUri|https://google.com|]
-      let matched = case uri of
-            [absoluteUri|https://google.com|] -> True
+      let x = [uri|https://google.com|]
+      let matched = case x of
+            [uri|https://google.com|] -> True
             _ -> False
       matched `shouldBe` True
     it "pattern match doesn't match a different uri" $ do
-      let uri = [absoluteUri|https://google.com|]
-      let matched = case uri of
-            [absoluteUri|https://test.com|] -> True
+      let x = [uri|https://google.com|]
+      let matched = case x of
+            [uri|https://test.com|] -> True
             _ -> False
       matched `shouldBe` False
   describe "relativeUri pattern" $ do
     it "pattern matches correctly against a matching uri" $ do
-      let uri = [relativeUri|/myPath|]
-      let matched = case uri of
-            [relativeUri|/myPath|] -> True
+      let x = [uri|/myPath|]
+      let matched = case x of
+            [uri|/myPath|] -> True
             _ -> False
       matched `shouldBe` True
     it "pattern match doesn't match a different uri" $ do
-      let uri = [relativeUri|/myPath2|]
-      let matched = case uri of
-            [relativeUri|/myPath|] -> True
+      let x = [uri|/myPath2|]
+      let matched = case x of
+            [uri|/myPath|] -> True
             _ -> False
       matched `shouldBe` False

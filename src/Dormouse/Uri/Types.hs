@@ -23,12 +23,9 @@ module Dormouse.Uri.Types
   , RelUri(..)
   ) where
 
-import Control.Exception.Safe (MonadThrow, throw, Exception(..))
-import Data.Proxy
 import Data.String (IsString(..))
 import qualified Data.List as L
 import Data.Text (Text, unpack, pack)
-import GHC.TypeLits
 import Language.Haskell.TH.Syntax (Lift(..))
 
 newtype Username = Username { unUsername :: Text } deriving (Eq, Lift)
@@ -105,39 +102,23 @@ instance Show Scheme where
 data AbsUri = AbsUri
   { uriScheme :: Scheme
   , uriAuthority :: Maybe Authority
-  , uriPath :: Path Absolute
+  , uriPath :: Path 'Absolute
   , uriQuery :: Maybe Query
   , uriFragment :: Maybe Fragment
   } deriving (Eq, Show, Lift)
 
 data RelUri = RelUri
-  { uriPath :: Path Relative
+  { uriPath :: Path 'Relative
   , uriQuery :: Maybe Query
   , uriFragment :: Maybe Fragment
   } deriving (Eq, Show, Lift)
 
 -- | A Uniform Resource Identifier (URI) is a compact sequence of characters that identifies an abstract or physical resource.
 -- It is defined according to RFC 3986 (<https://tools.ietf.org/html/rfc3986>).  URIs can be absolute (i.e. defined against a
--- specific scheme) or relative.  The `ref` type parameter supports encoding, at the type level, whether a given URI is absolute
--- or relative while the `scheme` type parameter allows the scheme to be known at the type level (such that e.g. https can be enforced.)
-data Uri (ref :: UriReference) (scheme :: Symbol) where 
-  AbsoluteUri :: AbsUri -> Uri Absolute scheme
-  RelativeUri :: RelUri -> Uri Relative scheme
-  AbsOrRelUri :: Uri r s -> Uri Unknown scheme
+-- specific scheme) or relative.
+data Uri 
+  = AbsoluteUri AbsUri
+  | RelativeUri RelUri
+  deriving (Lift, Eq, Show)
 
-instance Lift (Uri ref scheme) where
-  lift (AbsoluteUri u)      = [| AbsoluteUri u |]
-  lift (RelativeUri u)      = [| RelativeUri u |]
-  lift (AbsOrRelUri absUri) = [| AbsOrRelUri |]
 
-instance Show (Uri ref scheme) where
-  show (AbsoluteUri u) = show u
-  show (RelativeUri u) = show u
-  show (AbsOrRelUri absUri) = show absUri
-
-instance Eq (Uri ref scheme) where
-  (==) (AbsoluteUri u1) (AbsoluteUri u2) = u1 == u2
-  (==) (RelativeUri u1) (RelativeUri u2) = u1 == u2
-  (==) (AbsOrRelUri (AbsoluteUri u1)) (AbsOrRelUri (AbsoluteUri u2)) = u1 == u2
-  (==) (AbsOrRelUri (RelativeUri u1)) (AbsOrRelUri (RelativeUri u2)) = u1 == u2
-  (==) _ _ = False
