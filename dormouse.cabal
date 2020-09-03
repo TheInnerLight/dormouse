@@ -4,7 +4,7 @@ cabal-version: 1.18
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 9d46df1d579babdaa77f150e343cad3dd92eef9b0a5ff71a11e251008041b5a9
+-- hash: 5b1795ba5590339e64e14ec38dd8a966bea036bbb8f26432eaef1b89609cfd8b
 
 name:           dormouse
 version:        0.1.0.0
@@ -14,10 +14,10 @@ description:    An HTTP client designed to be productive, easy to use, easy to t
                 It was designed with the following objectives in mind:
                 .
                   - HTTP requests and responses should be modelled by a simple, immutable Haskell Record.
-                  - Real HTTP requests should be easily mockable so you can test that you are both generating the correct requests and your response handling logic is correct.
-                  - Illegal requests are unrepresentable, such as HTTP GET requests with a content body.
-                  - It is possible to enforce a protocol (e.g. https) at the type level.
-                  - Large request and response bodies can be handled via streaming.
+                  - Real HTTP calls should be made via an abstraction layer (`MonadDormouse`) so testing and mocking is painless.
+                  - Illegal requests should be unrepresentable, such as HTTP GET requests with a content body.
+                  - It should be possible to enforce a protocol (e.g. https) at the type level.
+                  - It should be possible to handle large request and response bodies via constant memory streaming.
 category:       Web
 homepage:       https://github.com/githubuser/dormouse#readme
 bug-reports:    https://github.com/githubuser/dormouse/issues
