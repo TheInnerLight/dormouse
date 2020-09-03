@@ -14,6 +14,7 @@ import qualified Data.ByteString as SB
 import qualified Data.ByteString.Char8 as C8SB
 import Data.Kind (Constraint)
 import Data.Proxy
+import Dormouse.Data
 import GHC.TypeLits
 
 data HttpMethod (a :: Symbol) where 
@@ -44,15 +45,15 @@ instance Eq (HttpMethod a) where
   (==) _ _ = True
 
 type family AllowedBody (a :: Symbol) b :: Constraint
-type instance AllowedBody "CONNECT" b = (b ~ ())
+type instance AllowedBody "CONNECT" b = (b ~ Empty)
 type instance AllowedBody "DELETE" b = ()
-type instance AllowedBody "GET" b = (b ~ ())
-type instance AllowedBody "HEAD" b = (b ~ ())
-type instance AllowedBody "OPTIONS" b = (b ~ ())
+type instance AllowedBody "GET" b = (b ~ Empty)
+type instance AllowedBody "HEAD" b = (b ~ Empty)
+type instance AllowedBody "OPTIONS" b = (b ~ Empty)
 type instance AllowedBody "PATCH" b = ()
 type instance AllowedBody "POST" b = ()
 type instance AllowedBody "PUT" b = ()
-type instance AllowedBody "TRACE" b = (b ~ ())
+type instance AllowedBody "TRACE" b = (b ~ Empty)
 
 methodAsByteString :: HttpMethod a -> SB.ByteString
 methodAsByteString CONNECT    = "CONNECT"

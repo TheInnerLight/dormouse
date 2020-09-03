@@ -83,8 +83,8 @@ tests = do
       it "submits the correct json body, content-type and accept header for a json request" $ do
         hedgehog $ do
           arbJson <- forAll . genJsonValue $ jsonGenRanges
-          let req = accept noBody $ supplyBody json arbJson $ post [https|https://testing123.com|]
-          _ :: HttpResponse () <- liftIO $ runTestM testEnv $ expect req
+          let req = accept noPayload $ supplyBody json arbJson $ post [https|https://testing123.com|]
+          _ :: HttpResponse Empty <- liftIO $ runTestM testEnv $ expect req
           lbs <- liftIO $ readMVar sentJson'
           actualContentType <- liftIO $ readMVar sentContentType'
           actualAcceptHeader <- liftIO $ readMVar sentAcceptHeader'
@@ -107,7 +107,7 @@ tests = do
         hedgehog $ do
           arbJson <- forAll . genJsonValue $ jsonGenRanges
           let req = supplyBody json arbJson $ post [https|https://testing123.com|]
-          _ :: HttpResponse () <- liftIO $ runTestM testEnv $ expectAs noBody req
+          _ :: HttpResponse Empty <- liftIO $ runTestM testEnv $ expectAs noPayload req
           lbs <- liftIO $ readMVar sentJson'
           actualContentType <- liftIO $ readMVar sentContentType'
           actualAcceptHeader <- liftIO $ readMVar sentAcceptHeader'

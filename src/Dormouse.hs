@@ -43,7 +43,7 @@ module Dormouse
   , RequestPayload(..)
   , json
   , urlForm
-  , noBody
+  , noPayload
   , ensureHttp
   , ensureHttps
   , parseUri
@@ -56,6 +56,7 @@ module Dormouse
   , Url
   , AnyUrl(..)
   , IsUrl(..)
+  , Empty
   ) where
 
 import Control.Exception.Safe (MonadThrow)
@@ -64,6 +65,7 @@ import Control.Monad.Reader
 import qualified Data.Map.Strict as Map
 import qualified Data.ByteString as B
 import Data.Proxy
+import Dormouse.Data
 import Dormouse.Class
 import Dormouse.Headers
 import Dormouse.Payload
@@ -75,37 +77,39 @@ import qualified Dormouse.MonadIOImpl as IOImpl
 import qualified Network.HTTP.Client as C
 import qualified Network.HTTP.Client.TLS as TLS
 
+
+
 -- | Create an HTTP request with the supplied URI and supplied method, containing no body and no headers
-makeRequest :: (RequestPayloadConstraint EmptyPayload (), HttpPayload EmptyPayload, IsUrl url) => HttpMethod method -> url -> HttpRequest url method () EmptyPayload acceptTag
+makeRequest :: (RequestPayloadConstraint EmptyPayload Empty, HttpPayload EmptyPayload, IsUrl url) => HttpMethod method -> url -> HttpRequest url method Empty EmptyPayload acceptTag
 makeRequest method url = HttpRequest 
   { requestMethod = method
   , requestUri = url
   , requestHeaders = Map.empty
-  , requestBody = ()
+  , requestBody = Empty
   }
 
 -- | Create an HTTP DELETE request with the supplied URI, containing no body and no headers
-delete :: IsUrl url => url -> HttpRequest url "DELETE" () EmptyPayload acceptTag
+delete :: IsUrl url => url -> HttpRequest url "DELETE" Empty EmptyPayload acceptTag
 delete = makeRequest DELETE
 
 -- | Create an HTTP GET request with the supplied URI, containing no body and no headers
-get :: IsUrl url => url  -> HttpRequest url "GET" () EmptyPayload acceptTag
+get :: IsUrl url => url  -> HttpRequest url "GET" Empty EmptyPayload acceptTag
 get = makeRequest GET
 
 -- | Create an HTTP HEAD request with the supplied URI, containing no body and no headers
-head :: IsUrl url => url  -> HttpRequest url "HEAD" () EmptyPayload acceptTag
+head :: IsUrl url => url  -> HttpRequest url "HEAD" Empty EmptyPayload acceptTag
 head = makeRequest HEAD
 
 -- | Create an HTTP PATCH request with the supplied URI, containing no body and no headers
-patch :: IsUrl url => url  -> HttpRequest url "PATCH" () EmptyPayload acceptTag
+patch :: IsUrl url => url  -> HttpRequest url "PATCH" Empty EmptyPayload acceptTag
 patch = makeRequest PATCH
 
 -- | Create an HTTP POST request with the supplied URI, containing no body and no headers
-post :: IsUrl url => url  -> HttpRequest url "POST" () EmptyPayload acceptTag
+post :: IsUrl url => url  -> HttpRequest url "POST" Empty EmptyPayload acceptTag
 post = makeRequest POST
 
 -- | Create an HTTP PUT request with the supplied URI, containing no body and no headers
-put :: IsUrl url => url  -> HttpRequest url "PUT" () EmptyPayload acceptTag
+put :: IsUrl url => url  -> HttpRequest url "PUT" Empty EmptyPayload acceptTag
 put = makeRequest PUT
 
 -- | Supply a body to an HTTP request using the supplied tag to indicate how the request should be encoded

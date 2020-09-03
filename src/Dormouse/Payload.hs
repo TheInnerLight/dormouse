@@ -15,7 +15,7 @@ module Dormouse.Payload
   , RequestPayload(..)
   , json
   , urlForm
-  , noBody
+  , noPayload
   ) where
 
 import Control.Exception.Safe (Exception, MonadThrow, throw)
@@ -24,6 +24,7 @@ import Data.Aeson (FromJSON, ToJSON, encode, eitherDecode)
 import Data.Proxy
 import Data.Text (Text, pack)
 import Data.Word (Word8, Word64)
+import Dormouse.Data
 import GHC.Exts
 import qualified Data.ByteString  as SB
 import qualified Data.ByteString.Lazy as LB
@@ -114,10 +115,10 @@ instance HasContentType EmptyPayload where
   contentType _ = Nothing
 
 instance HttpPayload EmptyPayload where
-  type RequestPayloadConstraint EmptyPayload b = b ~ ()
-  type ResponsePayloadConstraint EmptyPayload b = b ~ ()
-  createRequestPayload _ b = DefinedContentLength 0 S.nil
-  extractResponsePayload _ stream = liftIO $ S.drain stream
+  type RequestPayloadConstraint EmptyPayload b = b ~ Empty
+  type ResponsePayloadConstraint EmptyPayload b = b ~ Empty
+  createRequestPayload _ _ = DefinedContentLength 0 S.nil
+  extractResponsePayload _ stream = fmap (const Empty) $ liftIO $ S.drain stream
 
-noBody :: Proxy EmptyPayload
-noBody = Proxy :: Proxy EmptyPayload
+noPayload :: Proxy EmptyPayload
+noPayload = Proxy :: Proxy EmptyPayload
