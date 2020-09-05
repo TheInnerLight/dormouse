@@ -46,3 +46,154 @@ main = do
     liftIO $ print response
     return ()
 ```
+
+## Constructing Urls
+
+You can construct Urls using the helper QuasiQuoters:
+
+```haskell
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE QuasiQuotes #-}
+
+import Dormouse
+import Dormouse.Url.QQ
+
+githubHttpsUrl :: Url "https"
+githubHttpsUrl = [https|https://github.com|]
+
+githubHttpUrl :: Url "http"
+githubHttpUrl = [http|http://github.com|]
+
+githubAnyUrl :: AnyUrl
+githubAnyUrl = [url|http://github.com|]
+
+```
+
+You can use the Url Builder syntax to modify an existing Url safely to include paths, adding the import:
+
+```haskell
+import Dormouse.Url.Builder
+```
+
+To allow:
+
+```haskell
+dormouseHttpsUrl :: Url "https"
+dormouseHttpsUrl = githubHttpsUrl </> "TheInnerLight" </> "dormouse"
+```
+
+The Url will be constructed safely so that any characters that wouldn't normally be allowed in a Url path are percent-encoded before the url is resolved by Dormouse.
+
+You can also handle query parameters using similar syntax:
+
+```haskell
+searchUrl :: Url "https"
+searchUrl = [https|https://google.com|] </> "search" ? "q" =: ("haskell" :: String)
+```
+
+## Building requests
+
+### GET requests
+
+Building a GET request is simple using a Url
+
+```haskell
+postmanEchoGetUrl :: Url "http"
+postmanEchoGetUrl = [http|http://postman-echo.com/get?foo1=bar1&foo2=bar2/|]
+
+postmanEchoGetReq :: HttpRequest (Url "http") "GET" Empty EmptyPayload acceptTag
+postmanEchoGetReq = get postmanEchoGetUrl
+```
+
+It is often useful to tell Dormouse about the expected `Content-Type` of the response in advance so that the correct `Accept` headers can be sent:
+
+```haskell
+postmanEchoGetReq' :: HttpRequest (Url "http") "GET" Empty EmptyPayload acceptTag
+postmanEchoGetReq' = accept json $ get postmanEchoGetUrl
+```
+
+### POST requests
+
+You can build POST requests in the same way
+
+```haskell
+postmanEchoPostUrl :: Url "https"
+postmanEchoPostUrl = [https|https://postman-echo.com/post|]
+
+postmanEchoPostReq :: HttpRequest (Url "https") "POST" Empty EmptyPayload JsonPayload
+postmanEchoPostReq = accept json $ post postmanEchoPostUrl
+```
+
+## Expecting a response
+
+Since we're expecting json, we also need data types and `FromJSON` instances to interpret the response with.  Let's start with an example to handle the GET request.
+
+```haskell
+{-# LANGUAGE DeriveGeneric #-}
+```
+
+```haskell
+data Args = Args 
+  { foo1 :: String
+  , foo2 :: String
+  } deriving (Eq, Show, Generic)
+
+data PostmanEchoResponse = PostmanEchoResponse
+  { args :: Args
+  } deriving (Eq, Show, Generic)
+```
+
+
+Once the request has been built, you can send it and expect a response of a particular type in any `MonadDormouse m`.
+
+```haskell
+sendPostmanEchoGetReq :: MonadDormouse m => m PostmanEchoResponse
+sendPostmanEchoGetReq = do
+  (resp :: HttpResponse PostmanEchoResponse) <- expect postmanEchoGetReq'
+  return $ responseBody resp
+```
+
+## Running Dormouse
+
+Dormouse is not opinionated about how you run it.  
+
+You can use a concrete type.
+
+```haskell
+main :: IO ()
+main = do
+  manager <- newManager tlsManagerSettings
+  postmanResponse <- runDormouse (DormouseConfig { clientManager = manager }) sendPostmanEchoGetReq
+  print postmanResponse
+```
+
+You can integrate the `DormouseT` Monad Transformer into your transformer stack.
+
+```haskell
+main :: IO ()
+main = do
+  manager <- newManager tlsManagerSettings
+  postmanResponse <- runDormouseT (DormouseConfig { clientManager = manager }) sendPostmanEchoGetReq
+  print postmanResponse
+```
+
+You can also integrate into your own Application monad using the `sendHttp` function from `Dormouse.MonadIOImpl` and by providing an instance of `HasDormouseConfig` for your application environment.
+
+```haskell
+data MyEnv = MyEnv 
+  { dormouseEnv :: DormouseConfig
+  }
+
+instance HasDormouseConfig MyEnv where
+  getDormouseConfig = dormouseEnv
+
+newtype AppM a = AppM
+  { unAppM :: ReaderT Env IO a 
+  } deriving (Functor, Applicative, Monad, MonadReader Env, MonadIO, MonadThrow)
+
+instance MonadDormouse (AppM) where
+  send = IOImpl.sendHttp
+
+runAppM :: Env -> AppM a -> IO a
+runAppM deps app = flip runReaderT deps $ unAppM app
+```

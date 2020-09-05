@@ -10,7 +10,7 @@ module Dormouse.Payload
   , EmptyPayload(..)
   , HttpPayload(..)
   , DecodingException(..)
-  , JsonLbsPayload
+  , JsonPayload
   , UrlFormPayload
   , RequestPayload(..)
   , json
@@ -57,17 +57,17 @@ class (HasContentType tag, HasAcceptHeader tag) => HttpPayload tag where
   -- | Generates high level content from the supplied low level payload representation
   extractResponsePayload :: (ResponsePayloadConstraint tag b, MonadIO m, MonadThrow m) => Proxy tag -> SerialT IO (Array Word8) -> m b
 
-data JsonLbsPayload = JsonPayload
+data JsonPayload = JsonPayload
 
-instance HasAcceptHeader JsonLbsPayload where
+instance HasAcceptHeader JsonPayload where
   acceptHeader _ = Just "application/json"
 
-instance HasContentType JsonLbsPayload where
+instance HasContentType JsonPayload where
   contentType _ = Just "application/json"
 
-instance HttpPayload JsonLbsPayload where
-  type RequestPayloadConstraint JsonLbsPayload b = ToJSON b
-  type ResponsePayloadConstraint JsonLbsPayload b = FromJSON b
+instance HttpPayload JsonPayload where
+  type RequestPayloadConstraint JsonPayload b = ToJSON b
+  type ResponsePayloadConstraint JsonPayload b = FromJSON b
   createRequestPayload _ b = 
     DefinedContentLength (fromIntegral . LB.length $ lbs) (SEBL.toChunks lbs)
       where
@@ -76,8 +76,8 @@ instance HttpPayload JsonLbsPayload where
     lbs <- liftIO $ SEBL.fromChunksIO stream
     either (throw . DecodingException . pack) return . eitherDecode $ lbs
 
-json :: Proxy JsonLbsPayload
-json = Proxy :: Proxy JsonLbsPayload
+json :: Proxy JsonPayload
+json = Proxy :: Proxy JsonPayload
 
 data UrlFormPayload = UrlFormPayload
 
@@ -122,3 +122,25 @@ instance HttpPayload EmptyPayload where
 
 noPayload :: Proxy EmptyPayload
 noPayload = Proxy :: Proxy EmptyPayload
+
+data HtmlPayload = HtmlPayload
+
+instance HasAcceptHeader HtmlPayload where
+  acceptHeader _ = Just "text/html"
+
+instance HasContentType HtmlPayload where
+  contentType _ = Just "text/html"
+
+instance HttpPayload HtmlPayload where
+  type RequestPayloadConstraint HtmlPayload b = b ~ Text
+  type ResponsePayloadConstraint HtmlPayload b = b ~ Text
+  createRequestPayload _ b = 
+    DefinedContentLength (fromIntegral . LB.length $ lbs) (SEBL.toChunks lbs)
+      where
+       lbs = encode b
+  extractResponsePayload _ stream = do
+    lbs <- liftIO $ SEBL.fromChunksIO stream
+    either (throw . DecodingException . pack) return . eitherDecode $ lbs
+
+html :: Proxy HtmlPayload
+html = Proxy :: Proxy HtmlPayload

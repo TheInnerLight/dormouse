@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 22b1eab8696432aab93c534eb8c59633aeef617f161dbf8b9b3333439bcf3933
+-- hash: b56fd688b8447bd84437766243d87835a1506a4f03a3eceacf4ba718d064d2a6
 
 name:           dormouse-examples
 version:        0.1.0.0
@@ -24,6 +24,7 @@ executable dormouse-examples
   main-is: Main.hs
   other-modules:
       Classy
+      RequestBuilding
       Paths_dormouse_examples
   hs-source-dirs:
       src

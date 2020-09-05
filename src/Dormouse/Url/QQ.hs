@@ -49,7 +49,7 @@ url = QuasiQuoter
       let res = parseUrl $ pack s in
       case res of
         Left err -> fail $ show err
-        Right x -> [| (x : AnyUrl) |]
+        Right x -> [| (x :: AnyUrl) |]
   , quotePat = \s ->
       case parseUrl (pack s) of
         Left err -> fail $ show err

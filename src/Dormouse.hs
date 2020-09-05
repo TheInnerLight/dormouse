@@ -38,7 +38,7 @@ module Dormouse
   , EmptyPayload(..)
   , HttpPayload(..)
   , DecodingException(..)
-  , JsonLbsPayload
+  , JsonPayload
   , UrlFormPayload
   , RequestPayload(..)
   , json
