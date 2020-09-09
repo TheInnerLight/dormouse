@@ -6,6 +6,7 @@
 import Control.Monad.IO.Class
 import Dormouse
 import Data.Aeson.TH 
+import qualified Data.Text as T
 import GHC.Generics (Generic)
 import Dormouse.Url.QQ (https, http)
 import Web.FormUrlEncoded (ToForm(..), FromForm(..))
@@ -38,9 +39,9 @@ main = do
   runDormouse (DormouseConfig { clientManager = manager }) $ do
     let userDetails = UserDetails { name = "James T. Kirk", nickname = "Jim", email = "james.t.kirk@starfleet.com"}
     let req = accept json $ supplyBody json userDetails $ post [https|https://postman-echo.com/post|]
-    let req' = supplyBody urlForm userDetails $ post [https|https://postman-echo.com/post?ship=enterprise|]
+    let req' = accept html $ get [https|https://google.com|]
     response :: HttpResponse (EchoedJson UserDetails) <- expect req
     liftIO $ print response
-    response' :: HttpResponse (EchoedForm UserDetails) <- expectAs json req'
+    response' :: HttpResponse T.Text <- expectAs html req'
     liftIO $ print response'
     return ()

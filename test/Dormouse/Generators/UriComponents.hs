@@ -28,8 +28,6 @@ import qualified Data.ByteString.Char8 as B8
 import Data.ByteString.Internal (c2w, w2c)
 import qualified Data.Char as C
 import qualified Data.Text as T
-import qualified Data.Text.Encoding as TE
-import Data.Word (Word8)
 import Dormouse.Uri.Encode
 import Dormouse.Uri.RFC3986
 import Hedgehog

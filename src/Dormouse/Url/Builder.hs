@@ -31,7 +31,9 @@ import Dormouse.Url.Types
     HttpUrl (UrlComponents { .. }) -> HttpUrl $ UrlComponents { urlQuery = Just $ foldl' folder "" $ unQueryBuilder b  , .. }
     HttpsUrl (UrlComponents { .. }) -> HttpsUrl $ UrlComponents { urlQuery = Just $ foldl' folder "" $ unQueryBuilder b  , .. }
   where 
+    folder "" (QueryFlag val)       = Query $ val
     folder "" (QueryParam key val)  = Query $ key <> "=" <> val
+    folder acc (QueryFlag val)      = Query $ unQuery acc <> "&" <> val
     folder acc (QueryParam key val) = Query $ unQuery acc <> "&" <> key <> "=" <> val
 
 infixl 8 ?

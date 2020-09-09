@@ -18,24 +18,12 @@ module Dormouse.Url
   , IsUrl(..)
   ) where
 
-import Control.Exception.Safe (MonadThrow, throw, Exception(..))
+import Control.Exception.Safe (MonadThrow, throw)
 import qualified Data.ByteString as SB
-import Data.Text (Text, pack)
-import Data.Typeable (cast)
-import Dormouse.Types (SomeDormouseException(..))
+import qualified Data.Text as T
+import Dormouse.Exception (UrlException(..))
 import Dormouse.Uri
 import Dormouse.Url.Types
-
-data UrlException = UrlException  { urlExceptionMessage :: Text }
-
-instance Show (UrlException) where
-  show (UrlException { urlExceptionMessage = message }) = "Failed to parse uri: " <> show message
-
-instance Exception (UrlException) where
-  toException    = toException . SomeDormouseException
-  fromException x = do
-    SomeDormouseException a <- fromException x
-    cast a
 
 -- | Ensure that the supplied Url uses the _http_ scheme, throwing a 'UrlException' in @m@ if this is not the case
 ensureHttp :: MonadThrow m => AnyUrl -> m (Url "http")
@@ -54,7 +42,7 @@ ensureUrl (AbsoluteUri AbsUri {uriScheme = scheme, uriAuthority = maybeAuthority
   case unScheme scheme of
     "http"  -> return $ AnyUrl $ HttpUrl UrlComponents { urlAuthority = authority, urlPath = path, urlQuery = query, urlFragment = fragment }
     "https" -> return $ AnyUrl $ HttpsUrl UrlComponents { urlAuthority = authority, urlPath = path, urlQuery = query, urlFragment = fragment }
-    s       -> throw $ UrlException ("Supplied Url had a scheme of " <> pack (show s) <> " which was not http or https.")
+    s       -> throw $ UrlException ("Supplied Url had a scheme of " <> T.pack (show s) <> " which was not http or https.")
 ensureUrl (RelativeUri _) = throw $ UrlException ("Supplied Uri was a relative Uri - it must provide a scheme and authority to be considered a valid url")
 
 -- | Parse an ascii 'ByteString' as a url, throwing a 'UriException' in @m@ if this fails

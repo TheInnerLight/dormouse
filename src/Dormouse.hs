@@ -37,13 +37,19 @@ module Dormouse
   , HasContentType(..)
   , EmptyPayload(..)
   , HttpPayload(..)
+  , SomeDormouseException(..)
   , DecodingException(..)
+  , MediaTypeException(..)
+  , UnexpectedStatusCode(..)
+  , UriException(..)
+  , UrlException(..)
   , JsonPayload
   , UrlFormPayload
   , RequestPayload(..)
   , json
   , urlForm
   , noPayload
+  , html
   , ensureHttp
   , ensureHttps
   , parseUri
@@ -65,8 +71,9 @@ import Control.Monad.Reader
 import qualified Data.Map.Strict as Map
 import qualified Data.ByteString as B
 import Data.Proxy
-import Dormouse.Data
 import Dormouse.Class
+import Dormouse.Data
+import Dormouse.Exception
 import Dormouse.Headers
 import Dormouse.Payload
 import Dormouse.Methods

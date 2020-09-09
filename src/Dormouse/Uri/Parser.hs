@@ -55,9 +55,9 @@ pUnreserved = satisfy isUnreserved
 pSizedHexadecimal :: (Integral a, Bits a) => Int -> Parser a
 pSizedHexadecimal n = do
     bytes <- A.take n
-    if B.all isHexDigit bytes then return $ B.foldl' step 0 $ bytes else fail "pSizedHexadecimal"
+    if B.all isHexDigit' bytes then return $ B.foldl' step 0 $ bytes else fail "pSizedHexadecimal"
   where 
-    isHexDigit w = (w >= 48 && w <= 57) ||  (w >= 97 && w <= 102) ||(w >= 65 && w <= 70)
+    isHexDigit' w = (w >= 48 && w <= 57) ||  (w >= 97 && w <= 102) ||(w >= 65 && w <= 70)
     step a w | w >= 48 && w <= 57  = (a `shiftL` 4) .|. fromIntegral (w - 48)
              | w >= 97             = (a `shiftL` 4) .|. fromIntegral (w - 87)
              | otherwise           = (a `shiftL` 4) .|. fromIntegral (w - 55)

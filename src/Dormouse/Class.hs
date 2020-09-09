@@ -7,12 +7,14 @@ module Dormouse.Class
   , DormouseConfig(..)
   ) where
 
-import Data.Word (Word8)
-import Dormouse.Payload
-import Dormouse.Types
-import Network.HTTP.Client (Manager)
-import Streamly
-import Streamly.Memory.Array (Array)
+import qualified Data.ByteString  as SB
+import Data.Word ( Word8 )
+import Dormouse.Headers ( HeaderName )
+import Dormouse.Payload ( HttpPayload, RequestPayload )
+import Dormouse.Types ( HttpRequest, HttpResponse )
+import Network.HTTP.Client ( Manager )
+import Streamly ( SerialT )
+import qualified Data.Map.Strict as Map
 
 -- | The configuration options required to run Dormouse
 data DormouseConfig = DormouseConfig { clientManager :: Manager }
@@ -27,4 +29,4 @@ instance HasDormouseConfig DormouseConfig where
 -- | MonadDormouse describes the capability to send HTTP requests and receive an HTTP response
 class Monad m => MonadDormouse m where
   -- | Sends a supplied HTTP request and retrieves a response within the supplied monad @m@
-  send :: (HttpPayload contentTag, HttpPayload acceptTag) => HttpRequest scheme method a contentTag acceptTag -> (a -> RequestPayload) -> (SerialT IO (Array Word8) -> IO b) -> m (HttpResponse b)
+  send :: (HttpPayload contentTag, HttpPayload acceptTag) => HttpRequest scheme method a contentTag acceptTag -> (a -> RequestPayload) -> (Map.Map HeaderName SB.ByteString -> SerialT IO Word8 -> IO b) -> m (HttpResponse b)

@@ -39,6 +39,6 @@ postmanEchoPostReq = accept json $ post postmanEchoPostUrl
 
 sendPostmanEchoGetReq :: MonadDormouse m => m ()
 sendPostmanEchoGetReq = do
-  (resp :: HttpResponse ()) <- expect postmanEchoGetReq'
+  (_ :: HttpResponse ()) <- expect postmanEchoGetReq'
   return()
 

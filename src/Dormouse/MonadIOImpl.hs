@@ -9,12 +9,15 @@ module Dormouse.MonadIOImpl
 import Control.Exception.Safe (MonadThrow, throw)
 import Control.Monad.IO.Class
 import Control.Monad.Reader
+import Data.Function ((&))
 import Data.IORef
 import qualified Data.Map.Strict as Map
 import Data.Text.Encoding (encodeUtf8)
 import Data.Word (Word8)
 import Data.ByteString as B
 import Dormouse.Class
+import Dormouse.Exception (UnexpectedStatusCode(..))
+import Dormouse.Headers
 import Dormouse.Methods
 import Dormouse.Payload
 import Dormouse.Status
@@ -28,10 +31,11 @@ import qualified Network.HTTP.Types.Status as NC
 import Streamly
 import qualified Streamly.Prelude as S
 import qualified Streamly.External.ByteString as SEB
-import Streamly.Internal.Memory.Array.Types (Array(..))
+import qualified Streamly.Internal.Memory.ArrayStream as SIMA
 
-givesPopper :: SerialT IO (Array Word8) -> C.GivesPopper ()
-givesPopper initialStream k = do
+givesPopper :: SerialT IO (Word8) -> C.GivesPopper ()
+givesPopper rawStream k = do
+  let initialStream = SIMA.arraysOf 32768 rawStream
   streamState <- newIORef initialStream
   let popper = do
         stream <- readIORef streamState
@@ -66,22 +70,28 @@ genClientRequestFromUrlComponents url =
     , C.queryString = encodeQuery queryText
     }
 
-sendHttp :: (HasDormouseConfig env, MonadReader env m, MonadIO m, MonadThrow m) => HttpRequest url method a contentTag acceptTag -> (a -> RequestPayload) -> (SerialT IO (Array Word8) -> IO b) -> m (HttpResponse b)
-sendHttp HttpRequest { requestMethod = method, requestUri = url, requestBody = body, requestHeaders = headers} requestWriter responseBuilder = do
+responseStream :: IsStream t => C.Response C.BodyReader -> t IO Word8
+responseStream resp = 
+    S.repeatM (C.brRead $ C.responseBody resp)
+  & S.takeWhile (not . B.null)
+  & S.concatMap (S.unfold SEB.read)
+
+sendHttp :: (HasDormouseConfig env, MonadReader env m, MonadIO m, MonadThrow m) => HttpRequest url method a contentTag acceptTag -> (a -> RequestPayload) -> (Map.Map HeaderName B.ByteString -> SerialT IO Word8 -> IO b) -> m (HttpResponse b)
+sendHttp HttpRequest { requestMethod = method, requestUri = url, requestBody = reqBody, requestHeaders = reqHeaders} requestWriter responseBuilder = do
   manager <- fmap clientManager $ reader (getDormouseConfig)
   let initialRequest = genClientRequestFromUrlComponents $ asAnyUrl url
-  let requestPayload = requestWriter body
-  let request = initialRequest { C.method = methodAsByteString method, C.requestBody = translateRequestBody requestPayload, C.requestHeaders = Map.toList headers }
+  let requestPayload = requestWriter reqBody
+  let request = initialRequest { C.method = methodAsByteString method, C.requestBody = translateRequestBody requestPayload, C.requestHeaders = Map.toList reqHeaders }
   response <- liftIO $ C.withResponse request manager (\resp -> do
-      let serialBodyStream :: SerialT (IO) (Array Word8) = S.map (\(b,_) -> b) $ S.takeWhile (\(_, l) -> l > 0 ) $ S.map (\bs -> (SEB.toArray bs, B.length bs))  $ S.repeatM (C.brRead $ C.responseBody resp )
-      blug <- responseBuilder serialBodyStream
-      return $ resp { C.responseBody = blug }
+      let respHeaders = Map.fromList $ C.responseHeaders resp
+      let statusCode = NC.statusCode . C.responseStatus $ resp
+      respBody <- responseBuilder respHeaders . responseStream $ resp
+      return $ HttpResponse 
+        { responseStatusCode = statusCode
+        , responseHeaders = respHeaders
+        , responseBody = respBody
+        }
       ) 
-  let resp = HttpResponse 
-       { responseStatusCode = NC.statusCode . C.responseStatus $ response
-       , responseHeaders = Map.fromList $ C.responseHeaders response
-       , responseBody = C.responseBody response
-       }
-  case responseStatusCode resp of
-    Successful -> return resp
-    _          -> throw $ UnexpectedStatusCode (responseStatusCode resp)
+  case responseStatusCode response of
+    Successful -> return response
+    _          -> throw $ UnexpectedStatusCode (responseStatusCode response)

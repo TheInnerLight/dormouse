@@ -54,6 +54,7 @@ library:
   exposed-modules:
     - Dormouse
     - Dormouse.Headers
+    - Dormouse.Headers.MediaType
     - Dormouse.MonadIOImpl
     - Dormouse.Status
     - Dormouse.Uri.RFC3986
