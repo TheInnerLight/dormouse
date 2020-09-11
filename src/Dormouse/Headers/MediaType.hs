@@ -3,13 +3,17 @@ module Dormouse.Headers.MediaType
   , ContentType(..)
   , MediaTypeException
   , parseMediaType
+  , mediaTypeAsByteString
+  , applicationJson
+  , applicationXWWWFormUrlEncoded
+  , textHtml
   ) where
 
 import Control.Exception.Safe (MonadThrow, throw)
 import Control.Applicative ((<|>))
 import qualified Data.ByteString as B
 import qualified Data.Attoparsec.ByteString.Char8 as A
-import Data.CaseInsensitive  (CI, mk)
+import Data.CaseInsensitive  (CI, mk, foldedCase)
 import Dormouse.Exception (MediaTypeException(..))
 import qualified Data.Char as C
 import qualified Data.Text as T
@@ -31,6 +35,50 @@ data ContentType
   | Multipart
   | Other (CI B.ByteString)
   deriving (Eq, Show)
+
+mediaTypeAsByteString :: MediaType -> B.ByteString
+mediaTypeAsByteString mediaType =
+  let mainTypeBs = foldedCase . mainTypeAsByteString $ mainType mediaType
+      subTypeBs = foldedCase $ subType mediaType
+      suffixesBs = fmap (\x -> "+" <> foldedCase x) $ suffixes mediaType
+      paramsBs = Map.foldlWithKey' (\acc k v -> acc <> "; " <> foldedCase k <> "=" <> v) "" $ parameters mediaType
+  in mainTypeBs <> "/" <> subTypeBs <> B.concat suffixesBs <> paramsBs
+  where 
+    mainTypeAsByteString Text        = "text"
+    mainTypeAsByteString Image       = "image"
+    mainTypeAsByteString Audio       = "audio"
+    mainTypeAsByteString Video       = "video"
+    mainTypeAsByteString Application = "application"
+    mainTypeAsByteString Multipart   = "multipart"
+    mainTypeAsByteString (Other x)   = x
+
+
+parseMediaType :: MonadThrow m => B.ByteString -> m MediaType
+parseMediaType bs = either (throw . MediaTypeException . T.pack) return $ A.parseOnly pMediaType bs
+
+applicationJson :: MediaType
+applicationJson = MediaType 
+  { mainType = Application
+  , subType = mk "json"
+  , suffixes = []
+  , parameters = Map.empty
+  }
+
+applicationXWWWFormUrlEncoded :: MediaType
+applicationXWWWFormUrlEncoded = MediaType 
+  { mainType = Application
+  , subType = mk "x-www-form-urlencoded"
+  , suffixes = []
+  , parameters = Map.empty
+  }
+
+textHtml :: MediaType
+textHtml = MediaType 
+  { mainType = Text
+  , subType = mk "html"
+  , suffixes = []
+  , parameters = Map.empty
+  }
 
 pContentType :: A.Parser ContentType
 pContentType = 
@@ -86,6 +134,4 @@ pParam = do
   value <- pTokens <|> pQuotedString
   return (mk attribute, value)
 
-parseMediaType :: MonadThrow m => B.ByteString -> m MediaType
-parseMediaType bs = either (throw . MediaTypeException . T.pack) (return) $ A.parseOnly pMediaType bs
 

@@ -33,8 +33,7 @@ module Dormouse
   , HttpMethod(..)
   , AllowedBody
   , methodAsByteString
-  , HasAcceptHeader(..)
-  , HasContentType(..)
+  , HasMediaType(..)
   , EmptyPayload(..)
   , HttpPayload(..)
   , SomeDormouseException(..)
@@ -58,7 +57,7 @@ module Dormouse
   , parseHttpsUrl
   , QueryBuilder
   , IsQueryVal(..)
-  , Uri(..)
+  , Uri
   , Url
   , AnyUrl(..)
   , IsUrl(..)
@@ -75,6 +74,7 @@ import Dormouse.Class
 import Dormouse.Data
 import Dormouse.Exception
 import Dormouse.Headers
+import Dormouse.Headers.MediaType
 import Dormouse.Payload
 import Dormouse.Methods
 import Dormouse.Types
@@ -83,8 +83,6 @@ import Dormouse.Url
 import qualified Dormouse.MonadIOImpl as IOImpl
 import qualified Network.HTTP.Client as C
 import qualified Network.HTTP.Client.TLS as TLS
-
-
 
 -- | Create an HTTP request with the supplied URI and supplied method, containing no body and no headers
 makeRequest :: (RequestPayloadConstraint EmptyPayload Empty, HttpPayload EmptyPayload, IsUrl url) => HttpMethod method -> url -> HttpRequest url method Empty EmptyPayload acceptTag
@@ -123,7 +121,7 @@ put = makeRequest PUT
 supplyBody :: (AllowedBody method b, HttpPayload contentTag) => Proxy contentTag -> b -> HttpRequest url method b' contentTag' acceptTag -> HttpRequest url method b contentTag acceptTag
 supplyBody prox b (HttpRequest { requestHeaders = headers, requestBody = _, ..}) =
   HttpRequest 
-    { requestHeaders = foldMap (\v -> Map.insert ("Content-Type" :: HeaderName) v headers) $ contentType prox
+    { requestHeaders = foldMap (\v -> Map.insert ("Content-Type" :: HeaderName) v headers) . fmap mediaTypeAsByteString $ mediaType prox
     , requestBody = b
     , ..
     }
@@ -134,7 +132,7 @@ supplyHeader (k, v) r = r { requestHeaders = Map.insert k v $ requestHeaders r }
 
 -- | Apply an accept header derived from the supplied tag proxy and add a type hint to the request, indicating how the response should be decodable
 accept :: (HttpPayload acceptTag) => Proxy acceptTag -> HttpRequest url method b' contentTag acceptTag -> HttpRequest url method b' contentTag acceptTag
-accept prox r = maybe r (\v -> supplyHeader ("Accept", v) r) $ acceptHeader prox 
+accept prox r = maybe r (\v -> supplyHeader ("Accept", v) r) . fmap mediaTypeAsByteString $ mediaType prox
 
 -- | Make the supplied HTTP request, expecting an HTTP response with body type `b' to be delivered in some 'MonadDormouse m'
 expect :: (RequestPayloadConstraint contentTag b, ResponsePayloadConstraint acceptTag b', MonadDormouse m, HttpPayload contentTag, HttpPayload acceptTag) => HttpRequest url method b contentTag acceptTag -> m (HttpResponse b')
@@ -146,7 +144,8 @@ expect r = expectAs (proxyOfReq r) r
 -- | Make the supplied HTTP request, expecting an HTTP response in the supplied format with body type `b' to be delivered in some 'MonadDormouse m'
 expectAs :: (RequestPayloadConstraint contentTag b, ResponsePayloadConstraint acceptTag b', MonadDormouse m, HttpPayload contentTag, HttpPayload acceptTag) => Proxy acceptTag -> HttpRequest url method b contentTag acceptTag -> m (HttpResponse b')
 expectAs tag r = do
-  resp <- send r (createRequestPayload (contentTypeProx r)) (extractResponsePayload tag)
+  let r' = serialiseRequest (contentTypeProx r) r
+  resp <- send r' $ deserialiseRequest tag
   return resp
   where 
     contentTypeProx :: HttpRequest url method b contentTag acceptTag -> Proxy contentTag

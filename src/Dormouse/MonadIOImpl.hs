@@ -17,7 +17,6 @@ import Data.Word (Word8)
 import Data.ByteString as B
 import Dormouse.Class
 import Dormouse.Exception (UnexpectedStatusCode(..))
-import Dormouse.Headers
 import Dormouse.Methods
 import Dormouse.Payload
 import Dormouse.Status
@@ -70,26 +69,24 @@ genClientRequestFromUrlComponents url =
     , C.queryString = encodeQuery queryText
     }
 
-responseStream :: IsStream t => C.Response C.BodyReader -> t IO Word8
+responseStream :: C.Response C.BodyReader -> SerialT IO Word8
 responseStream resp = 
     S.repeatM (C.brRead $ C.responseBody resp)
   & S.takeWhile (not . B.null)
   & S.concatMap (S.unfold SEB.read)
 
-sendHttp :: (HasDormouseConfig env, MonadReader env m, MonadIO m, MonadThrow m) => HttpRequest url method a contentTag acceptTag -> (a -> RequestPayload) -> (Map.Map HeaderName B.ByteString -> SerialT IO Word8 -> IO b) -> m (HttpResponse b)
-sendHttp HttpRequest { requestMethod = method, requestUri = url, requestBody = reqBody, requestHeaders = reqHeaders} requestWriter responseBuilder = do
+sendHttp :: (HasDormouseConfig env, MonadReader env m, MonadIO m, MonadThrow m) => HttpRequest url method RequestPayload contentTag acceptTag -> (HttpResponse (SerialT IO Word8) -> IO (HttpResponse b)) -> m (HttpResponse b)
+sendHttp HttpRequest { requestMethod = method, requestUri = url, requestBody = reqBody, requestHeaders = reqHeaders} deserialiseResp = do
   manager <- fmap clientManager $ reader (getDormouseConfig)
   let initialRequest = genClientRequestFromUrlComponents $ asAnyUrl url
-  let requestPayload = requestWriter reqBody
-  let request = initialRequest { C.method = methodAsByteString method, C.requestBody = translateRequestBody requestPayload, C.requestHeaders = Map.toList reqHeaders }
+  let request = initialRequest { C.method = methodAsByteString method, C.requestBody = translateRequestBody reqBody, C.requestHeaders = Map.toList reqHeaders }
   response <- liftIO $ C.withResponse request manager (\resp -> do
       let respHeaders = Map.fromList $ C.responseHeaders resp
       let statusCode = NC.statusCode . C.responseStatus $ resp
-      respBody <- responseBuilder respHeaders . responseStream $ resp
-      return $ HttpResponse 
+      deserialiseResp $ HttpResponse 
         { responseStatusCode = statusCode
         , responseHeaders = respHeaders
-        , responseBody = respBody
+        , responseBody = responseStream resp
         }
       ) 
   case responseStatusCode response of

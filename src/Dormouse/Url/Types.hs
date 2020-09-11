@@ -28,7 +28,7 @@ data UrlScheme
   = HttpScheme
   | HttpsScheme
 
--- | A 'Url' is defined here as an absolute URI in the _http_ or _https_.  Authority components are requried by the http/https
+-- | A 'Url' is defined here as an absolute URI in the @http@ or @https@ schemes.  Authority components are requried by the http / https
 -- Uri schemes.
 data Url (scheme :: Symbol) where
   HttpUrl  :: UrlComponents -> Url "http"
@@ -46,7 +46,7 @@ instance Lift (Url scheme) where
   lift (HttpUrl uc)  = [| HttpUrl uc |]
   lift (HttpsUrl uc) = [| HttpsUrl uc |]
 
--- | `AnyUrl` is a wrapper aroud `Url` which allows either _http_ or _https_ urls to be contained.
+-- | `AnyUrl` is a wrapper aroud `Url` which allows either @http@ or @https@ urls.
 data AnyUrl = forall scheme. AnyUrl (Url scheme)
 
 instance Eq AnyUrl where

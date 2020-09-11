@@ -57,6 +57,7 @@ library:
     - Dormouse.Headers.MediaType
     - Dormouse.MonadIOImpl
     - Dormouse.Status
+    - Dormouse.Test.Class
     - Dormouse.Uri.RFC3986
     - Dormouse.Url.Builder
     - Dormouse.Uri.QQ

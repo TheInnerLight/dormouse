@@ -8,7 +8,7 @@ import Dormouse
 import Data.Aeson.TH 
 import qualified Data.Text as T
 import GHC.Generics (Generic)
-import Dormouse.Url.QQ (https, http)
+import Dormouse.Url.QQ (https)
 import Web.FormUrlEncoded (ToForm(..), FromForm(..))
 
 data UserDetails = UserDetails 

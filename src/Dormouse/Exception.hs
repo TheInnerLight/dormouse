@@ -35,7 +35,7 @@ instance Exception (UnexpectedStatusCode) where
 data DecodingException = DecodingException { decodingExceptionMessage :: T.Text }
 
 instance Show (DecodingException) where
-  show (DecodingException { decodingExceptionMessage = msg }) = "Server returned unexpected status code: " <> T.unpack msg
+  show (DecodingException { decodingExceptionMessage = msg }) = "Decoding payload failed: " <> T.unpack msg
 
 instance Exception DecodingException
 
@@ -53,7 +53,7 @@ instance Exception (UriException) where
 data UrlException = UrlException  { urlExceptionMessage :: T.Text }
 
 instance Show (UrlException) where
-  show (UrlException { urlExceptionMessage = msg }) = "Failed to parse uri: " <> T.unpack msg
+  show (UrlException { urlExceptionMessage = msg }) = "Failed to parse url: " <> T.unpack msg
 
 instance Exception (UrlException) where
   toException     = toException . SomeDormouseException

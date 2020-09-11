@@ -12,7 +12,6 @@ import Data.Aeson.TH
 import GHC.Generics (Generic)
 import Dormouse.Url.QQ
 import Web.FormUrlEncoded (ToForm(..), FromForm(..))
-import Language.Haskell.TH
 
 data UserDetails = UserDetails 
   { name :: String
