@@ -3,15 +3,15 @@
 {-# LANGUAGE ViewPatterns #-}
 
 module Dormouse.Uri.QQSpec 
-  ( tests
+  ( spec
   ) where
 
 import Test.Hspec
 import Dormouse.Uri.QQ
 import Dormouse.Url.QQ
 
-tests :: IO()
-tests = hspec $ do
+spec :: Spec
+spec = do
   describe "http pattern" $ do
     it "pattern matches correctly against a matching uri" $ do
       let url' = [http|http://google.com|]

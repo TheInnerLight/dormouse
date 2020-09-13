@@ -94,7 +94,7 @@ pContentType =
     convertContentType x             = Other x
 
 pSubType :: A.Parser (CI B.ByteString)
-pSubType = fmap mk $ A.takeWhile1 isAsciiAlpha
+pSubType = fmap mk $ A.takeWhile1 isSubtypeChar
 
 pSuffix :: A.Parser (CI B.ByteString)
 pSuffix = fmap mk $ A.takeWhile1 isAsciiAlpha
@@ -120,6 +120,9 @@ isTokenChar c = (not $ isSpecial c) && (not $ C.isSpace c) && C.isAscii c && (no
 
 isQuotedChar :: Char -> Bool
 isQuotedChar c = C.isAscii c && (not $ C.isControl c)
+
+isSubtypeChar :: Char -> Bool
+isSubtypeChar c = isAsciiAlpha c || c == '-'
 
 pTokens :: A.Parser B.ByteString
 pTokens = A.takeWhile1 isTokenChar

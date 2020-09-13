@@ -2,7 +2,7 @@
 {-# LANGUAGE DataKinds #-}
 
 module Dormouse.UrlSpec
-  ( tests
+  ( spec
   ) where
 
 import Test.Hspec
@@ -11,8 +11,8 @@ import Dormouse.Url.QQ
 import Dormouse.MonadIOImpl
 import qualified Network.HTTP.Client as C
 
-tests :: IO()
-tests = hspec $ 
+spec :: Spec
+spec = do
   describe "parseURI" $ do
     it "generates a non-secure request for an http uri" $ do
       let anyUrl = asAnyUrl [http|http://google.com|]

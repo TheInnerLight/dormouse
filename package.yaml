@@ -77,7 +77,8 @@ tests:
     - -with-rtsopts=-N
     - -Wall
     dependencies:
-    - hspec >= 2.0.0
+    - hspec >= 2.0.0 && < 3
+    - hspec-discover >= 2.0.0 && < 3
     - hedgehog >= 1.0.1 && < 2
     - hspec-hedgehog >= 0.0.1.2 && < 0.1
     - scientific >= 0.3.6.2 && < 0.4

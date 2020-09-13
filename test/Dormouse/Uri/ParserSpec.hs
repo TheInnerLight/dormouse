@@ -6,7 +6,7 @@
 {-# LANGUAGE ViewPatterns #-}
 
 module Dormouse.Uri.ParserSpec
-  ( tests
+  ( spec
   ) where
 
 import Test.Hspec
@@ -139,8 +139,8 @@ percentDecode (p :< x :< y :< xs)
   | p == c2w '%' = B.cons (fromIntegral $ C.digitToInt (w2c x) * 16 + C.digitToInt (w2c y)) (percentDecode xs)
   | otherwise    = B.cons p $ percentDecode (B.cons x $ B.cons y $ xs)
 
-tests :: IO()
-tests = hspec $ do
+spec :: Spec
+spec = do
   describe "pScheme" $ do
     it "returns the matching scheme for all valid schemes" $ hedgehog $ do
       schemeText <- forAll genValidScheme

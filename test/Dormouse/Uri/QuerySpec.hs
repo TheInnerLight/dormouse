@@ -4,7 +4,7 @@
 {-# LANGUAGE GADTs #-}
 
 module Dormouse.Uri.QuerySpec
-  ( tests
+  ( spec
   ) where
 
 import qualified Data.Text as T
@@ -30,8 +30,8 @@ uriLookingUpTheEnterprise = HttpUrl $ UrlComponents
   , urlFragment = Nothing
   }
 
-tests :: IO()
-tests = hspec $
+spec :: Spec
+spec = do
   describe "build query" $ do
     it "generates correct uri using the URI builder syntax with text components" $ do
       let actualUri = [http|http://enterprise.starfleet.com|] </> "destruct" ? ("code1" =: ("11a" :: T.Text)) & ("code2" =: ("11a2b" :: T.Text)) & ("code3" =: ("1b2b3":: T.Text)) & ("code4" =: ("000destruct-0" :: T.Text))

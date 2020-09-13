@@ -4,7 +4,7 @@ cabal-version: 1.18
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c42dc799b382f81c7c5f764856ab4788b1f8b44e502b9446cd85799d04ca7a93
+-- hash: 94fbe26e8c4d65056c1439cbf5112db35abf79ff0ca5edeeaf733f5ef018b75d
 
 name:           dormouse
 version:        0.1.0.0
@@ -118,6 +118,7 @@ test-suite dormouse-test
       Dormouse.Url.Types
       Dormouse.Generators.Json
       Dormouse.Generators.UriComponents
+      Dormouse.Headers.MediaTypeSpec
       Dormouse.StatusSpec
       Dormouse.Uri.ParserSpec
       Dormouse.Uri.QQSpec
@@ -138,7 +139,8 @@ test-suite dormouse-test
     , case-insensitive >=1.2.1.0 && <2.0.0
     , containers >=0.6.2.1 && <0.7
     , hedgehog >=1.0.1 && <2
-    , hspec >=2.0.0
+    , hspec >=2.0.0 && <3
+    , hspec-discover >=2.0.0 && <3
     , hspec-hedgehog >=0.0.1.2 && <0.1
     , http-api-data >=0.4.1.1 && <0.5
     , http-client >=0.6.4.1 && <0.7.0
