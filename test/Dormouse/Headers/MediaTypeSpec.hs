@@ -21,9 +21,9 @@ spec = do
       mediaType `shouldBe` textHtml
   describe "mediaTypeAsByteString" $ do
     it "creates correct ByteString for applicationJson" $ do
-      mediaTypeAsByteString applicationJson `shouldBe` "application/json"
+      encodeMediaType applicationJson `shouldBe` "application/json"
     it "creates correct ByteString for applicationXWWWFormUrlEncoded" $ do
-      mediaTypeAsByteString applicationXWWWFormUrlEncoded `shouldBe` "application/x-www-form-urlencoded"
+      encodeMediaType applicationXWWWFormUrlEncoded `shouldBe` "application/x-www-form-urlencoded"
     it "creates correct ByteString for textHtml" $ do
-      mediaTypeAsByteString textHtml `shouldBe` "text/html"
+      encodeMediaType textHtml `shouldBe` "text/html"
   

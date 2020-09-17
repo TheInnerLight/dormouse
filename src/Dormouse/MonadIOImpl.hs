@@ -44,7 +44,7 @@ givesPopper rawStream k = do
           Nothing               -> return B.empty
   k popper
 
-translateRequestBody :: RequestPayload -> C.RequestBody
+translateRequestBody :: RawRequestPayload -> C.RequestBody
 translateRequestBody (DefinedContentLength size stream) = C.RequestBodyStream (fromIntegral size) (givesPopper stream)
 translateRequestBody (ChunkedTransfer stream)           = C.RequestBodyStreamChunked (givesPopper stream)
 
@@ -75,7 +75,7 @@ responseStream resp =
   & S.takeWhile (not . B.null)
   & S.concatMap (S.unfold SEB.read)
 
-sendHttp :: (HasDormouseConfig env, MonadReader env m, MonadIO m, MonadThrow m) => HttpRequest url method RequestPayload contentTag acceptTag -> (HttpResponse (SerialT IO Word8) -> IO (HttpResponse b)) -> m (HttpResponse b)
+sendHttp :: (HasDormouseConfig env, MonadReader env m, MonadIO m, MonadThrow m) => HttpRequest url method RawRequestPayload contentTag acceptTag -> (HttpResponse (SerialT IO Word8) -> IO (HttpResponse b)) -> m (HttpResponse b)
 sendHttp HttpRequest { requestMethod = method, requestUri = url, requestBody = reqBody, requestHeaders = reqHeaders} deserialiseResp = do
   manager <- fmap clientManager $ reader (getDormouseConfig)
   let initialRequest = genClientRequestFromUrlComponents $ asAnyUrl url

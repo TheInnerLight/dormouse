@@ -3,7 +3,7 @@ module Dormouse.Headers.MediaType
   , ContentType(..)
   , MediaTypeException
   , parseMediaType
-  , mediaTypeAsByteString
+  , encodeMediaType
   , applicationJson
   , applicationXWWWFormUrlEncoded
   , textHtml
@@ -19,11 +19,12 @@ import qualified Data.Char as C
 import qualified Data.Text as T
 import qualified Data.Map.Strict as Map
 
+-- | A Media Type indicates the format of content which can be transferred over the wire
 data MediaType = MediaType 
-  { mainType :: ContentType
-  , subType :: CI B.ByteString
-  , suffixes :: [CI B.ByteString]
-  , parameters :: Map.Map (CI B.ByteString) B.ByteString
+  { mainType :: ContentType -- ^ The general category of data associated with this Media Type
+  , subType :: CI B.ByteString -- ^ The subtype indicates the exact subtype of data associated with this Media Type
+  , suffixes :: [CI B.ByteString] -- ^ The suffixes specify additional information on the structure of this Media Type
+  , parameters :: Map.Map (CI B.ByteString) B.ByteString -- ^ Parameters serve to modify the content subtype specifying additional information, e.g. the @charset@
   } deriving (Eq, Show)
 
 data ContentType
@@ -36,8 +37,9 @@ data ContentType
   | Other (CI B.ByteString)
   deriving (Eq, Show)
 
-mediaTypeAsByteString :: MediaType -> B.ByteString
-mediaTypeAsByteString mediaType =
+-- | Encode a Media Type as an ASCII ByteString
+encodeMediaType :: MediaType -> B.ByteString
+encodeMediaType mediaType =
   let mainTypeBs = foldedCase . mainTypeAsByteString $ mainType mediaType
       subTypeBs = foldedCase $ subType mediaType
       suffixesBs = fmap (\x -> "+" <> foldedCase x) $ suffixes mediaType
@@ -52,10 +54,11 @@ mediaTypeAsByteString mediaType =
     mainTypeAsByteString Multipart   = "multipart"
     mainTypeAsByteString (Other x)   = x
 
-
+-- | Parse a Media Type from an ASCII ByteString
 parseMediaType :: MonadThrow m => B.ByteString -> m MediaType
 parseMediaType bs = either (throw . MediaTypeException . T.pack) return $ A.parseOnly pMediaType bs
 
+-- | The @application/json@ Media Type
 applicationJson :: MediaType
 applicationJson = MediaType 
   { mainType = Application
@@ -64,6 +67,7 @@ applicationJson = MediaType
   , parameters = Map.empty
   }
 
+-- | The @application/x-www-form-urlencoded@ Media Type
 applicationXWWWFormUrlEncoded :: MediaType
 applicationXWWWFormUrlEncoded = MediaType 
   { mainType = Application
@@ -72,6 +76,7 @@ applicationXWWWFormUrlEncoded = MediaType
   , parameters = Map.empty
   }
 
+-- | The @text/html@ Media Type
 textHtml :: MediaType
 textHtml = MediaType 
   { mainType = Text
@@ -122,7 +127,7 @@ isQuotedChar :: Char -> Bool
 isQuotedChar c = C.isAscii c && (not $ C.isControl c)
 
 isSubtypeChar :: Char -> Bool
-isSubtypeChar c = isAsciiAlpha c || c == '-'
+isSubtypeChar c = (isTokenChar c) && (c /= '+')
 
 pTokens :: A.Parser B.ByteString
 pTokens = A.takeWhile1 isTokenChar

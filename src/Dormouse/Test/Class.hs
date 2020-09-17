@@ -20,7 +20,7 @@ import qualified Data.ByteString  as SB
 import qualified Data.ByteString.Lazy  as LB
 import Data.Word ( Word8 )
 import Dormouse.Class
-import Dormouse.Payload ( RequestPayload(..) )
+import Dormouse.Payload ( RawRequestPayload(..) )
 import Dormouse.Types ( HttpRequest(..), HttpResponse(..) )
 import Streamly ( SerialT )
 import qualified Streamly.Prelude as S
@@ -49,7 +49,7 @@ instance (Monad m, MonadIO m, MonadDormouseTest m) => MonadDormouse m where
     let respStream = S.unfold SEBL.read . LB.fromStrict $ responseBody respBs
     liftIO $ deserialiseResp $ respBs { responseBody = respStream }
     where 
-      extricateRequestStream :: RequestPayload -> SerialT IO Word8
+      extricateRequestStream :: RawRequestPayload -> SerialT IO Word8
       extricateRequestStream (DefinedContentLength _ s) = s
       extricateRequestStream (ChunkedTransfer s) = s
 
