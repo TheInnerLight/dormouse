@@ -3,7 +3,7 @@
 module Dormouse.Exception 
   ( SomeDormouseException(..)
   , DecodingException(..)
-  , UnexpectedStatusCode(..)
+  , UnexpectedStatusCodeException(..)
   , UriException(..)
   , UrlException(..)
   , MediaTypeException(..)
@@ -21,17 +21,19 @@ instance Show SomeDormouseException where
 
 instance Exception SomeDormouseException
 
-data UnexpectedStatusCode = UnexpectedStatusCode { uscStatusCode :: Int }
+-- | 'UnexpectedStatusCodeException' is used to indicate that the remote server returned an unexpected status code value, for instance an unsuccessful (non-2XX) status code.
+data UnexpectedStatusCodeException = UnexpectedStatusCodeException { uscStatusCode :: Int }
 
-instance Show (UnexpectedStatusCode) where
-  show (UnexpectedStatusCode { uscStatusCode = statusCode }) = "Server returned unexpected status code: " <> show statusCode
+instance Show (UnexpectedStatusCodeException) where
+  show (UnexpectedStatusCodeException { uscStatusCode = statusCode }) = "Server returned unexpected status code: " <> show statusCode
 
-instance Exception (UnexpectedStatusCode) where
+instance Exception (UnexpectedStatusCodeException) where
   toException     = toException . SomeDormouseException
   fromException x = do
     SomeDormouseException a <- fromException x
     cast a
 
+-- | 'DecodingException' is used to when something has gone wrong decoding an http response into the expected representation, e.g. json was expected but the response json was invalid.
 data DecodingException = DecodingException { decodingExceptionMessage :: T.Text }
 
 instance Show (DecodingException) where
@@ -39,6 +41,7 @@ instance Show (DecodingException) where
 
 instance Exception DecodingException
 
+-- | 'UriException' is used to indicate an error parsing a URI
 data UriException = UriException  { uriExceptionMessage :: T.Text }
 
 instance Show (UriException) where
@@ -50,6 +53,7 @@ instance Exception (UriException) where
     SomeDormouseException a <- fromException x
     cast a
 
+-- | 'UrlException' is used to indicate an error in transforming a valid URI into a URL, e.g. the URI refers to a different schema such as @file@
 data UrlException = UrlException  { urlExceptionMessage :: T.Text }
 
 instance Show (UrlException) where
@@ -61,6 +65,7 @@ instance Exception (UrlException) where
     SomeDormouseException a <- fromException x
     cast a
 
+-- | 'MediaTypeException' is used to indicate an error parsing a MediaType header such as "Content-Type" into a valid 'MediaType'
 data MediaTypeException = MediaTypeException  { mediaTypeExceptionMessage :: T.Text }
 
 instance Show (MediaTypeException) where

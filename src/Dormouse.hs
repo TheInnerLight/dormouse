@@ -8,9 +8,10 @@
 --
 --  For a comprehensive tutorial, please see: <https://github.com/TheInnerLight/dormouse/blob/master/README.md>
 module Dormouse
-  ( module Dormouse.Types
-  , DormouseT
-  , Dormouse
+  ( -- * Request / Response Types
+    HttpRequest(..)
+  , HttpResponse(..)
+  -- * Request building
   , delete
   , get
   , Dormouse.head
@@ -21,48 +22,61 @@ module Dormouse
   , accept
   , expectAs
   , expect
+  -- * Dormouse Monad and Transformer
+  , DormouseT
+  , Dormouse
   , runDormouseT
   , runDormouse
+  -- * Dormouse Class
+  , MonadDormouse(..)
+  -- * Dormouse Config
   , C.newManager
   , TLS.tlsManagerSettings
-  , MonadDormouse(..)
   , HasDormouseConfig(..)
   , DormouseConfig(..)
+  -- * Headers
   , HeaderName
   , HasHeaders(..)
+  , HasMediaType(..)
+  -- * Methods
   , HttpMethod(..)
   , AllowedBody
   , methodAsByteString
-  , HasMediaType(..)
-  , EmptyPayload(..)
+  -- * Payloads
+  , RawRequestPayload(..)
   , RequestPayload(..)
   , ResponsePayload(..)
-  , SomeDormouseException(..)
-  , DecodingException(..)
-  , MediaTypeException(..)
-  , UnexpectedStatusCode(..)
-  , UriException(..)
-  , UrlException(..)
+  , EmptyPayload
+  , HtmlPayload
   , JsonPayload
   , UrlFormPayload
-  , RawRequestPayload(..)
+  , Empty
   , json
   , urlForm
   , noPayload
   , html
-  , ensureHttp
-  , ensureHttps
-  , parseUri
-  , parseUrl
-  , parseHttpUrl
-  , parseHttpsUrl
-  , QueryBuilder
-  , IsQueryVal(..)
+  -- * Exceptions
+  , SomeDormouseException(..)
+  , DecodingException(..)
+  , MediaTypeException(..)
+  , UnexpectedStatusCodeException(..)
+  , UriException(..)
+  , UrlException(..)
+  -- * Uri
   , Uri
+  , parseUri
+  -- * Url
   , Url
   , AnyUrl(..)
   , IsUrl(..)
-  , Empty
+  , ensureHttp
+  , ensureHttps
+  , parseUrl
+  , parseHttpUrl
+  , parseHttpsUrl
+  -- * Query Builder
+  , QueryBuilder
+  , IsQueryVal(..)
   ) where
 
 import Control.Exception.Safe (MonadThrow)
@@ -136,14 +150,14 @@ accept :: (ResponsePayload acceptTag) => Proxy acceptTag -> HttpRequest url meth
 accept prox r = maybe r (\v -> supplyHeader ("Accept", v) r) . fmap encodeMediaType $ mediaType prox
 
 -- | Make the supplied HTTP request, expecting an HTTP response with body type `b' to be delivered in some 'MonadDormouse m'
-expect :: (RequestPayloadConstraint contentTag b, ResponsePayloadConstraint acceptTag b', MonadDormouse m, RequestPayload contentTag, ResponsePayload acceptTag) => HttpRequest url method b contentTag acceptTag -> m (HttpResponse b')
+expect :: (RequestPayloadConstraint contentTag b, ResponsePayloadConstraint acceptTag b', MonadDormouse m, RequestPayload contentTag, ResponsePayload acceptTag, IsUrl url) => HttpRequest url method b contentTag acceptTag -> m (HttpResponse b')
 expect r = expectAs (proxyOfReq r) r
   where 
     proxyOfReq :: HttpRequest url method b contentTag acceptTag -> Proxy acceptTag
     proxyOfReq _ = Proxy
 
 -- | Make the supplied HTTP request, expecting an HTTP response in the supplied format with body type `b' to be delivered in some 'MonadDormouse m'
-expectAs :: (RequestPayloadConstraint contentTag b, ResponsePayloadConstraint acceptTag b', MonadDormouse m, RequestPayload contentTag, ResponsePayload acceptTag) => Proxy acceptTag -> HttpRequest url method b contentTag acceptTag -> m (HttpResponse b')
+expectAs :: (RequestPayloadConstraint contentTag b, ResponsePayloadConstraint acceptTag b', MonadDormouse m, RequestPayload contentTag, ResponsePayload acceptTag, IsUrl url) => Proxy acceptTag -> HttpRequest url method b contentTag acceptTag -> m (HttpResponse b')
 expectAs tag r = do
   let r' = serialiseRequest (contentTypeProx r) r
   resp <- send r' $ deserialiseRequest tag

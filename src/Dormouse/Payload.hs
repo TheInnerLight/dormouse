@@ -6,11 +6,12 @@
 
 module Dormouse.Payload
   ( HasMediaType(..)
-  , EmptyPayload(..)
+  , EmptyPayload
   , RequestPayload(..)
   , ResponsePayload(..)
   , JsonPayload
   , UrlFormPayload
+  , HtmlPayload
   , RawRequestPayload(..)
   , json
   , urlForm

@@ -7,6 +7,7 @@ module Dormouse.Class
 import Data.Word ( Word8 )
 import Dormouse.Payload ( RawRequestPayload(..) )
 import Dormouse.Types ( HttpRequest(..), HttpResponse(..) )
+import Dormouse.Url.Class ( IsUrl )
 import Network.HTTP.Client ( Manager )
 import Streamly ( SerialT )
 
@@ -20,7 +21,7 @@ class HasDormouseConfig a where
 instance HasDormouseConfig DormouseConfig where
   getDormouseConfig = id
 
--- -- | MonadDormouse describes the capability to send HTTP requests and receive an HTTP response
+-- | MonadDormouse describes the capability to send HTTP requests and receive an HTTP response
 class Monad m => MonadDormouse m where
   -- | Sends a supplied HTTP request and retrieves a response within the supplied monad @m@
-  send :: HttpRequest url method RawRequestPayload contentTag acceptTag -> (HttpResponse (SerialT IO Word8) -> IO (HttpResponse b)) -> m (HttpResponse b)
+  send :: IsUrl url => HttpRequest url method RawRequestPayload contentTag acceptTag -> (HttpResponse (SerialT IO Word8) -> IO (HttpResponse b)) -> m (HttpResponse b)

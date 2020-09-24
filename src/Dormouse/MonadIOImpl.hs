@@ -16,7 +16,7 @@ import Data.Text.Encoding (encodeUtf8)
 import Data.Word (Word8)
 import Data.ByteString as B
 import Dormouse.Class
-import Dormouse.Exception (UnexpectedStatusCode(..))
+import Dormouse.Exception (UnexpectedStatusCodeException(..))
 import Dormouse.Methods
 import Dormouse.Payload
 import Dormouse.Status
@@ -75,7 +75,7 @@ responseStream resp =
   & S.takeWhile (not . B.null)
   & S.concatMap (S.unfold SEB.read)
 
-sendHttp :: (HasDormouseConfig env, MonadReader env m, MonadIO m, MonadThrow m) => HttpRequest url method RawRequestPayload contentTag acceptTag -> (HttpResponse (SerialT IO Word8) -> IO (HttpResponse b)) -> m (HttpResponse b)
+sendHttp :: (HasDormouseConfig env, MonadReader env m, MonadIO m, MonadThrow m, IsUrl url) => HttpRequest url method RawRequestPayload contentTag acceptTag -> (HttpResponse (SerialT IO Word8) -> IO (HttpResponse b)) -> m (HttpResponse b)
 sendHttp HttpRequest { requestMethod = method, requestUri = url, requestBody = reqBody, requestHeaders = reqHeaders} deserialiseResp = do
   manager <- fmap clientManager $ reader (getDormouseConfig)
   let initialRequest = genClientRequestFromUrlComponents $ asAnyUrl url
@@ -91,4 +91,4 @@ sendHttp HttpRequest { requestMethod = method, requestUri = url, requestBody = r
       ) 
   case responseStatusCode response of
     Successful -> return response
-    _          -> throw $ UnexpectedStatusCode (responseStatusCode response)
+    _          -> throw $ UnexpectedStatusCodeException (responseStatusCode response)
