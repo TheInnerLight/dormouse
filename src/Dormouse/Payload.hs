@@ -1,8 +1,4 @@
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE InstanceSigs #-}
-{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module Dormouse.Payload
   ( HasMediaType(..)
@@ -53,34 +49,28 @@ data RawRequestPayload
   -- | ChunkedTransfer represents a payload with indertiminate length, to be sent using chunked transfer encoding
   | ChunkedTransfer (SerialT IO Word8)  
 
--- | RequestPayload relates a type of content to its byte stream representation and the constraints required to encode it
-class HasMediaType tag => RequestPayload tag where
-  -- | @RequestPayloadConstraint@ describes the constraints on @b@ such that it can be encoded as the low level representation
-  type RequestPayloadConstraint tag b :: Constraint
+-- | RequestPayload relates a type of content and a payload tag used to describe that type to its byte stream representation and the constraints required to encode it
+class HasMediaType tag => RequestPayload body tag where
   -- | Generates a the byte stream representation from the supplied content
-  serialiseRequest :: RequestPayloadConstraint tag b => Proxy tag -> HttpRequest url method b acceptTag contentTag -> HttpRequest url method RawRequestPayload acceptTag contentTag
+  serialiseRequest :: Proxy tag -> HttpRequest url method body acceptTag contentTag -> HttpRequest url method RawRequestPayload acceptTag contentTag
 
--- | ResponsePayload relates a type of content to its byte stream representation and the constraints required to decode it
-class HasMediaType tag => ResponsePayload tag where
-  -- | @ResponsePayloadConstraint@ describes the constraints on @b@ such that it can be decoded from the low level representation.
-  type ResponsePayloadConstraint tag b :: Constraint
+-- | ResponsePayload relates a type of content and a payload tag used to describe that type  to its byte stream representation and the constraints required to decode it
+class HasMediaType tag => ResponsePayload body tag where
   -- | Decodes the high level representation from the supplied byte stream
-  deserialiseRequest :: (ResponsePayloadConstraint tag b) => Proxy tag -> HttpResponse (SerialT IO Word8) -> IO (HttpResponse b)
+  deserialiseRequest :: Proxy tag -> HttpResponse (SerialT IO Word8) -> IO (HttpResponse body)
 
 data JsonPayload = JsonPayload
 
 instance HasMediaType JsonPayload where
   mediaType _ = Just applicationJson
 
-instance RequestPayload JsonPayload where
-  type RequestPayloadConstraint JsonPayload b = ToJSON b
+instance (ToJSON body) => RequestPayload body JsonPayload where
   serialiseRequest _ r = 
     let b = requestBody r
         lbs = encode b
     in r { requestBody = DefinedContentLength (fromIntegral . LB.length $ lbs) (S.unfold SEBL.read lbs) }
 
-instance ResponsePayload JsonPayload where
-  type ResponsePayloadConstraint JsonPayload b = FromJSON b
+instance (FromJSON body) => ResponsePayload body JsonPayload where
   deserialiseRequest _ resp = do
     let stream = responseBody resp
     bs <- S.fold SEB.write $ stream
@@ -95,15 +85,13 @@ data UrlFormPayload = UrlFormPayload
 instance HasMediaType UrlFormPayload where
   mediaType _ = Just applicationXWWWFormUrlEncoded
 
-instance RequestPayload UrlFormPayload where
-  type RequestPayloadConstraint UrlFormPayload b = W.ToForm b
+instance (W.ToForm body) => RequestPayload body UrlFormPayload where
   serialiseRequest _ r =
     let b = requestBody r
         lbs = W.urlEncodeAsForm b
     in r { requestBody = DefinedContentLength (fromIntegral . LB.length $ lbs) (S.unfold SEBL.read lbs) }
 
-instance ResponsePayload UrlFormPayload where
-  type ResponsePayloadConstraint UrlFormPayload b = W.FromForm b
+instance (W.FromForm body) => ResponsePayload body UrlFormPayload where
   deserialiseRequest _ resp = do
     let stream = responseBody resp
     bs <- S.fold SEB.write $ stream
@@ -118,12 +106,10 @@ data EmptyPayload = EmptyPayload
 instance HasMediaType EmptyPayload where
   mediaType _ = Nothing
 
-instance RequestPayload EmptyPayload where
-  type RequestPayloadConstraint EmptyPayload b = b ~ Empty
+instance RequestPayload Empty EmptyPayload where
   serialiseRequest _ r = r { requestBody = DefinedContentLength 0 S.nil }
 
-instance ResponsePayload EmptyPayload where
-  type ResponsePayloadConstraint EmptyPayload b = b ~ Empty
+instance ResponsePayload Empty EmptyPayload where
   deserialiseRequest _ resp = do
     let stream = responseBody resp
     body <- fmap (const Empty) $ S.drain stream
@@ -152,15 +138,13 @@ data HtmlPayload = HtmlPayload
 instance HasMediaType HtmlPayload where
   mediaType _ = Just textHtml
 
-instance RequestPayload HtmlPayload where
-  type RequestPayloadConstraint HtmlPayload b = b ~ T.Text
+instance RequestPayload T.Text HtmlPayload where
   serialiseRequest _ r =
     let b = requestBody r
         lbs = LB.fromStrict $ TE.encodeUtf8 b 
     in r { requestBody = DefinedContentLength (fromIntegral . LB.length $ lbs) (S.unfold SEBL.read lbs) }
 
-instance ResponsePayload HtmlPayload where
-  type ResponsePayloadConstraint HtmlPayload b = b ~ T.Text
+instance ResponsePayload T.Text HtmlPayload where
   deserialiseRequest _ resp = decodeTextContent resp
 
 html :: Proxy HtmlPayload
