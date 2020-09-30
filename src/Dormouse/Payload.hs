@@ -77,6 +77,7 @@ instance (FromJSON body) => ResponsePayload body JsonPayload where
     body <- either (throw . DecodingException . T.pack) return . eitherDecodeStrict $ bs
     return $ resp { responseBody = body }
 
+-- | A type tag used to indicate that a request\/response should be encoded\/decoded as @application/json@ data
 json :: Proxy JsonPayload
 json = Proxy :: Proxy JsonPayload
 
@@ -98,6 +99,7 @@ instance (W.FromForm body) => ResponsePayload body UrlFormPayload where
     body <- either (throw . DecodingException) return . W.urlDecodeAsForm $ LB.fromStrict bs
     return $ resp { responseBody = body }
 
+-- | A type tag used to indicate that a request\/response should be encoded\/decoded as @application/x-www-form-urlencoded@ data
 urlForm :: Proxy UrlFormPayload
 urlForm = Proxy :: Proxy UrlFormPayload
 
@@ -115,6 +117,7 @@ instance ResponsePayload Empty EmptyPayload where
     body <- fmap (const Empty) $ S.drain stream
     return $ resp { responseBody = body }
 
+-- | A type tag used to indicate that a request\/response has no payload
 noPayload :: Proxy EmptyPayload
 noPayload = Proxy :: Proxy EmptyPayload
 
@@ -147,5 +150,6 @@ instance RequestPayload T.Text HtmlPayload where
 instance ResponsePayload T.Text HtmlPayload where
   deserialiseRequest _ resp = decodeTextContent resp
 
+-- | A type tag used to indicate that a request\/response should be encoded\/decoded as @text/html@ data
 html :: Proxy HtmlPayload
 html = Proxy :: Proxy HtmlPayload
