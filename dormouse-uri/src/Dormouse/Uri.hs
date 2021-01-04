@@ -18,7 +18,7 @@ import Control.Exception.Safe (MonadThrow, throw)
 import qualified Data.ByteString as SB
 import Data.Attoparsec.ByteString.Char8 (parseOnly)
 import qualified Data.Text as T
-import Dormouse.Exception (UriException(..))
+import Dormouse.Uri.Exception (UriException(..))
 import Dormouse.Uri.Parser
 import Dormouse.Uri.Types
 import Dormouse.Uri.Query

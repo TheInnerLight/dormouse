@@ -1,4 +1,4 @@
-name:                dormouse
+name:                dormouse-uri
 version:             0.1.0.0
 github:              "githubuser/dormouse"
 license:             BSD3
@@ -21,15 +21,7 @@ category:            Web
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
 description: | 
-  An HTTP client designed to be productive, easy to use, easy to test, flexible and safe!
-  
-  It was designed with the following objectives in mind:
-       
-    - HTTP requests and responses should be modelled by a simple, immutable Haskell Record.
-    - Real HTTP calls should be made via an abstraction layer (`MonadDormouse`) so testing and mocking is painless.
-    - Illegal requests should be unrepresentable, such as HTTP GET requests with a content body.
-    - It should be possible to enforce a protocol (e.g. https) at the type level.
-    - It should be possible to handle large request and response bodies via constant memory streaming.
+  Safe URI/URL handling
 
 dependencies:
 - base >= 4.7 && < 5
@@ -52,16 +44,15 @@ dependencies:
 library:
   source-dirs: src
   exposed-modules:
-    - Dormouse
-    - Dormouse.Headers
-    - Dormouse.Headers.MediaType
-    - Dormouse.MonadIOImpl
-    - Dormouse.Status
-    - Dormouse.Test.Class
     - Dormouse.Uri.RFC3986
+    - Dormouse.Uri.Encode
+    - Dormouse.Uri.Exception
     - Dormouse.Url.Builder
+    - Dormouse.Url.Exception
     - Dormouse.Uri.QQ
     - Dormouse.Url.QQ
+    - Dormouse.Uri
+    - Dormouse.Url
   ghc-options:
     - -Wall
   

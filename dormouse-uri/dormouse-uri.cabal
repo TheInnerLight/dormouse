@@ -1,0 +1,128 @@
+cabal-version: 1.18
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 08b1091c0f14f508fc2754daf9f8b86f750b37f5446394e9bfcb98d4a1117481
+
+name:           dormouse-uri
+version:        0.1.0.0
+synopsis:       Simple, Type-Safe, Testable HTTP Client
+description:    Safe URI/URL handling
+category:       Web
+homepage:       https://github.com/githubuser/dormouse#readme
+bug-reports:    https://github.com/githubuser/dormouse/issues
+author:         Phil Curzon
+maintainer:     phil@novelfs.org
+copyright:      2020 Phil Curzon
+license:        BSD3
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+extra-doc-files:
+    README.md
+
+source-repository head
+  type: git
+  location: https://github.com/githubuser/dormouse
+
+library
+  exposed-modules:
+      Dormouse.Uri.RFC3986
+      Dormouse.Uri.Encode
+      Dormouse.Uri.Exception
+      Dormouse.Url.Builder
+      Dormouse.Url.Exception
+      Dormouse.Uri.QQ
+      Dormouse.Url.QQ
+      Dormouse.Uri
+      Dormouse.Url
+  other-modules:
+      Dormouse.Uri.Parser
+      Dormouse.Uri.Query
+      Dormouse.Uri.Types
+      Dormouse.Url.Class
+      Dormouse.Url.Types
+      Paths_dormouse_uri
+  hs-source-dirs:
+      src
+  default-extensions: OverloadedStrings MultiParamTypeClasses ScopedTypeVariables FlexibleContexts
+  ghc-options: -Wall
+  build-depends:
+      aeson >=1.4.2 && <2.0.0
+    , attoparsec >=0.13.2.4 && <0.14
+    , base >=4.7 && <5
+    , bytestring >=0.10.8 && <0.11.0
+    , case-insensitive >=1.2.1.0 && <2.0.0
+    , containers >=0.6.2.1 && <0.7
+    , http-api-data >=0.4.1.1 && <0.5
+    , http-client >=0.6.4.1 && <0.7.0
+    , http-client-tls >=0.3.5.3 && <0.4
+    , http-types >=0.12.3 && <0.13
+    , mtl >=2.2.2 && <3
+    , safe-exceptions >=0.1.7 && <0.2.0
+    , streamly >=0.7.2 && <0.8
+    , streamly-bytestring >=0.1.2 && <0.2
+    , template-haskell >=2.15.0 && <3.0.0
+    , text >=1.2.3 && <2.0.0
+  default-language: Haskell2010
+
+test-suite dormouse-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Dormouse.Uri
+      Dormouse.Uri.Encode
+      Dormouse.Uri.Exception
+      Dormouse.Uri.Parser
+      Dormouse.Uri.QQ
+      Dormouse.Uri.Query
+      Dormouse.Uri.RFC3986
+      Dormouse.Uri.Types
+      Dormouse.Url
+      Dormouse.Url.Builder
+      Dormouse.Url.Class
+      Dormouse.Url.Exception
+      Dormouse.Url.QQ
+      Dormouse.Url.Types
+      Dormouse.Generators.Json
+      Dormouse.Generators.UriComponents
+      Dormouse.Headers.MediaTypeSpec
+      Dormouse.StatusSpec
+      Dormouse.Uri.ParserSpec
+      Dormouse.Uri.QQSpec
+      Dormouse.Uri.QuerySpec
+      Dormouse.UrlSpec
+      DormouseSpec
+      Paths_dormouse_uri
+  hs-source-dirs:
+      src
+      test
+  default-extensions: OverloadedStrings MultiParamTypeClasses ScopedTypeVariables FlexibleContexts
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall
+  build-depends:
+      aeson >=1.4.2 && <2.0.0
+    , attoparsec >=0.13.2.4 && <0.14
+    , base >=4.7 && <5
+    , bytestring >=0.10.8 && <0.11.0
+    , case-insensitive >=1.2.1.0 && <2.0.0
+    , containers >=0.6.2.1 && <0.7
+    , hedgehog >=1.0.1 && <2
+    , hspec >=2.0.0 && <3
+    , hspec-discover >=2.0.0 && <3
+    , hspec-hedgehog >=0.0.1.2 && <0.1
+    , http-api-data >=0.4.1.1 && <0.5
+    , http-client >=0.6.4.1 && <0.7.0
+    , http-client-tls >=0.3.5.3 && <0.4
+    , http-types >=0.12.3 && <0.13
+    , mtl >=2.2.2 && <3
+    , safe-exceptions >=0.1.7 && <0.2.0
+    , scientific >=0.3.6.2 && <0.4
+    , streamly >=0.7.2 && <0.8
+    , streamly-bytestring >=0.1.2 && <0.2
+    , template-haskell >=2.15.0 && <3.0.0
+    , text >=1.2.3 && <2.0.0
+    , vector >=0.12.0.3 && <0.13
+  default-language: Haskell2010

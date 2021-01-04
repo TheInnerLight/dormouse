@@ -4,13 +4,15 @@ module Dormouse.Exception
   ( SomeDormouseException(..)
   , DecodingException(..)
   , UnexpectedStatusCodeException(..)
+  , MediaTypeException(..)
   , UriException(..)
   , UrlException(..)
-  , MediaTypeException(..)
   ) where
 
   
 import Control.Exception.Safe (Exception(..))
+import Dormouse.Uri.Exception (UriException(..))
+import Dormouse.Url.Exception (UrlException(..))
 import qualified Data.Text as T
 import Data.Typeable (cast)
 
@@ -40,30 +42,6 @@ instance Show (DecodingException) where
   show (DecodingException { decodingExceptionMessage = msg }) = "Decoding payload failed: " <> T.unpack msg
 
 instance Exception DecodingException
-
--- | 'UriException' is used to indicate an error parsing a URI
-data UriException = UriException  { uriExceptionMessage :: T.Text }
-
-instance Show (UriException) where
-  show (UriException { uriExceptionMessage = msg }) = "Failed to parse uri: " <> T.unpack msg
-
-instance Exception (UriException) where
-  toException     = toException . SomeDormouseException
-  fromException x = do
-    SomeDormouseException a <- fromException x
-    cast a
-
--- | 'UrlException' is used to indicate an error in transforming a valid URI into a URL, e.g. the URI refers to a different schema such as @file@
-data UrlException = UrlException  { urlExceptionMessage :: T.Text }
-
-instance Show (UrlException) where
-  show (UrlException { urlExceptionMessage = msg }) = "Failed to parse url: " <> T.unpack msg
-
-instance Exception (UrlException) where
-  toException     = toException . SomeDormouseException
-  fromException x = do
-    SomeDormouseException a <- fromException x
-    cast a
 
 -- | 'MediaTypeException' is used to indicate an error parsing a MediaType header such as "Content-Type" into a valid 'MediaType'
 data MediaTypeException = MediaTypeException  { mediaTypeExceptionMessage :: T.Text }

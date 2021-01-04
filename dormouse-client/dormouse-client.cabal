@@ -4,9 +4,9 @@ cabal-version: 1.18
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 94fbe26e8c4d65056c1439cbf5112db35abf79ff0ca5edeeaf733f5ef018b75d
+-- hash: 112d7e3bf143dbab423214815fc2acda24b2ef1680b57b1c9ef238bd3c00dfb3
 
-name:           dormouse
+name:           dormouse-client
 version:        0.1.0.0
 synopsis:       Simple, Type-Safe, Testable HTTP Client
 description:    An HTTP client designed to be productive, easy to use, easy to test, flexible and safe!
@@ -25,7 +25,6 @@ author:         Phil Curzon
 maintainer:     phil@novelfs.org
 copyright:      2020 Phil Curzon
 license:        BSD3
-license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
     README.md
@@ -45,10 +44,6 @@ library
       Dormouse.MonadIOImpl
       Dormouse.Status
       Dormouse.Test.Class
-      Dormouse.Uri.RFC3986
-      Dormouse.Url.Builder
-      Dormouse.Uri.QQ
-      Dormouse.Url.QQ
   other-modules:
       Dormouse.Class
       Dormouse.Data
@@ -56,15 +51,7 @@ library
       Dormouse.Methods
       Dormouse.Payload
       Dormouse.Types
-      Dormouse.Uri
-      Dormouse.Uri.Encode
-      Dormouse.Uri.Parser
-      Dormouse.Uri.Query
-      Dormouse.Uri.Types
-      Dormouse.Url
-      Dormouse.Url.Class
-      Dormouse.Url.Types
-      Paths_dormouse
+      Paths_dormouse_client
   hs-source-dirs:
       src
   default-extensions: OverloadedStrings MultiParamTypeClasses ScopedTypeVariables FlexibleContexts
@@ -76,6 +63,7 @@ library
     , bytestring >=0.10.8 && <0.11.0
     , case-insensitive >=1.2.1.0 && <2.0.0
     , containers >=0.6.2.1 && <0.7
+    , dormouse-uri
     , http-api-data >=0.4.1.1 && <0.5
     , http-client >=0.6.4.1 && <0.7.0
     , http-client-tls >=0.3.5.3 && <0.4
@@ -104,18 +92,6 @@ test-suite dormouse-test
       Dormouse.Status
       Dormouse.Test.Class
       Dormouse.Types
-      Dormouse.Uri
-      Dormouse.Uri.Encode
-      Dormouse.Uri.Parser
-      Dormouse.Uri.QQ
-      Dormouse.Uri.Query
-      Dormouse.Uri.RFC3986
-      Dormouse.Uri.Types
-      Dormouse.Url
-      Dormouse.Url.Builder
-      Dormouse.Url.Class
-      Dormouse.Url.QQ
-      Dormouse.Url.Types
       Dormouse.Generators.Json
       Dormouse.Generators.UriComponents
       Dormouse.Headers.MediaTypeSpec
@@ -125,7 +101,7 @@ test-suite dormouse-test
       Dormouse.Uri.QuerySpec
       Dormouse.UrlSpec
       DormouseSpec
-      Paths_dormouse
+      Paths_dormouse_client
   hs-source-dirs:
       src
       test

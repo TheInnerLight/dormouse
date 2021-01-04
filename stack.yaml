@@ -29,7 +29,8 @@ resolver: lts-16.9
 #   - auto-update
 #   - wai
 packages:
-- .
+- dormouse-client
+- dormouse-uri
 - examples
 # Dependency packages to be pulled from upstream that are not in the resolver.
 # These entries can reference officially published versions as well as

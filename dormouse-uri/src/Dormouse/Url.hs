@@ -21,7 +21,7 @@ module Dormouse.Url
 import Control.Exception.Safe (MonadThrow, throw)
 import qualified Data.ByteString as SB
 import qualified Data.Text as T
-import Dormouse.Exception (UrlException(..))
+import Dormouse.Url.Exception (UrlException(..))
 import Dormouse.Uri
 import Dormouse.Url.Types
 

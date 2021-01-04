@@ -7,7 +7,7 @@ module Dormouse.Class
 import Data.Word ( Word8 )
 import Dormouse.Payload ( RawRequestPayload(..) )
 import Dormouse.Types ( HttpRequest(..), HttpResponse(..) )
-import Dormouse.Url.Class ( IsUrl )
+import Dormouse.Url ( IsUrl )
 import Network.HTTP.Client ( Manager )
 import Streamly ( SerialT )
 
