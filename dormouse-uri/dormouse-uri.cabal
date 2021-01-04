@@ -4,7 +4,7 @@ cabal-version: 1.18
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7c057e83f937a987d75c9d5d59fbef8a008d180247fe3f2dc6fe6624480ccf24
+-- hash: d277a67951bf92bff92a7b59de84358b44b62bac1dd4036813970d6f28536d6b
 
 name:           dormouse-uri
 version:        0.1.0.0
@@ -51,20 +51,13 @@ library
   default-extensions: OverloadedStrings MultiParamTypeClasses ScopedTypeVariables FlexibleContexts
   ghc-options: -Wall
   build-depends:
-      aeson >=1.4.2 && <2.0.0
-    , attoparsec >=0.13.2.4 && <0.14
+      attoparsec >=0.13.2.4 && <0.14
     , base >=4.7 && <5
     , bytestring >=0.10.8 && <0.11.0
     , case-insensitive >=1.2.1.0 && <2.0.0
     , containers >=0.6.2.1 && <0.7
-    , http-api-data >=0.4.1.1 && <0.5
-    , http-client >=0.6.4.1 && <0.7.0
-    , http-client-tls >=0.3.5.3 && <0.4
     , http-types >=0.12.3 && <0.13
-    , mtl >=2.2.2 && <3
     , safe-exceptions >=0.1.7 && <0.2.0
-    , streamly >=0.7.2 && <0.8
-    , streamly-bytestring >=0.1.2 && <0.2
     , template-haskell >=2.15.0 && <3.0.0
     , text >=1.2.3 && <2.0.0
   default-language: Haskell2010
@@ -98,8 +91,7 @@ test-suite dormouse-uri-test
   default-extensions: OverloadedStrings MultiParamTypeClasses ScopedTypeVariables FlexibleContexts
   ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall
   build-depends:
-      aeson >=1.4.2 && <2.0.0
-    , attoparsec >=0.13.2.4 && <0.14
+      attoparsec >=0.13.2.4 && <0.14
     , base >=4.7 && <5
     , bytestring >=0.10.8 && <0.11.0
     , case-insensitive >=1.2.1.0 && <2.0.0
@@ -108,15 +100,9 @@ test-suite dormouse-uri-test
     , hspec >=2.0.0 && <3
     , hspec-discover >=2.0.0 && <3
     , hspec-hedgehog >=0.0.1.2 && <0.1
-    , http-api-data >=0.4.1.1 && <0.5
-    , http-client >=0.6.4.1 && <0.7.0
-    , http-client-tls >=0.3.5.3 && <0.4
     , http-types >=0.12.3 && <0.13
-    , mtl >=2.2.2 && <3
     , safe-exceptions >=0.1.7 && <0.2.0
     , scientific >=0.3.6.2 && <0.4
-    , streamly >=0.7.2 && <0.8
-    , streamly-bytestring >=0.1.2 && <0.2
     , template-haskell >=2.15.0 && <3.0.0
     , text >=1.2.3 && <2.0.0
     , vector >=0.12.0.3 && <0.13

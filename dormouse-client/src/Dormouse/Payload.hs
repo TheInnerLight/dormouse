@@ -29,7 +29,6 @@ import Dormouse.Exception (DecodingException(..))
 import Dormouse.Headers
 import Dormouse.Headers.MediaType
 import qualified Dormouse.Headers.MediaType as MTH
-import GHC.Exts
 import qualified Data.ByteString.Lazy as LB
 import qualified Data.Map.Strict as Map
 import qualified Web.FormUrlEncoded as W

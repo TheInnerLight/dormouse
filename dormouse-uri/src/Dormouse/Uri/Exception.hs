@@ -8,9 +8,9 @@ import Control.Exception.Safe (Exception(..))
 import qualified Data.Text as T
 
 -- | 'UriException' is used to indicate an error parsing a URI
-data UriException = UriException  { uriExceptionMessage :: T.Text }
+newtype UriException = UriException  { uriExceptionMessage :: T.Text }
 
-instance Show (UriException) where
-  show (UriException { uriExceptionMessage = msg }) = "Failed to parse uri: " <> T.unpack msg
+instance Show UriException where
+  show UriException { uriExceptionMessage = msg } = "Failed to parse uri: " <> T.unpack msg
 
 instance Exception UriException

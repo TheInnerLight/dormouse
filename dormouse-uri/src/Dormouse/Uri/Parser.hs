@@ -64,7 +64,7 @@ pSizedHexadecimal n = do
 
 pPercentEnc :: Parser Char
 pPercentEnc = do
-  _ <- (char '%')
+  _ <- char '%'
   hexdig1 <- pSizedHexadecimal 1
   hexdig2 <- pSizedHexadecimal 1
   return . chr $ hexdig1 * 16 + hexdig2
@@ -137,13 +137,13 @@ pPathCharNc :: Parser Char
 pPathCharNc = satisfy isPathCharNoColon <|> pPercentEnc
 
 pSegmentNz :: Parser PathSegment 
-pSegmentNz = fmap (PathSegment . repack) $ many1' pPathChar
+pSegmentNz = PathSegment . repack <$> many1' pPathChar
 
 pSegmentNzNc :: Parser PathSegment 
-pSegmentNzNc = fmap (PathSegment . repack) $ many1' pPathCharNc
+pSegmentNzNc = PathSegment . repack <$> many1' pPathCharNc
 
 pSegment :: Parser PathSegment
-pSegment = fmap (PathSegment . repack) $ many' pPathChar
+pSegment = PathSegment . repack <$> many' pPathChar
 
 pPathsAbEmpty :: Parser [PathSegment]
 pPathsAbEmpty = many1' (char '/' *> pSegment)
@@ -171,15 +171,15 @@ pPathsEmpty :: Parser [PathSegment]
 pPathsEmpty = return []
 
 pPathAbsAuth :: Parser (Path 'Absolute)
-pPathAbsAuth = fmap (Path) (pPathsAbEmpty <|> pPathsAbsolute <|> pPathsEmpty)
+pPathAbsAuth = fmap Path (pPathsAbEmpty <|> pPathsAbsolute <|> pPathsEmpty)
 
 pPathAbsNoAuth :: Parser (Path 'Absolute)
-pPathAbsNoAuth = fmap (Path) (pPathsAbsolute <|> pPathsRootless <|> pPathsEmpty)
+pPathAbsNoAuth = fmap Path (pPathsAbsolute <|> pPathsRootless <|> pPathsEmpty)
 
 pPathRel :: Parser (Path 'Relative)
-pPathRel = fmap (Path) (pPathsAbsolute <|> pPathsNoScheme <|> pPathsEmpty)
+pPathRel = fmap Path (pPathsAbsolute <|> pPathsNoScheme <|> pPathsEmpty)
 
-pQuery :: Parser (Query)
+pQuery :: Parser Query
 pQuery = do
   queryText <- (char '?' *> (many1' (satisfy isQueryChar <|> pPercentEnc)))
   _ <- peekChar >>= \case
@@ -188,7 +188,7 @@ pQuery = do
     c                 -> fail $ "Invalid query termination character: " <> show c <> ", must be # or end of input"
   return . Query . repack $ queryText
 
-pFragment :: Parser (Fragment)
+pFragment :: Parser Fragment
 pFragment = do
   fragmentText <- (char '#' *> (many1' (satisfy isFragmentChar <|> pPercentEnc)))
   _ <- peekChar >>= \case
