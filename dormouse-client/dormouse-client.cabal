@@ -4,7 +4,7 @@ cabal-version: 1.18
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 112d7e3bf143dbab423214815fc2acda24b2ef1680b57b1c9ef238bd3c00dfb3
+-- hash: b00c1246bd65de1c3a5b9a57cdba70e9582c8f568f92e40d19132f5afd5c6835
 
 name:           dormouse-client
 version:        0.1.0.0
@@ -76,7 +76,7 @@ library
     , text >=1.2.3 && <2.0.0
   default-language: Haskell2010
 
-test-suite dormouse-test
+test-suite dormouse-client-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
@@ -96,10 +96,7 @@ test-suite dormouse-test
       Dormouse.Generators.UriComponents
       Dormouse.Headers.MediaTypeSpec
       Dormouse.StatusSpec
-      Dormouse.Uri.ParserSpec
-      Dormouse.Uri.QQSpec
-      Dormouse.Uri.QuerySpec
-      Dormouse.UrlSpec
+      Dormouse.UrlReqSpec
       DormouseSpec
       Paths_dormouse_client
   hs-source-dirs:
@@ -114,6 +111,7 @@ test-suite dormouse-test
     , bytestring >=0.10.8 && <0.11.0
     , case-insensitive >=1.2.1.0 && <2.0.0
     , containers >=0.6.2.1 && <0.7
+    , dormouse-uri
     , hedgehog >=1.0.1 && <2
     , hspec >=2.0.0 && <3
     , hspec-discover >=2.0.0 && <3

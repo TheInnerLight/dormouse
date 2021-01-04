@@ -10,7 +10,9 @@ import Control.Exception.Safe (MonadThrow, throw)
 import Control.Monad.IO.Class
 import Control.Monad.Reader
 import Data.Function ((&))
+import Data.Functor (($>))
 import Data.IORef
+import Data.Maybe (fromMaybe)
 import qualified Data.Map.Strict as Map
 import Data.Text.Encoding (encodeUtf8)
 import Data.Word (Word8)
@@ -32,7 +34,7 @@ import qualified Streamly.Prelude as S
 import qualified Streamly.External.ByteString as SEB
 import qualified Streamly.Internal.Memory.ArrayStream as SIMA
 
-givesPopper :: SerialT IO (Word8) -> C.GivesPopper ()
+givesPopper :: SerialT IO Word8 -> C.GivesPopper ()
 givesPopper rawStream k = do
   let initialStream = SIMA.arraysOf 32768 rawStream
   streamState <- newIORef initialStream
@@ -40,7 +42,7 @@ givesPopper rawStream k = do
         stream <- readIORef streamState
         test <- S.uncons stream
         case test of
-          Just (elems, stream') -> writeIORef streamState stream' *> (return $ SEB.fromArray elems)
+          Just (elems, stream') -> writeIORef streamState stream' $> SEB.fromArray elems
           Nothing               -> return B.empty
   k popper
 
@@ -58,9 +60,9 @@ genClientRequestFromUrlComponents url =
       queryParams = urlQuery comps
       host = T.urlEncode False . encodeUtf8 . unHost . authorityHost $ authority
       (isSecure, port) = case scheme of
-        HttpScheme -> (False, maybe 80 id $ authorityPort authority)
-        HttpsScheme -> (True, maybe 443 id $  authorityPort authority)
-      queryText = maybe "" (id) $ queryParams in
+        HttpScheme -> (False, fromMaybe 80 $ authorityPort authority)
+        HttpsScheme -> (True, fromMaybe 443 $  authorityPort authority)
+      queryText = fromMaybe "" queryParams in
   C.defaultRequest
     { C.host = host
     , C.path = encodePath path
@@ -77,7 +79,7 @@ responseStream resp =
 
 sendHttp :: (HasDormouseConfig env, MonadReader env m, MonadIO m, MonadThrow m, IsUrl url) => HttpRequest url method RawRequestPayload contentTag acceptTag -> (HttpResponse (SerialT IO Word8) -> IO (HttpResponse b)) -> m (HttpResponse b)
 sendHttp HttpRequest { requestMethod = method, requestUri = url, requestBody = reqBody, requestHeaders = reqHeaders} deserialiseResp = do
-  manager <- fmap clientManager $ reader (getDormouseConfig)
+  manager <- clientManager <$> reader getDormouseConfig
   let initialRequest = genClientRequestFromUrlComponents $ asAnyUrl url
   let request = initialRequest { C.method = methodAsByteString method, C.requestBody = translateRequestBody reqBody, C.requestHeaders = Map.toList reqHeaders }
   response <- liftIO $ C.withResponse request manager (\resp -> do

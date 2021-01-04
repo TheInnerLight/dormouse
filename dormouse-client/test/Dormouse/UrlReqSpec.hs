@@ -1,7 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE DataKinds #-}
 
-module Dormouse.UrlSpec
+module Dormouse.UrlReqSpec
   ( spec
   ) where
 
@@ -13,7 +13,7 @@ import qualified Network.HTTP.Client as C
 
 spec :: Spec
 spec = do
-  describe "parseURI" $ do
+  describe "genClientRequestFromUrlComponents" $ do
     it "generates a non-secure request for an http uri" $ do
       let anyUrl = asAnyUrl [http|http://google.com|]
           req = genClientRequestFromUrlComponents anyUrl

@@ -57,7 +57,7 @@ library:
     - -Wall
   
 tests:
-  dormouse-test:
+  dormouse-uri-test:
     main:                Spec.hs
     source-dirs:         
     - src

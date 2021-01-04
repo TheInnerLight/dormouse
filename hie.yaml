@@ -1,8 +1,13 @@
-# cradle:
-#   stack:
-#     - path: "./dormouse-client/src"
-#       component: "dormouse:lib"
-#     - path: "./examples/src"
-#       component: "dormouse-examples:exe:dormouse-examples"
-#     - path: "./test"
-#       component: "dormouse:test:dormouse-test"
+cradle:
+  stack:
+    - path: "./dormouse-client/src"
+      component: "dormouse-client:lib"
+    - path: "./dormouse-client/test"
+      component: "dormouse-client:test:dormouse-test"
+    - path: "./examples/src"
+      component: "dormouse-examples:exe:dormouse-examples"
+    - path: "./dormouse-uri/src"
+      component: "dormouse-uri:lib"
+    - path: "./dormouse-uri/test"
+      component: "dormouse-uri:test:dormouse-uri-test"
+

@@ -64,7 +64,7 @@ library:
     - -Wall
   
 tests:
-  dormouse-test:
+  dormouse-client-test:
     main:                Spec.hs
     source-dirs:         
     - src
@@ -75,6 +75,7 @@ tests:
     - -with-rtsopts=-N
     - -Wall
     dependencies:
+    - dormouse-uri
     - hspec >= 2.0.0 && < 3
     - hspec-discover >= 2.0.0 && < 3
     - hedgehog >= 1.0.1 && < 2
