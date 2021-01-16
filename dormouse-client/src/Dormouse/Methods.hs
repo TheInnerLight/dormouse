@@ -1,5 +1,4 @@
 {-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -13,9 +12,9 @@ module Dormouse.Methods
 import qualified Data.ByteString as SB
 import qualified Data.ByteString.Char8 as C8SB
 import Data.Kind (Constraint)
-import Data.Proxy
-import Dormouse.Data
-import GHC.TypeLits
+import Data.Proxy ( Proxy )
+import Dormouse.Data ( Empty )
+import GHC.TypeLits ( KnownSymbol, Symbol, symbolVal )
 
 data HttpMethod (a :: Symbol) where 
   CONNECT :: HttpMethod "CONNECT"

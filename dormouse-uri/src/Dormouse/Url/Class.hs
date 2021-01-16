@@ -12,5 +12,5 @@ class (Eq url, Show url) => IsUrl url where
 instance IsUrl (Url scheme) where
   asAnyUrl = AnyUrl
 
-instance IsUrl (AnyUrl) where
+instance IsUrl AnyUrl where
   asAnyUrl (AnyUrl u) = asAnyUrl u

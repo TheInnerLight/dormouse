@@ -1,17 +1,11 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DisambiguateRecordFields #-}
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
 
 module Dormouse.Uri
   ( module Dormouse.Uri.Types
   , parseUri
-  , QueryBuilder
-  , IsQueryVal(..)
-  , IsUrl(..)
   ) where
 
 import Control.Exception.Safe (MonadThrow, throw)
@@ -21,9 +15,7 @@ import qualified Data.Text as T
 import Dormouse.Uri.Exception (UriException(..))
 import Dormouse.Uri.Parser
 import Dormouse.Uri.Types
-import Dormouse.Uri.Query
-import Dormouse.Url.Class
 
 -- | Parse an ascii 'ByteString' as an absolute uri, throwing a 'UriException' in @m@ if this fails
 parseUri :: MonadThrow m => SB.ByteString -> m Uri
-parseUri bs = either (throw . UriException . T.pack) (return) $ parseOnly pUri bs
+parseUri bs = either (throw . UriException . T.pack) return $ parseOnly pUri bs

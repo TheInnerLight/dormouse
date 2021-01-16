@@ -14,7 +14,7 @@ extra-doc-files:
 - README.md
 
 # Metadata used when publishing your package
-synopsis:            Simple, Type-Safe, Testable HTTP Client
+synopsis:            Simple, type-safe and testable HTTP client
 category:            Web
 
 # To avoid duplicated efforts in documentation and dealing with the

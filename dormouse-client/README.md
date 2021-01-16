@@ -1,4 +1,4 @@
-# Dormouse
+# Dormouse-Client
 
 Dormouse is an HTTP client that will help you REST.
 
@@ -47,55 +47,11 @@ main = do
     return ()
 ```
 
-## Constructing Urls
-
-You can construct Urls using the helper QuasiQuoters:
-
-```haskell
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE QuasiQuotes #-}
-
-import Dormouse
-import Dormouse.Url.QQ
-
-githubHttpsUrl :: Url "https"
-githubHttpsUrl = [https|https://github.com|]
-
-githubHttpUrl :: Url "http"
-githubHttpUrl = [http|http://github.com|]
-
-githubAnyUrl :: AnyUrl
-githubAnyUrl = [url|http://github.com|]
-
-```
-
-You can use the Url Builder syntax to modify an existing Url safely to include paths, adding the import:
-
-```haskell
-import Dormouse.Url.Builder
-```
-
-To allow:
-
-```haskell
-dormouseHttpsUrl :: Url "https"
-dormouseHttpsUrl = githubHttpsUrl </> "TheInnerLight" </> "dormouse"
-```
-
-The Url will be constructed safely so that any characters that wouldn't normally be allowed in a Url path are percent-encoded before the url is resolved by Dormouse.
-
-You can also handle query parameters using similar syntax:
-
-```haskell
-searchUrl :: Url "https"
-searchUrl = [https|https://google.com|] </> "search" ? "q" =: ("haskell" :: String)
-```
-
 ## Building requests
 
 ### GET requests
 
-Building a GET request is simple using a Url
+Building a GET request is simple using a `Url` (Please see the [Dormouse-Uri](../dormouse-uri/README.md) documentation for more details of how to safely create and construct `Url`s).
 
 ```haskell
 postmanEchoGetUrl :: Url "http"

@@ -57,5 +57,5 @@ instance Eq AnyUrl where
 instance Show AnyUrl where
   show (AnyUrl u) = show u
 
-instance Lift (AnyUrl) where
+instance Lift AnyUrl where
   lift (AnyUrl u)  = [| AnyUrl u |]

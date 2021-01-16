@@ -15,11 +15,11 @@ module Dormouse.Test.Class
   ( MonadDormouseTest(..)
   ) where
 
-import Control.Monad.IO.Class
+import Control.Monad.IO.Class ( MonadIO(..) )
 import qualified Data.ByteString  as SB
 import qualified Data.ByteString.Lazy  as LB
 import Data.Word ( Word8 )
-import Dormouse.Class
+import Dormouse.Class ( MonadDormouse(..) )
 import Dormouse.Payload ( RawRequestPayload(..) )
 import Dormouse.Types ( HttpRequest(..), HttpResponse(..) )
 import Streamly ( SerialT )

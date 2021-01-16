@@ -1,8 +1,5 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DisambiguateRecordFields #-}
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
 
@@ -13,8 +10,6 @@ module Dormouse.Url
   , parseUrl
   , parseHttpUrl
   , parseHttpsUrl
-  , QueryBuilder
-  , IsQueryVal(..)
   , IsUrl(..)
   ) where
 
@@ -23,6 +18,7 @@ import qualified Data.ByteString as SB
 import qualified Data.Text as T
 import Dormouse.Url.Exception (UrlException(..))
 import Dormouse.Uri
+import Dormouse.Url.Class
 import Dormouse.Url.Types
 
 -- | Ensure that the supplied Url uses the _http_ scheme, throwing a 'UrlException' in @m@ if this is not the case
@@ -43,7 +39,7 @@ ensureUrl (AbsoluteUri AbsUri {uriScheme = scheme, uriAuthority = maybeAuthority
     "http"  -> return $ AnyUrl $ HttpUrl UrlComponents { urlAuthority = authority, urlPath = path, urlQuery = query, urlFragment = fragment }
     "https" -> return $ AnyUrl $ HttpsUrl UrlComponents { urlAuthority = authority, urlPath = path, urlQuery = query, urlFragment = fragment }
     s       -> throw $ UrlException ("Supplied Url had a scheme of " <> T.pack (show s) <> " which was not http or https.")
-ensureUrl (RelativeUri _) = throw $ UrlException ("Supplied Uri was a relative Uri - it must provide a scheme and authority to be considered a valid url")
+ensureUrl (RelativeUri _) = throw $ UrlException "Supplied Uri was a relative Uri - it must provide a scheme and authority to be considered a valid url"
 
 -- | Parse an ascii 'ByteString' as a url, throwing a 'UriException' in @m@ if this fails
 parseUrl :: MonadThrow m => SB.ByteString -> m AnyUrl

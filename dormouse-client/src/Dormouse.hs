@@ -74,9 +74,6 @@ module Dormouse
   , parseUrl
   , parseHttpUrl
   , parseHttpsUrl
-  -- * Query Builder
-  , QueryBuilder
-  , IsQueryVal(..)
   ) where
 
 import Control.Exception.Safe (MonadThrow)

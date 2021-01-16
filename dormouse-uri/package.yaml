@@ -14,14 +14,25 @@ extra-doc-files:
 - README.md
 
 # Metadata used when publishing your package
-synopsis:            Simple, Type-Safe, Testable HTTP Client
+synopsis:            Library for type-safe representations of Uri/Urls
 category:            Web
 
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
 description: | 
-  Safe URI/URL handling
+  Dormouse-Uri provides type safe handling of `Uri`s and `Url`s.
+
+  `Uri` sytax is well defined according to [RFC 3986](https://tools.ietf.org/html/rfc3986), Dormouse-Uri parses and encodes `Uri`s according to the syntax defined in this document.
+
+  We define `Url` as an absolute URI associated with web resources, the current version of Dormouse-Uri restricts `Url`s to the `http` and `https` schemes.
+
+  Dormouse-Uri has the following features:
+
+    - The `Uri` and `Url` data types use `Data.Text` internally, this allows you to freely include percent-decoded characters which will be properly rendered when the `Url`/`Uri` is encoded.
+    - Quasiquoters to allow safe construction of `Uri`/`Url`s from string literals.
+    - `DataKinds` allow `Url`s to be restricted to the `http` or `https` schemes are the type level.
+    - A UrlBuilder syntax to allow type-safe construction/concatenation of `Url`s from their components, e.g. path and query parameters.
 
 dependencies:
 - base >= 4.7 && < 5
