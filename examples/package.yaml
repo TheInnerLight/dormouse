@@ -34,7 +34,8 @@ executables:
     - -with-rtsopts=-N
     - -Wall
     dependencies:
-    - dormouse
+    - dormouse-client
+    - dormouse-uri
    
 default-extensions:
   - OverloadedStrings

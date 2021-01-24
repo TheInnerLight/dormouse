@@ -1,0 +1,86 @@
+name:                dormouse-uri
+version:             0.1.0.0
+github:              "githubuser/dormouse"
+license:             BSD3
+author:              Phil Curzon
+maintainer:          "phil@novelfs.org"
+copyright:           "2020 Phil Curzon"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+extra-doc-files:
+- README.md
+
+# Metadata used when publishing your package
+synopsis:            Library for type-safe representations of Uri/Urls
+category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description: | 
+  Dormouse-Uri provides type safe handling of `Uri`s and `Url`s.
+
+  `Uri` sytax is well defined according to [RFC 3986](https://tools.ietf.org/html/rfc3986), Dormouse-Uri parses and encodes `Uri`s according to the syntax defined in this document.
+
+  We define `Url` as an absolute URI associated with web resources, the current version of Dormouse-Uri restricts `Url`s to the `http` and `https` schemes.
+
+  Dormouse-Uri has the following features:
+
+    - The `Uri` and `Url` data types use `Data.Text` internally, this allows you to freely include percent-decoded characters which will be properly rendered when the `Url`/`Uri` is encoded.
+    - Quasiquoters to allow safe construction of `Uri`/`Url`s from string literals.
+    - `DataKinds` allow `Url`s to be restricted to the `http` or `https` schemes are the type level.
+    - A UrlBuilder syntax to allow type-safe construction/concatenation of `Url`s from their components, e.g. path and query parameters.
+
+dependencies:
+- base >= 4.7 && < 5
+- attoparsec >= 0.13.2.4 && < 0.14
+- bytestring >= 0.10.8 && < 0.11.0
+- safe-exceptions >= 0.1.7 && < 0.2.0
+- case-insensitive >= 1.2.1.0 && < 2.0.0
+- http-types >= 0.12.3 && < 0.13
+- text >= 1.2.3 && < 2.0.0
+- template-haskell >= 2.15.0 && < 3.0.0
+- containers >= 0.6.2.1 && < 0.7
+
+library:
+  source-dirs: src
+  exposed-modules:
+    - Dormouse.Uri.RFC3986
+    - Dormouse.Uri.Encode
+    - Dormouse.Uri.Exception
+    - Dormouse.Url.Builder
+    - Dormouse.Url.Exception
+    - Dormouse.Uri.QQ
+    - Dormouse.Url.QQ
+    - Dormouse.Uri
+    - Dormouse.Url
+  ghc-options:
+    - -Wall
+  
+tests:
+  dormouse-uri-test:
+    main:                Spec.hs
+    source-dirs:         
+    - src
+    - test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -Wall
+    dependencies:
+    - hspec >= 2.0.0 && < 3
+    - hspec-discover >= 2.0.0 && < 3
+    - hedgehog >= 1.0.1 && < 2
+    - hspec-hedgehog >= 0.0.1.2 && < 0.1
+    - scientific >= 0.3.6.2 && < 0.4
+    - vector >= 0.12.0.3 && < 0.13
+
+default-extensions:
+  - OverloadedStrings
+  - MultiParamTypeClasses
+  - ScopedTypeVariables
+  - FlexibleContexts
