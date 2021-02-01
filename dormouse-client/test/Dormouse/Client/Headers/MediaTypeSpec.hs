@@ -1,10 +1,10 @@
-module Dormouse.Headers.MediaTypeSpec
+module Dormouse.Client.Headers.MediaTypeSpec
   ( spec
   ) where
 
 import Data.CaseInsensitive (mk)
 import qualified Data.Map.Strict as Map
-import Dormouse.Headers.MediaType
+import Dormouse.Client.Headers.MediaType
 import Test.Hspec
 
 spec :: Spec

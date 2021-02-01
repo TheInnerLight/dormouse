@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 
-module Dormouse.Payload
+module Dormouse.Client.Payload
   ( HasMediaType(..)
   , EmptyPayload
   , RequestPayload(..)
@@ -23,12 +23,12 @@ import Data.Proxy
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import Data.Word (Word8, Word64)
-import Dormouse.Data
-import Dormouse.Types
-import Dormouse.Exception (DecodingException(..))
-import Dormouse.Headers
-import Dormouse.Headers.MediaType
-import qualified Dormouse.Headers.MediaType as MTH
+import Dormouse.Client.Data
+import Dormouse.Client.Types
+import Dormouse.Client.Exception (DecodingException(..))
+import Dormouse.Client.Headers
+import Dormouse.Client.Headers.MediaType
+import qualified Dormouse.Client.Headers.MediaType as MTH
 import qualified Data.ByteString.Lazy as LB
 import qualified Data.Map.Strict as Map
 import qualified Web.FormUrlEncoded as W
@@ -46,12 +46,12 @@ data RawRequestPayload
   -- | DefinedContentLength represents a payload where the size of the message is known in advance and the content length header can be computed
   = DefinedContentLength Word64 (SerialT IO Word8)
   -- | ChunkedTransfer represents a payload with indertiminate length, to be sent using chunked transfer encoding
-  | ChunkedTransfer (SerialT IO Word8)  
+  | ChunkedTransfer (SerialT IO Word8)
 
 -- | RequestPayload relates a type of content and a payload tag used to describe that type to its byte stream representation and the constraints required to encode it
-class HasMediaType tag => RequestPayload body tag where
+class HasMediaType contentTag => RequestPayload body contentTag where
   -- | Generates a the byte stream representation from the supplied content
-  serialiseRequest :: Proxy tag -> HttpRequest url method body acceptTag contentTag -> HttpRequest url method RawRequestPayload acceptTag contentTag
+  serialiseRequest :: Proxy contentTag -> HttpRequest url method body contentTag acceptTag  -> HttpRequest url method RawRequestPayload contentTag acceptTag 
 
 -- | ResponsePayload relates a type of content and a payload tag used to describe that type  to its byte stream representation and the constraints required to decode it
 class HasMediaType tag => ResponsePayload body tag where
@@ -72,7 +72,7 @@ instance (ToJSON body) => RequestPayload body JsonPayload where
 instance (FromJSON body) => ResponsePayload body JsonPayload where
   deserialiseRequest _ resp = do
     let stream = responseBody resp
-    bs <- S.fold SEB.write $ stream
+    bs <- S.fold SEB.write stream
     body <- either (throw . DecodingException . T.pack) return . eitherDecodeStrict $ bs
     return $ resp { responseBody = body }
 
@@ -113,7 +113,7 @@ instance RequestPayload Empty EmptyPayload where
 instance ResponsePayload Empty EmptyPayload where
   deserialiseRequest _ resp = do
     let stream = responseBody resp
-    body <- fmap (const Empty) $ S.drain stream
+    body <- Empty <$ S.drain stream
     return $ resp { responseBody = body }
 
 -- | A type tag used to indicate that a request\/response has no payload

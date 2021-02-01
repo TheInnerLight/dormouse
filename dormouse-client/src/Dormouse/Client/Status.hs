@@ -4,7 +4,7 @@
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module Dormouse.Status
+module Dormouse.Client.Status
   ( ok
   , created
   , accepted

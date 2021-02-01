@@ -2,19 +2,19 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE RecordWildCards #-}
 
--- | The "Dormouse" module is the primary module you will need to import to perform HTTP requests with this library.
+-- | The "Client" module is the primary module you will need to import to perform HTTP requests with this library.
 --
 --  You will need to enable @XDataKinds@ because Dormouse requests are parameterised by the associated HTTP method literal at the type level.
 --
 --  For a comprehensive tutorial, please see: <https://github.com/TheInnerLight/dormouse/blob/master/README.md>
-module Dormouse
+module Dormouse.Client
   ( -- * Request / Response Types
     HttpRequest(..)
   , HttpResponse(..)
   -- * Request building
   , delete
   , get
-  , Dormouse.head
+  , Dormouse.Client.head
   , patch
   , post
   , put
@@ -28,12 +28,12 @@ module Dormouse
   , runDormouseT
   , runDormouse
   -- * Dormouse Class
-  , MonadDormouse(..)
+  , MonadDormouseClient(..)
   -- * Dormouse Config
   , C.newManager
   , TLS.tlsManagerSettings
-  , HasDormouseConfig(..)
-  , DormouseConfig(..)
+  , HasDormouseClientConfig(..)
+  , DormouseClientConfig(..)
   -- * Headers
   , HeaderName
   , HasHeaders(..)
@@ -82,17 +82,17 @@ import Control.Monad.Reader
 import qualified Data.Map.Strict as Map
 import qualified Data.ByteString as B
 import Data.Proxy
-import Dormouse.Class
-import Dormouse.Data
-import Dormouse.Exception
-import Dormouse.Headers
-import Dormouse.Headers.MediaType
-import Dormouse.Payload
-import Dormouse.Methods
-import Dormouse.Types
+import Dormouse.Client.Class
+import Dormouse.Client.Data
+import Dormouse.Client.Exception
+import Dormouse.Client.Headers
+import Dormouse.Client.Headers.MediaType
+import Dormouse.Client.Payload
+import Dormouse.Client.Methods
+import Dormouse.Client.Types
 import Dormouse.Uri
 import Dormouse.Url
-import qualified Dormouse.MonadIOImpl as IOImpl
+import qualified Dormouse.Client.MonadIOImpl as IOImpl
 import qualified Network.HTTP.Client as C
 import qualified Network.HTTP.Client.TLS as TLS
 
@@ -100,7 +100,7 @@ import qualified Network.HTTP.Client.TLS as TLS
 makeRequest :: IsUrl url => HttpMethod method -> url -> HttpRequest url method Empty EmptyPayload acceptTag
 makeRequest method url = HttpRequest 
   { requestMethod = method
-  , requestUri = url
+  , requestUrl = url
   , requestHeaders = Map.empty
   , requestBody = Empty
   }
@@ -131,7 +131,7 @@ put = makeRequest PUT
 
 -- | Supply a body to an HTTP request using the supplied tag to indicate how the request should be encoded
 supplyBody :: (AllowedBody method b, RequestPayload b contentTag) => Proxy contentTag -> b -> HttpRequest url method b' contentTag' acceptTag -> HttpRequest url method b contentTag acceptTag
-supplyBody prox b (HttpRequest { requestHeaders = headers, requestBody = _, ..}) =
+supplyBody prox b HttpRequest { requestHeaders = headers, requestBody = _, ..} =
   HttpRequest 
     { requestHeaders = foldMap (\v -> Map.insert ("Content-Type" :: HeaderName) v headers) . fmap encodeMediaType $ mediaType prox
     , requestBody = b
@@ -146,38 +146,37 @@ supplyHeader (k, v) r = r { requestHeaders = Map.insert k v $ requestHeaders r }
 accept :: HasMediaType acceptTag => Proxy acceptTag -> HttpRequest url method b contentTag acceptTag -> HttpRequest url method b contentTag acceptTag
 accept prox r = maybe r (\v -> supplyHeader ("Accept", v) r) . fmap encodeMediaType $ mediaType prox
 
--- | Make the supplied HTTP request, expecting an HTTP response with body type `b' to be delivered in some 'MonadDormouse m'
-expect :: (MonadDormouse m, RequestPayload b contentTag, ResponsePayload b' acceptTag, IsUrl url) => HttpRequest url method b contentTag acceptTag -> m (HttpResponse b')
+-- | Make the supplied HTTP request, expecting an HTTP response with body type `b' to be delivered in some 'MonadDormouseClient m'
+expect :: (MonadDormouseClient m, RequestPayload b contentTag, ResponsePayload b' acceptTag, IsUrl url) => HttpRequest url method b contentTag acceptTag -> m (HttpResponse b')
 expect r = expectAs (proxyOfReq r) r
   where 
     proxyOfReq :: HttpRequest url method b contentTag acceptTag -> Proxy acceptTag
     proxyOfReq _ = Proxy
 
--- | Make the supplied HTTP request, expecting an HTTP response in the supplied format with body type `b' to be delivered in some 'MonadDormouse m'
-expectAs :: (MonadDormouse m, RequestPayload b contentTag, ResponsePayload b' acceptTag, IsUrl url) => Proxy acceptTag -> HttpRequest url method b contentTag acceptTag -> m (HttpResponse b')
+-- | Make the supplied HTTP request, expecting an HTTP response in the supplied format with body type `b' to be delivered in some 'MonadDormouseClient m'
+expectAs :: (MonadDormouseClient m, RequestPayload b contentTag, ResponsePayload b' acceptTag, IsUrl url) => Proxy acceptTag -> HttpRequest url method b contentTag acceptTag -> m (HttpResponse b')
 expectAs tag r = do
   let r' = serialiseRequest (contentTypeProx r) r
-  resp <- send r' $ deserialiseRequest tag
-  return resp
+  send r' $ deserialiseRequest tag
   where 
     contentTypeProx :: HttpRequest url method b contentTag acceptTag -> Proxy contentTag
     contentTypeProx _ = Proxy
 
 -- | The DormouseT Monad Transformer
 newtype DormouseT m a = DormouseT 
-  { unDormouseT :: ReaderT DormouseConfig m a 
-  } deriving (Functor, Applicative, Monad, MonadReader DormouseConfig, MonadIO, MonadThrow, MonadTrans)
+  { unDormouseT :: ReaderT DormouseClientConfig m a 
+  } deriving (Functor, Applicative, Monad, MonadReader DormouseClientConfig, MonadIO, MonadThrow, MonadTrans)
 
-instance (MonadIO m, MonadThrow m) => MonadDormouse (DormouseT m) where
+instance (MonadIO m, MonadThrow m) => MonadDormouseClient (DormouseT m) where
   send = IOImpl.sendHttp
 
 -- | A simple monad that allows you to run Dormouse
 type Dormouse a = DormouseT IO a
 
 -- | Run a DormouseT using the supplied 'DormouseConfig' to generate a result in the underlying monad @m@
-runDormouseT :: DormouseConfig -> DormouseT m a -> m a
+runDormouseT :: DormouseClientConfig -> DormouseT m a -> m a
 runDormouseT config dormouseT = runReaderT (unDormouseT dormouseT) config
 
 -- | Run a Dormouse using the supplied 'DormouseConfig' to generate a result in 'IO'
-runDormouse :: DormouseConfig -> Dormouse a -> IO a
+runDormouse :: DormouseClientConfig -> Dormouse a -> IO a
 runDormouse = runDormouseT

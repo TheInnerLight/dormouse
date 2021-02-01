@@ -1,5 +1,5 @@
 
-module Dormouse.Headers
+module Dormouse.Client.Headers
   ( HeaderName
   , HasHeaders(..)
   ) where

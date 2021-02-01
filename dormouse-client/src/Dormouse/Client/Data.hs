@@ -1,4 +1,4 @@
-module Dormouse.Data 
+module Dormouse.Client.Data 
   ( Empty(..)
   ) where
 

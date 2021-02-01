@@ -4,7 +4,7 @@ cabal-version: 1.18
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 838847d760982cec6e456e21f5027b81cbf97166f633a9492bd8b7f7f7cae3d0
+-- hash: b732b18eea17bbcfbb21470186a443f6e1913dd42bcfcf8818137c1accba0e53
 
 name:           dormouse-client
 version:        0.1.0.0
@@ -14,7 +14,7 @@ description:    An HTTP client designed to be productive, easy to use, easy to t
                 It was designed with the following objectives in mind:
                 .
                   - HTTP requests and responses should be modelled by a simple, immutable Haskell Record.
-                  - Real HTTP calls should be made via an abstraction layer (`MonadDormouse`) so testing and mocking is painless.
+                  - Real HTTP calls should be made via an abstraction layer (`MonadDormouseClient`) so testing and mocking is painless.
                   - Illegal requests should be unrepresentable, such as HTTP GET requests with a content body.
                   - It should be possible to enforce a protocol (e.g. https) at the type level.
                   - It should be possible to handle large request and response bodies via constant memory streaming.
@@ -38,19 +38,19 @@ source-repository head
 
 library
   exposed-modules:
-      Dormouse
-      Dormouse.Headers
-      Dormouse.Headers.MediaType
-      Dormouse.MonadIOImpl
-      Dormouse.Status
-      Dormouse.Test.Class
+      Dormouse.Client
+      Dormouse.Client.Headers
+      Dormouse.Client.Headers.MediaType
+      Dormouse.Client.MonadIOImpl
+      Dormouse.Client.Status
+      Dormouse.Client.Test.Class
   other-modules:
-      Dormouse.Class
-      Dormouse.Data
-      Dormouse.Exception
-      Dormouse.Methods
-      Dormouse.Payload
-      Dormouse.Types
+      Dormouse.Client.Class
+      Dormouse.Client.Data
+      Dormouse.Client.Exception
+      Dormouse.Client.Methods
+      Dormouse.Client.Payload
+      Dormouse.Client.Types
       Paths_dormouse_client
   hs-source-dirs:
       src
@@ -80,24 +80,24 @@ test-suite dormouse-client-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Dormouse
-      Dormouse.Class
-      Dormouse.Data
-      Dormouse.Exception
-      Dormouse.Headers
-      Dormouse.Headers.MediaType
-      Dormouse.Methods
-      Dormouse.MonadIOImpl
-      Dormouse.Payload
-      Dormouse.Status
-      Dormouse.Test.Class
-      Dormouse.Types
-      Dormouse.Generators.Json
-      Dormouse.Generators.UriComponents
-      Dormouse.Headers.MediaTypeSpec
-      Dormouse.StatusSpec
-      Dormouse.UrlReqSpec
-      DormouseSpec
+      Dormouse.Client
+      Dormouse.Client.Class
+      Dormouse.Client.Data
+      Dormouse.Client.Exception
+      Dormouse.Client.Headers
+      Dormouse.Client.Headers.MediaType
+      Dormouse.Client.Methods
+      Dormouse.Client.MonadIOImpl
+      Dormouse.Client.Payload
+      Dormouse.Client.Status
+      Dormouse.Client.Test.Class
+      Dormouse.Client.Types
+      Dormouse.Client.Generators.Json
+      Dormouse.Client.Generators.UriComponents
+      Dormouse.Client.Headers.MediaTypeSpec
+      Dormouse.Client.StatusSpec
+      Dormouse.Client.UrlReqSpec
+      Dormouse.ClientSpec
       Paths_dormouse_client
   hs-source-dirs:
       src

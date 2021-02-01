@@ -1,6 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Dormouse.Generators.Json 
+module Dormouse.Client.Generators.Json 
   ( genJsonValue
   , JsonGenRanges(..)
   )

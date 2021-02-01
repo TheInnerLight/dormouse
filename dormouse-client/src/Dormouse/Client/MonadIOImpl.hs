@@ -1,7 +1,7 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Dormouse.MonadIOImpl
+module Dormouse.Client.MonadIOImpl
   ( sendHttp
   , genClientRequestFromUrlComponents
   ) where
@@ -17,12 +17,12 @@ import qualified Data.Map.Strict as Map
 import Data.Text.Encoding (encodeUtf8)
 import Data.Word (Word8)
 import Data.ByteString as B
-import Dormouse.Class
-import Dormouse.Exception (UnexpectedStatusCodeException(..))
-import Dormouse.Methods
-import Dormouse.Payload
-import Dormouse.Status
-import Dormouse.Types
+import Dormouse.Client.Class
+import Dormouse.Client.Exception (UnexpectedStatusCodeException(..))
+import Dormouse.Client.Methods
+import Dormouse.Client.Payload
+import Dormouse.Client.Status
+import Dormouse.Client.Types
 import Dormouse.Uri
 import Dormouse.Uri.Encode
 import Dormouse.Url
@@ -77,9 +77,9 @@ responseStream resp =
   & S.takeWhile (not . B.null)
   & S.concatMap (S.unfold SEB.read)
 
-sendHttp :: (HasDormouseConfig env, MonadReader env m, MonadIO m, MonadThrow m, IsUrl url) => HttpRequest url method RawRequestPayload contentTag acceptTag -> (HttpResponse (SerialT IO Word8) -> IO (HttpResponse b)) -> m (HttpResponse b)
-sendHttp HttpRequest { requestMethod = method, requestUri = url, requestBody = reqBody, requestHeaders = reqHeaders} deserialiseResp = do
-  manager <- clientManager <$> reader getDormouseConfig
+sendHttp :: (HasDormouseClientConfig env, MonadReader env m, MonadIO m, MonadThrow m, IsUrl url) => HttpRequest url method RawRequestPayload contentTag acceptTag -> (HttpResponse (SerialT IO Word8) -> IO (HttpResponse b)) -> m (HttpResponse b)
+sendHttp HttpRequest { requestMethod = method, requestUrl = url, requestBody = reqBody, requestHeaders = reqHeaders} deserialiseResp = do
+  manager <- clientManager <$> reader getDormouseClientConfig
   let initialRequest = genClientRequestFromUrlComponents $ asAnyUrl url
   let request = initialRequest { C.method = methodAsByteString method, C.requestBody = translateRequestBody reqBody, C.requestHeaders = Map.toList reqHeaders }
   response <- liftIO $ C.withResponse request manager (\resp -> do

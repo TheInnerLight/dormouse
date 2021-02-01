@@ -3,7 +3,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module DormouseSpec 
+module Dormouse.ClientSpec 
   ( spec
   ) where
 
@@ -15,10 +15,10 @@ import Data.Aeson (encode, Value)
 import qualified Data.Map.Strict as Map
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as LB
-import Dormouse
-import Dormouse.Test.Class
+import Dormouse.Client
+import Dormouse.Client.Test.Class
 import Dormouse.Url.QQ
-import Dormouse.Generators.Json
+import Dormouse.Client.Generators.Json
 import Test.Hspec
 import Test.Hspec.Hedgehog
 
@@ -36,7 +36,7 @@ newtype TestM a = TestM { unTestM :: ReaderT TestEnv IO a } deriving (Functor, A
 runTestM :: TestEnv -> TestM a -> IO a
 runTestM deps app = flip runReaderT deps $ unTestM app
 
-instance MonadDormouseTest TestM where
+instance MonadDormouseTestClient TestM where
   expectLbs req = do
     testEnv <- ask
     _ <- liftIO . swapMVar (sentJson testEnv) . Just $ requestBody req

@@ -1,6 +1,6 @@
 {-# LANGUAGE ExistentialQuantification #-}
 
-module Dormouse.Exception 
+module Dormouse.Client.Exception 
   ( SomeDormouseException(..)
   , DecodingException(..)
   , UnexpectedStatusCodeException(..)

@@ -5,13 +5,13 @@
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE GADTs #-}
 
-module Dormouse.Types
+module Dormouse.Client.Types
   ( HttpRequest(..)
   , HttpResponse(..)
   ) where
 
-import Dormouse.Headers
-import Dormouse.Methods
+import Dormouse.Client.Headers
+import Dormouse.Client.Methods
 import qualified Data.ByteString as SB
 import qualified Data.Map.Strict as Map
 
@@ -19,17 +19,17 @@ import qualified Data.Map.Strict as Map
 -- describing the HTTP verb associated with the request, @contentTag@ describing the type of content being sen and @acceptTag@ describing the type of content desired
 data HttpRequest url method body contentTag acceptTag = HttpRequest 
   { requestMethod :: !(HttpMethod method)
-  , requestUri :: !url
+  , requestUrl :: !url
   , requestHeaders :: Map.Map HeaderName SB.ByteString
   , requestBody :: body
   }
 
 instance (Eq body, Eq url) => Eq (HttpRequest url method body contentTag acceptTag) where
-  (==) (HttpRequest { requestMethod = rm1, requestUri = ru1, requestHeaders = rh1, requestBody = rb1 }) (HttpRequest { requestMethod = rm2, requestUri = ru2, requestHeaders = rh2, requestBody = rb2 }) =
+  (==) (HttpRequest { requestMethod = rm1, requestUrl = ru1, requestHeaders = rh1, requestBody = rb1 }) (HttpRequest { requestMethod = rm2, requestUrl = ru2, requestHeaders = rh2, requestBody = rb2 }) =
     rm1 == rm2 && ru1 == ru2 && rh1 == rh2 && rb1 == rb2
 
 instance (Show body, Show url) => Show (HttpRequest url method body contentTag acceptTag) where
-  show (HttpRequest { requestMethod = rm, requestUri = ru, requestHeaders = rh, requestBody = rb }) = 
+  show (HttpRequest { requestMethod = rm, requestUrl = ru, requestHeaders = rh, requestBody = rb }) = 
     unlines
         [ "HttpRequest"
         , "{ requestMethod  = " ++ show rm

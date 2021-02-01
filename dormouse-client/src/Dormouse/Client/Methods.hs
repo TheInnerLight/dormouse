@@ -3,7 +3,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Dormouse.Methods
+module Dormouse.Client.Methods
   ( HttpMethod(..)
   , AllowedBody
   , methodAsByteString
@@ -13,7 +13,7 @@ import qualified Data.ByteString as SB
 import qualified Data.ByteString.Char8 as C8SB
 import Data.Kind (Constraint)
 import Data.Proxy ( Proxy )
-import Dormouse.Data ( Empty )
+import Dormouse.Client.Data ( Empty )
 import GHC.TypeLits ( KnownSymbol, Symbol, symbolVal )
 
 data HttpMethod (a :: Symbol) where 

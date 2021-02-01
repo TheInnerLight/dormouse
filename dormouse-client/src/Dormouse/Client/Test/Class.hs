@@ -11,24 +11,24 @@
 --
 -- The machinery in here uses orphan instances of 'MonadDormouse' so you should use this carefully and restrict this module to test 
 -- cases only.
-module Dormouse.Test.Class
-  ( MonadDormouseTest(..)
+module Dormouse.Client.Test.Class
+  ( MonadDormouseTestClient(..)
   ) where
 
 import Control.Monad.IO.Class ( MonadIO(..) )
 import qualified Data.ByteString  as SB
 import qualified Data.ByteString.Lazy  as LB
 import Data.Word ( Word8 )
-import Dormouse.Class ( MonadDormouse(..) )
-import Dormouse.Payload ( RawRequestPayload(..) )
-import Dormouse.Types ( HttpRequest(..), HttpResponse(..) )
+import Dormouse.Client.Class ( MonadDormouseClient(..) )
+import Dormouse.Client.Payload ( RawRequestPayload(..) )
+import Dormouse.Client.Types ( HttpRequest(..), HttpResponse(..) )
 import Streamly ( SerialT )
 import qualified Streamly.Prelude as S
 import qualified Streamly.External.ByteString as SEB
 import qualified Streamly.External.ByteString.Lazy as SEBL
 
 -- | MonadDormouseTest describes the capability to send and receive specifically ByteString typed HTTP Requests and Responses
-class Monad m => MonadDormouseTest m where
+class Monad m => MonadDormouseTestClient m where
   -- | Make the supplied HTTP request, expecting an HTTP response with a Lazy ByteString body to be delivered in some @MonadDormouseTest m@
   expectLbs :: HttpRequest scheme method LB.ByteString contentTag acceptTag -> m (HttpResponse LB.ByteString)
   expectLbs req = do
@@ -41,7 +41,7 @@ class Monad m => MonadDormouseTest m where
     return $ resp {responseBody = LB.toStrict $ responseBody resp}
   {-# MINIMAL expectLbs | expectBs #-}
 
-instance (Monad m, MonadIO m, MonadDormouseTest m) => MonadDormouse m where
+instance (Monad m, MonadIO m, MonadDormouseTestClient m) => MonadDormouseClient m where
   send req deserialiseResp = do
     reqBody <- liftIO . S.fold SEB.write . extricateRequestStream . requestBody $ req
     let reqBs = req {requestBody = reqBody}

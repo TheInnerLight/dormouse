@@ -13,7 +13,7 @@ Quick example:
 {-# LANGUAGE DataKinds #-}
 
 import Control.Monad.IO.Class
-import Dormouse
+import Dormouse.Client
 import Data.Aeson.TH 
 import Dormouse.Url.QQ
 
@@ -34,7 +34,7 @@ deriveJSON defaultOptions {fieldLabelModifier = drop 6} ''EchoedJson
 main :: IO ()
 main = do
   manager <- newManager tlsManagerSettings
-  runDormouse (DormouseConfig { clientManager = manager }) $ do
+  runDormouse (DormouseClientConfig{ clientManager = manager }) $ do
     let userDetails = UserDetails { name = "James T. Kirk", nickname = "Jim", email = "james.t.kirk@starfleet.com"}
     let req = accept json $ supplyBody json userDetails $ post [https|https://postman-echo.com/post|]
     response :: HttpResponse (EchoedJson UserDetails) <- expect req

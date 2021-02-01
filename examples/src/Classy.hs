@@ -7,7 +7,7 @@ module Classy where
 
 import Control.Exception.Safe (MonadThrow)
 import Control.Monad.IO.Class
-import Dormouse
+import Dormouse.Client
 import Data.Aeson.TH
 import GHC.Generics (Generic)
 import Dormouse.Url.QQ
@@ -35,7 +35,7 @@ data EchoedForm a = EchoedForm
 
 deriveJSON defaultOptions {fieldLabelModifier = drop 6} ''EchoedForm
 
-sendRequests :: (MonadThrow m, MonadDormouse m, MonadIO m) => m ()
+sendRequests :: (MonadThrow m, MonadDormouseClient m, MonadIO m) => m ()
 sendRequests = do
   let userDetails = UserDetails { name = "James T. Kirk", nickname = "Jim", email = "james.t.kirk@starfleet.com"}
   let req = accept json $ supplyBody json userDetails $ post [https|https://postman-echo.com/post|]
@@ -47,4 +47,4 @@ sendRequests = do
 main :: IO ()
 main = do
   manager <- newManager tlsManagerSettings
-  runDormouse (DormouseConfig { clientManager = manager }) sendRequests
+  runDormouse (DormouseClientConfig { clientManager = manager }) sendRequests

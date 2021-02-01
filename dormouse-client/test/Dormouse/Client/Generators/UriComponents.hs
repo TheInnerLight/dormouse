@@ -1,6 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Dormouse.Generators.UriComponents 
+module Dormouse.Client.Generators.UriComponents 
   ( genValidScheme
   , genInvalidScheme
   , genValidUsername

@@ -5,7 +5,7 @@ Dormouse is an HTTP client that will help you REST.
 It was designed with the following objectives in mind:
        
   - HTTP requests and responses should be modelled by a simple, immutable Haskell Record.
-  - Real HTTP calls should be made via an abstraction layer (`MonadDormouse`) so testing and mocking is painless.
+  - Real HTTP calls should be made via an abstraction layer (`MonadDormouseClient`) so testing and mocking is painless.
   - Illegal requests should be unrepresentable, such as HTTP GET requests with a content body.
   - It should be possible to enforce a protocol (e.g. https) at the type level.
   - It should be possible to handle large request and response bodies via constant memory streaming.
@@ -18,7 +18,7 @@ Example use:
 {-# LANGUAGE DataKinds #-}
 
 import Control.Monad.IO.Class
-import Dormouse
+import Dormouse.Client
 import Data.Aeson.TH 
 import Dormouse.Url.QQ
 
@@ -39,7 +39,7 @@ deriveJSON defaultOptions {fieldLabelModifier = drop 6} ''EchoedJson
 main :: IO ()
 main = do
   manager <- newManager tlsManagerSettings
-  runDormouse (DormouseConfig { clientManager = manager }) $ do
+  runDormouse (DormouseClientConfig{ clientManager = manager }) $ do
     let userDetails = UserDetails { name = "James T. Kirk", nickname = "Jim", email = "james.t.kirk@starfleet.com"}
     let req = accept json $ supplyBody json userDetails $ post [https|https://postman-echo.com/post|]
     response :: HttpResponse (EchoedJson UserDetails) <- expect req
@@ -100,10 +100,10 @@ data PostmanEchoResponse = PostmanEchoResponse
 ```
 
 
-Once the request has been built, you can send it and expect a response of a particular type in any `MonadDormouse m`.
+Once the request has been built, you can send it and expect a response of a particular type in any `MonadDormouseClient m`.
 
 ```haskell
-sendPostmanEchoGetReq :: MonadDormouse m => m PostmanEchoResponse
+sendPostmanEchoGetReq :: MonadDormouseClient m => m PostmanEchoResponse
 sendPostmanEchoGetReq = do
   (resp :: HttpResponse PostmanEchoResponse) <- expect postmanEchoGetReq'
   return $ responseBody resp
@@ -119,7 +119,7 @@ You can use a concrete type.
 main :: IO ()
 main = do
   manager <- newManager tlsManagerSettings
-  postmanResponse <- runDormouse (DormouseConfig { clientManager = manager }) sendPostmanEchoGetReq
+  postmanResponse <- runDormouse (DormouseClientConfig { clientManager = manager }) sendPostmanEchoGetReq
   print postmanResponse
 ```
 
@@ -129,7 +129,7 @@ You can integrate the `DormouseT` Monad Transformer into your transformer stack.
 main :: IO ()
 main = do
   manager <- newManager tlsManagerSettings
-  postmanResponse <- runDormouseT (DormouseConfig { clientManager = manager }) sendPostmanEchoGetReq
+  postmanResponse <- runDormouseT (DormouseClientConfig { clientManager = manager }) sendPostmanEchoGetReq
   print postmanResponse
 ```
 
@@ -137,17 +137,17 @@ You can also integrate into your own Application monad using the `sendHttp` func
 
 ```haskell
 data MyEnv = MyEnv 
-  { dormouseEnv :: DormouseConfig
+  { dormouseEnv :: DormouseClientConfig
   }
 
-instance HasDormouseConfig MyEnv where
-  getDormouseConfig = dormouseEnv
+instance HasDormouseClientConfigMyEnv where
+  getDormouseClientConfig = dormouseEnv
 
 newtype AppM a = AppM
   { unAppM :: ReaderT Env IO a 
   } deriving (Functor, Applicative, Monad, MonadReader Env, MonadIO, MonadThrow)
 
-instance MonadDormouse (AppM) where
+instance MonadDormouseClient (AppM) where
   send = IOImpl.sendHttp
 
 runAppM :: Env -> AppM a -> IO a

@@ -1,14 +1,14 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE DataKinds #-}
 
-module Dormouse.UrlReqSpec
+module Dormouse.Client.UrlReqSpec
   ( spec
   ) where
 
 import Test.Hspec
 import Dormouse.Url
 import Dormouse.Url.QQ
-import Dormouse.MonadIOImpl
+import Dormouse.Client.MonadIOImpl
 import qualified Network.HTTP.Client as C
 
 spec :: Spec

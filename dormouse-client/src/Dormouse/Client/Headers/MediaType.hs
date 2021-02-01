@@ -1,4 +1,4 @@
-module Dormouse.Headers.MediaType 
+module Dormouse.Client.Headers.MediaType 
   ( MediaType(..)
   , ContentType(..)
   , MediaTypeException
@@ -14,7 +14,7 @@ import Control.Applicative ((<|>))
 import qualified Data.ByteString as B
 import qualified Data.Attoparsec.ByteString.Char8 as A
 import Data.CaseInsensitive  (CI, mk, foldedCase)
-import Dormouse.Exception (MediaTypeException(..))
+import Dormouse.Client.Exception (MediaTypeException(..))
 import qualified Data.Char as C
 import qualified Data.Text as T
 import qualified Data.Map.Strict as Map

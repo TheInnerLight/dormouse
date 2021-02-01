@@ -1,9 +1,9 @@
-module Dormouse.StatusSpec
+module Dormouse.Client.StatusSpec
   ( spec
   ) where
 
 import Test.Hspec
-import Dormouse.Status
+import Dormouse.Client.Status
 
 spec :: Spec
 spec = do
