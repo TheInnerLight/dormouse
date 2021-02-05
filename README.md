@@ -1,45 +1,20 @@
-## Dormouse
+# Dormouse
 
 Dormouse is a set of libraries designed to permit productive, type-safe, HTTP in Haskell.  It currently consists of:
 
  - [Dormouse-Uri](dormouse-uri/README.md), a library for type-safe representations of `Url`s and `Uri`s.
  - [Dormouse-Client](dormouse-client/README.md), a simple, type-safe and testable HTTP client.
 
-Quick example:
+## Documentation
 
-```haskell
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE DataKinds #-}
+Please see [Dormouse.io](https://dormouse.io) for full documentation.
 
-import Control.Monad.IO.Class
-import Dormouse.Client
-import Data.Aeson.TH 
-import Dormouse.Url.QQ
+## Objectives
 
-data UserDetails = UserDetails 
-  { name :: String
-  , nickname :: String
-  , email :: String
-  } deriving (Eq, Show)
+Dormouse aims to be:
 
-deriveJSON defaultOptions ''UserDetails
-
-data EchoedJson a = EchoedJson 
-  { echoedjson :: a
-  } deriving (Eq, Show)
-
-deriveJSON defaultOptions {fieldLabelModifier = drop 6} ''EchoedJson
-
-main :: IO ()
-main = do
-  manager <- newManager tlsManagerSettings
-  runDormouse (DormouseClientConfig{ clientManager = manager }) $ do
-    let userDetails = UserDetails { name = "James T. Kirk", nickname = "Jim", email = "james.t.kirk@starfleet.com"}
-    let req = accept json $ supplyBody json userDetails $ post [https|https://postman-echo.com/post|]
-    response :: HttpResponse (EchoedJson UserDetails) <- expect req
-    liftIO $ print response
-    return ()
-```
-
+  - User Friendly: Dormouse libraries attempt to map as naturally as possible to the underlying problem domain. Fancy code is great but only if it assists in representing the underlying abstractions.
+  - Strict: Dormouse libraries aim to make it extremely hard to write incorrect code by type checking as many common error scenarios as possible.
+  - Customisable & Realistic: We recognise that not all APIs are standards compliant and weird things occur in the real world. Default behaviour should be strict but the library should support customisation to handle interaction with the weird and wonderful real world of bizarre systems and legacy code.
+  - Testable: Dormouse is built from the ground up to make your job of testing any code that is built on top of it quick, straightforward and painless making it easy to keep projects reliable and well maintained for a long time to come.
 

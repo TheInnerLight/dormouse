@@ -37,9 +37,14 @@ main :: IO ()
 main = do
   manager <- newManager tlsManagerSettings
   runDormouse (DormouseClientConfig { clientManager = manager }) $ do
-    let userDetails = UserDetails { name = "James T. Kirk", nickname = "Jim", email = "james.t.kirk@starfleet.com"}
-    let req = accept json $ supplyBody json userDetails $ post [https|https://postman-echo.com/post|]
-    let req' = accept html $ get [https|https://google.com|]
+    let 
+      userDetails = UserDetails 
+        { name = "James T. Kirk"
+        , nickname = "Jim"
+        , email = "james.t.kirk@starfleet.com"
+        }
+      req = accept json $ supplyBody json userDetails $ post [https|https://postman-echo.com/post|]
+      req' = accept html $ get [https|https://google.com|]
     response :: HttpResponse (EchoedJson UserDetails) <- expect req
     liftIO $ print response
     response' :: HttpResponse T.Text <- expectAs html req'

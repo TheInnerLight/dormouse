@@ -13,35 +13,42 @@ It was designed with the following objectives in mind:
 Example use:
 
 ```haskell
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 import Control.Monad.IO.Class
-import Dormouse.Client
 import Data.Aeson.TH 
+import Dormouse.Client
+import GHC.Generics (Generic)
 import Dormouse.Url.QQ
 
 data UserDetails = UserDetails 
   { name :: String
   , nickname :: String
   , email :: String
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Generic)
 
 deriveJSON defaultOptions ''UserDetails
 
 data EchoedJson a = EchoedJson 
   { echoedjson :: a
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Generic)
 
 deriveJSON defaultOptions {fieldLabelModifier = drop 6} ''EchoedJson
 
 main :: IO ()
 main = do
   manager <- newManager tlsManagerSettings
-  runDormouse (DormouseClientConfig{ clientManager = manager }) $ do
-    let userDetails = UserDetails { name = "James T. Kirk", nickname = "Jim", email = "james.t.kirk@starfleet.com"}
-    let req = accept json $ supplyBody json userDetails $ post [https|https://postman-echo.com/post|]
+  runDormouse (DormouseClientConfig { clientManager = manager }) $ do
+    let 
+      userDetails = UserDetails 
+        { name = "James T. Kirk"
+        , nickname = "Jim"
+        , email = "james.t.kirk@starfleet.com"
+        }
+      req = accept json $ supplyBody json userDetails $ post [https|https://postman-echo.com/post|]
     response :: HttpResponse (EchoedJson UserDetails) <- expect req
     liftIO $ print response
     return ()
@@ -133,7 +140,7 @@ main = do
   print postmanResponse
 ```
 
-You can also integrate into your own Application monad using the `sendHttp` function from `Dormouse.MonadIOImpl` and by providing an instance of `HasDormouseConfig` for your application environment.
+You can also integrate into your own Application monad using the `sendHttp` function from `Dormouse.Client.MonadIOImpl` and by providing an instance of `HasDormouseConfig` for your application environment.
 
 ```haskell
 data MyEnv = MyEnv 

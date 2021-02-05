@@ -1,6 +1,5 @@
 
 {-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE GADTs #-}
