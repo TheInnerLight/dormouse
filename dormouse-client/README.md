@@ -41,7 +41,7 @@ deriveJSON defaultOptions {fieldLabelModifier = drop 6} ''EchoedJson
 main :: IO ()
 main = do
   manager <- newManager tlsManagerSettings
-  runDormouse (DormouseClientConfig { clientManager = manager }) $ do
+  runDormouseClient (DormouseClientConfig { clientManager = manager }) $ do
     let 
       userDetails = UserDetails 
         { name = "James T. Kirk"
@@ -126,17 +126,17 @@ You can use a concrete type.
 main :: IO ()
 main = do
   manager <- newManager tlsManagerSettings
-  postmanResponse <- runDormouse (DormouseClientConfig { clientManager = manager }) sendPostmanEchoGetReq
+  postmanResponse <- runDormouseClient (DormouseClientConfig { clientManager = manager }) sendPostmanEchoGetReq
   print postmanResponse
 ```
 
-You can integrate the `DormouseT` Monad Transformer into your transformer stack.
+You can integrate the `DormouseClientT` Monad Transformer into your transformer stack.
 
 ```haskell
 main :: IO ()
 main = do
   manager <- newManager tlsManagerSettings
-  postmanResponse <- runDormouseT (DormouseClientConfig { clientManager = manager }) sendPostmanEchoGetReq
+  postmanResponse <- runDormouseClientT (DormouseClientConfig { clientManager = manager }) sendPostmanEchoGetReq
   print postmanResponse
 ```
 

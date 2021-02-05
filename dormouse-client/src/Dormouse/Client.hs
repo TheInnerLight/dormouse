@@ -23,10 +23,10 @@ module Dormouse.Client
   , expectAs
   , expect
   -- * Dormouse Monad and Transformer
-  , DormouseT
-  , Dormouse
-  , runDormouseT
-  , runDormouse
+  , DormouseClientT
+  , DormouseClient
+  , runDormouseClientT
+  , runDormouseClient
   -- * Dormouse Class
   , MonadDormouseClient(..)
   -- * Dormouse Config
@@ -162,21 +162,21 @@ expectAs tag r = do
     contentTypeProx :: HttpRequest url method b contentTag acceptTag -> Proxy contentTag
     contentTypeProx _ = Proxy
 
--- | The DormouseT Monad Transformer
-newtype DormouseT m a = DormouseT 
-  { unDormouseT :: ReaderT DormouseClientConfig m a 
+-- | The DormouseClientT Monad Transformer
+newtype DormouseClientT m a = DormouseClientT 
+  { unDormouseClientT :: ReaderT DormouseClientConfig m a 
   } deriving (Functor, Applicative, Monad, MonadReader DormouseClientConfig, MonadIO, MonadThrow, MonadTrans)
 
-instance (MonadIO m, MonadThrow m) => MonadDormouseClient (DormouseT m) where
+instance (MonadIO m, MonadThrow m) => MonadDormouseClient (DormouseClientT m) where
   send = IOImpl.sendHttp
 
--- | A simple monad that allows you to run Dormouse
-type Dormouse a = DormouseT IO a
+-- | A simple monad that allows you to run DormouseClient
+type DormouseClient a = DormouseClientT IO a
 
--- | Run a DormouseT using the supplied 'DormouseConfig' to generate a result in the underlying monad @m@
-runDormouseT :: DormouseClientConfig -> DormouseT m a -> m a
-runDormouseT config dormouseT = runReaderT (unDormouseT dormouseT) config
+-- | Run a 'DormouseClientT' using the supplied 'DormouseClientConfig' to generate a result in the underlying monad @m@
+runDormouseClientT :: DormouseClientConfig -> DormouseClientT m a -> m a
+runDormouseClientT config dormouseClientT = runReaderT (unDormouseClientT dormouseClientT) config
 
--- | Run a Dormouse using the supplied 'DormouseConfig' to generate a result in 'IO'
-runDormouse :: DormouseClientConfig -> Dormouse a -> IO a
-runDormouse = runDormouseT
+-- | Run a 'DormouseClient' using the supplied 'DormouseClientConfig' to generate a result in 'IO'
+runDormouseClient :: DormouseClientConfig -> DormouseClient a -> IO a
+runDormouseClient = runDormouseClientT

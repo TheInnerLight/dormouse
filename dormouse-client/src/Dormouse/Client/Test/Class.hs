@@ -27,7 +27,7 @@ import qualified Streamly.Prelude as S
 import qualified Streamly.External.ByteString as SEB
 import qualified Streamly.External.ByteString.Lazy as SEBL
 
--- | MonadDormouseTest describes the capability to send and receive specifically ByteString typed HTTP Requests and Responses
+-- | MonadDormouseTestClient describes the capability to send and receive specifically ByteString typed HTTP Requests and Responses
 class Monad m => MonadDormouseTestClient m where
   -- | Make the supplied HTTP request, expecting an HTTP response with a Lazy ByteString body to be delivered in some @MonadDormouseTest m@
   expectLbs :: HttpRequest scheme method LB.ByteString contentTag acceptTag -> m (HttpResponse LB.ByteString)

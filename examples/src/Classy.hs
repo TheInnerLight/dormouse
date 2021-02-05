@@ -47,4 +47,4 @@ sendRequests = do
 main :: IO ()
 main = do
   manager <- newManager tlsManagerSettings
-  runDormouse (DormouseClientConfig { clientManager = manager }) sendRequests
+  runDormouseClient (DormouseClientConfig { clientManager = manager }) sendRequests
