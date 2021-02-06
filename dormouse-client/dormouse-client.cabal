@@ -4,7 +4,7 @@ cabal-version: 1.18
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b732b18eea17bbcfbb21470186a443f6e1913dd42bcfcf8818137c1accba0e53
+-- hash: fcfdacfd0fc01c25ad26ba8d31ecc49d501fa89dfc2f4460617882af3d2eeed3
 
 name:           dormouse-client
 version:        0.1.0.0
@@ -14,13 +14,13 @@ description:    An HTTP client designed to be productive, easy to use, easy to t
                 It was designed with the following objectives in mind:
                 .
                   - HTTP requests and responses should be modelled by a simple, immutable Haskell Record.
-                  - Real HTTP calls should be made via an abstraction layer (`MonadDormouseClient`) so testing and mocking is painless.
+                  - Actual HTTP calls should be made via an abstraction layer (`MonadDormouseClient`) so testing and mocking is painless.
                   - Illegal requests should be unrepresentable, such as HTTP GET requests with a content body.
                   - It should be possible to enforce a protocol (e.g. https) at the type level.
                   - It should be possible to handle large request and response bodies via constant memory streaming.
 category:       Web
-homepage:       https://github.com/githubuser/dormouse#readme
-bug-reports:    https://github.com/githubuser/dormouse/issues
+homepage:       https://dormouse.io/client.html
+bug-reports:    https://github.com/theinnerlight/dormouse/issues
 author:         Phil Curzon
 maintainer:     phil@novelfs.org
 copyright:      2020 Phil Curzon
@@ -34,7 +34,7 @@ extra-doc-files:
 
 source-repository head
   type: git
-  location: https://github.com/githubuser/dormouse
+  location: https://github.com/theinnerlight/dormouse
 
 library
   exposed-modules:

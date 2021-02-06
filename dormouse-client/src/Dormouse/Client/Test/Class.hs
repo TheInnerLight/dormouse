@@ -3,13 +3,16 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | 
--- This module is useful for testing by providing a concrete ByteString typed version of 'MonadDormouse' called `MonadDormouseTest`.  
+-- This module is useful for testing by providing a concrete ByteString typed version of 'MonadDormouseClient' called `MonadDormouseTestClient`.  
 --
 -- The assumption is that, in most test cases, you probably want to verify the byte payload of the request (which you simply extract
 -- from the request here as a @ByteString@) and provide a byte payload (also as a @ByteString@) in the response so that you can verify 
 -- your repsonse payload can be decoded directly.
 --
--- The machinery in here uses orphan instances of 'MonadDormouse' so you should use this carefully and restrict this module to test 
+-- An implementation of `MonadDormouseTestClient` can be written in terms of either Strict or Lazy Bytestrings at your convenient and the other 
+-- will be automatically provided for you.
+--
+-- The machinery in here uses orphan instances of 'MonadDormouseClient' so you should use this carefully and restrict this module to test 
 -- cases only.
 module Dormouse.Client.Test.Class
   ( MonadDormouseTestClient(..)

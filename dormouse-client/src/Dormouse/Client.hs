@@ -4,9 +4,7 @@
 
 -- | The "Client" module is the primary module you will need to import to perform HTTP requests with this library.
 --
---  You will need to enable @XDataKinds@ because Dormouse requests are parameterised by the associated HTTP method literal at the type level.
---
---  For a comprehensive tutorial, please see: <https://github.com/TheInnerLight/dormouse/blob/master/README.md>
+--  For a comprehensive documentation, please see: <https://dormouse.io/client.html>
 module Dormouse.Client
   ( -- * Request / Response Types
     HttpRequest(..)
@@ -22,14 +20,14 @@ module Dormouse.Client
   , accept
   , expectAs
   , expect
-  -- * Dormouse Monad and Transformer
+  -- * Dormouse Client Monad and Transformer
   , DormouseClientT
   , DormouseClient
   , runDormouseClientT
   , runDormouseClient
-  -- * Dormouse Class
+  -- * Dormouse Client Class
   , MonadDormouseClient(..)
-  -- * Dormouse Config
+  -- * Dormouse Client Config
   , C.newManager
   , TLS.tlsManagerSettings
   , HasDormouseClientConfig(..)

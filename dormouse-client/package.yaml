@@ -1,10 +1,11 @@
 name:                dormouse-client
 version:             0.1.0.0
-github:              "githubuser/dormouse"
+github:              "theinnerlight/dormouse"
 license:             BSD3
 author:              Phil Curzon
 maintainer:          "phil@novelfs.org"
 copyright:           "2020 Phil Curzon"
+homepage:            "https://dormouse.io/client.html"
 
 extra-source-files:
 - README.md
