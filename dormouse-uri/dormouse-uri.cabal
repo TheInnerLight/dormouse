@@ -4,7 +4,7 @@ cabal-version: 1.18
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 3ab471af86bb2828db7e9375c19717aa7b2b40e0cfb6dfd063778b1fbf258f60
+-- hash: 7c88a7285ad48f5d51d430c58efcedff76ebd29951e6a7cb06ab16b8b38b1909
 
 name:           dormouse-uri
 version:        0.1.0.0
@@ -28,7 +28,7 @@ homepage:       https://dormouse.io/uri.html
 bug-reports:    https://github.com/theinnerlight/dormouse/issues
 author:         Phil Curzon
 maintainer:     phil@novelfs.org
-copyright:      2020 Phil Curzon
+copyright:      2020-2021 Phil Curzon
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
