@@ -36,6 +36,8 @@ description: |
     - `DataKinds` allow `Url`s to be restricted to the `http` or `https` schemes are the type level.
     - A UrlBuilder syntax to allow type-safe construction/concatenation of `Url`s from their components, e.g. path and query parameters.
 
+  Please see https://dormouse.io for full documentation.
+
 dependencies:
 - base >= 4.7 && < 5
 - attoparsec >= 0.13.2.4 && < 0.14

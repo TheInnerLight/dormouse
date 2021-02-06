@@ -4,7 +4,7 @@ cabal-version: 1.18
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 78cf75cd19805dc131aca81e03b4c8ac82894d0128a93c6da378838c8806bb13
+-- hash: 3ab471af86bb2828db7e9375c19717aa7b2b40e0cfb6dfd063778b1fbf258f60
 
 name:           dormouse-uri
 version:        0.1.0.0
@@ -21,6 +21,8 @@ description:    Dormouse-Uri provides type safe handling of `Uri`s and `Url`s.
                   - Quasiquoters to allow safe construction of `Uri`/`Url`s from string literals.
                   - `DataKinds` allow `Url`s to be restricted to the `http` or `https` schemes are the type level.
                   - A UrlBuilder syntax to allow type-safe construction/concatenation of `Url`s from their components, e.g. path and query parameters.
+                .
+                Please see https://dormouse.io for full documentation.
 category:       Web
 homepage:       https://dormouse.io/uri.html
 bug-reports:    https://github.com/theinnerlight/dormouse/issues
