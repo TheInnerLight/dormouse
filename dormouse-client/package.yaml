@@ -6,6 +6,7 @@ author:              Phil Curzon
 maintainer:          "phil@novelfs.org"
 copyright:           "2020 Phil Curzon"
 homepage:            "https://dormouse.io/client.html"
+license-file:        "LICENSE"
 
 extra-source-files:
 - README.md
@@ -31,6 +32,8 @@ description: |
     - Illegal requests should be unrepresentable, such as HTTP GET requests with a content body.
     - It should be possible to enforce a protocol (e.g. https) at the type level.
     - It should be possible to handle large request and response bodies via constant memory streaming.
+
+  Please see https://dormouse.io for full documentation.
 
 dependencies:
 - base >= 4.7 && < 5

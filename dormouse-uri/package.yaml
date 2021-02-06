@@ -5,6 +5,7 @@ license:             BSD3
 author:              Phil Curzon
 maintainer:          "phil@novelfs.org"
 copyright:           "2020 Phil Curzon"
+license-file:        "LICENSE"
 
 extra-source-files:
 - README.md
