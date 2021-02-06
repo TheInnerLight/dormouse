@@ -1,11 +1,12 @@
 name:                dormouse-uri
 version:             0.1.0.0
-github:              "githubuser/dormouse"
+github:              "theinnerlight/dormouse"
 license:             BSD3
 author:              Phil Curzon
 maintainer:          "phil@novelfs.org"
 copyright:           "2020 Phil Curzon"
 license-file:        "LICENSE"
+homepage:            "https://dormouse.io/uri.html"
 
 extra-source-files:
 - README.md

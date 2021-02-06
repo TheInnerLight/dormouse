@@ -4,7 +4,7 @@ cabal-version: 1.18
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 4d3ffd2061b782d1f02c95c8de78c03cb81c1c0711ab7f348800df84dcdc10a5
+-- hash: 78cf75cd19805dc131aca81e03b4c8ac82894d0128a93c6da378838c8806bb13
 
 name:           dormouse-uri
 version:        0.1.0.0
@@ -22,8 +22,8 @@ description:    Dormouse-Uri provides type safe handling of `Uri`s and `Url`s.
                   - `DataKinds` allow `Url`s to be restricted to the `http` or `https` schemes are the type level.
                   - A UrlBuilder syntax to allow type-safe construction/concatenation of `Url`s from their components, e.g. path and query parameters.
 category:       Web
-homepage:       https://github.com/githubuser/dormouse#readme
-bug-reports:    https://github.com/githubuser/dormouse/issues
+homepage:       https://dormouse.io/uri.html
+bug-reports:    https://github.com/theinnerlight/dormouse/issues
 author:         Phil Curzon
 maintainer:     phil@novelfs.org
 copyright:      2020 Phil Curzon
@@ -38,7 +38,7 @@ extra-doc-files:
 
 source-repository head
   type: git
-  location: https://github.com/githubuser/dormouse
+  location: https://github.com/theinnerlight/dormouse
 
 library
   exposed-modules:
