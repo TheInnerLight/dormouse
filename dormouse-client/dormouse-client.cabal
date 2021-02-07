@@ -4,7 +4,7 @@ cabal-version: 1.18
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8652b7eaceeefc033d88b84aeca6b9e13ea610548c6ee6eeeefa7567243686cd
+-- hash: 90d3eeeb17ca2977692b0372e234055e5c25aa444fff5c97df3a0ef7a3b1a09e
 
 name:           dormouse-client
 version:        0.1.0.0
@@ -25,7 +25,7 @@ homepage:       https://dormouse.io/client.html
 bug-reports:    https://github.com/theinnerlight/dormouse/issues
 author:         Phil Curzon
 maintainer:     phil@novelfs.org
-copyright:      2020 Phil Curzon
+copyright:      2020-2021 Phil Curzon
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
@@ -76,7 +76,7 @@ library
     , streamly >=0.7.2 && <0.8
     , streamly-bytestring >=0.1.2 && <0.2
     , template-haskell >=2.15.0 && <3.0.0
-    , text >=1.2.3 && <2.0.0
+    , text >=1.2.4 && <2.0.0
   default-language: Haskell2010
 
 test-suite dormouse-client-test
@@ -96,8 +96,10 @@ test-suite dormouse-client-test
       Dormouse.Client.Test.Class
       Dormouse.Client.Types
       Dormouse.Client.Generators.Json
+      Dormouse.Client.Generators.Text
       Dormouse.Client.Generators.UriComponents
       Dormouse.Client.Headers.MediaTypeSpec
+      Dormouse.Client.PayloadSpec
       Dormouse.Client.StatusSpec
       Dormouse.Client.UrlReqSpec
       Dormouse.ClientSpec
@@ -129,6 +131,6 @@ test-suite dormouse-client-test
     , streamly >=0.7.2 && <0.8
     , streamly-bytestring >=0.1.2 && <0.2
     , template-haskell >=2.15.0 && <3.0.0
-    , text >=1.2.3 && <2.0.0
+    , text >=1.2.4 && <2.0.0
     , vector >=0.12.0.3 && <0.13
   default-language: Haskell2010
