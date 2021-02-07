@@ -75,6 +75,8 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     - -Wall
+    - -O
+    - -fdicts-strict
     dependencies:
     - hspec >= 2.0.0 && < 3
     - hspec-discover >= 2.0.0 && < 3
