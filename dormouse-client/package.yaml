@@ -78,6 +78,7 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     - -Wall
+    - -fdicts-strict
     dependencies:
     - dormouse-uri
     - hspec >= 2.0.0 && < 3

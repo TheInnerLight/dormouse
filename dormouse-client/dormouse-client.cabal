@@ -4,7 +4,7 @@ cabal-version: 1.18
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b714759239c3ed2a82a821af11373aea15d8d7ff3a93869dcdd6abd6403ce101
+-- hash: 53a8941fce30957b33c0c2573f20f976e663b6a0d21e6feed28a68ff8b5d68e3
 
 name:           dormouse-client
 version:        0.1.0.1
@@ -108,7 +108,7 @@ test-suite dormouse-client-test
       src
       test
   default-extensions: OverloadedStrings MultiParamTypeClasses ScopedTypeVariables FlexibleContexts
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -fdicts-strict
   build-depends:
       aeson >=1.4.2 && <2.0.0
     , attoparsec >=0.13.2.4 && <0.14

@@ -4,7 +4,7 @@ cabal-version: 1.18
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: cd9a77b7273de55152afc4eae0bcd369bc7ab89436aca08d57928dbb6d9ad818
+-- hash: d508cc2541c26dac72e00ed351d5551d186ecc83c31bfaa78e30d2a5a0962e63
 
 name:           dormouse-uri
 version:        0.1.0.1
@@ -101,7 +101,7 @@ test-suite dormouse-uri-test
       src
       test
   default-extensions: OverloadedStrings MultiParamTypeClasses ScopedTypeVariables FlexibleContexts
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -O -fdicts-strict
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -fdicts-strict
   build-depends:
       attoparsec >=0.13.2.4 && <0.14
     , base >=4.7 && <5
