@@ -4,10 +4,10 @@ cabal-version: 1.18
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 6ce92ba4e4ad75f133e8ce8895ea687caa96a2b9be10edf71558bdc381a309df
+-- hash: cd9a77b7273de55152afc4eae0bcd369bc7ab89436aca08d57928dbb6d9ad818
 
 name:           dormouse-uri
-version:        0.1.0.0
+version:        0.1.0.1
 synopsis:       Library for type-safe representations of Uri/Urls
 description:    Dormouse-Uri provides type safe handling of `Uri`s and `Url`s.
                 .

@@ -4,10 +4,10 @@ cabal-version: 1.18
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 90d3eeeb17ca2977692b0372e234055e5c25aa444fff5c97df3a0ef7a3b1a09e
+-- hash: b714759239c3ed2a82a821af11373aea15d8d7ff3a93869dcdd6abd6403ce101
 
 name:           dormouse-client
-version:        0.1.0.0
+version:        0.1.0.1
 synopsis:       Simple, type-safe and testable HTTP client
 description:    An HTTP client designed to be productive, easy to use, easy to test, flexible and safe!
                 .

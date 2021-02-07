@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 9e209283762be9b57f372e9e8a81df98fa8f4b9abf853ebea4a636dd7df01ee6
+-- hash: b7e619928ab25f37e544467253dcf0841a356bd2be5ec1dfa3bdc2b7c37abbc9
 
 name:           dormouse-examples
-version:        0.1.0.0
+version:        0.1.0.1
 homepage:       https://github.com/githubuser/dormouse#readme
 bug-reports:    https://github.com/githubuser/dormouse/issues
 author:         Phil Curzon
@@ -49,5 +49,5 @@ executable dormouse-examples
     , streamly >=0.7.2 && <0.8
     , streamly-bytestring >=0.1.2 && <0.2
     , template-haskell >=2.15.0 && <3.0.0
-    , text >=1.2.3 && <2.0.0
+    , text >=1.2.4 && <2.0.0
   default-language: Haskell2010
