@@ -108,6 +108,15 @@ uriWithUnicodeInFragment = AbsoluteUri $ AbsUri
   , uriFragment = Just $ "😀😀😀"
   }
 
+uriWithUnicodeInPath :: Uri
+uriWithUnicodeInPath = AbsoluteUri $ AbsUri
+  { uriScheme = Scheme "https"
+  , uriAuthority = Just $ Authority { authorityUserInfo = Nothing, authorityHost = "www.example.com", authorityPort = Nothing }
+  , uriPath = Path ["test", "dsdsfdsfds😀😀😀", ""]
+  , uriQuery = Nothing
+  , uriFragment = Nothing 
+  }
+
 ldapUri :: Uri
 ldapUri = AbsoluteUri $ AbsUri
   { uriScheme = Scheme "ldap"
@@ -260,9 +269,16 @@ spec = do
     it "generates uri components correctly when there is percent encoded unicode in the fragment" $ do
       let res = parseOnly pUri "https://www.example.com/forum/questions/#%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80"
       res `shouldBe` (Right uriWithUnicodeInFragment)
+    it "generates uri components correctly when there is percent encoded unicode in the path" $ do
+      let res = parseOnly pUri "https://www.example.com/test/dsdsfdsfds%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80/"
+      res `shouldBe` Right uriWithUnicodeInPath
     it "generates uri components correctly for ldap uri" $ do
       let res = parseOnly pUri "ldap://192.168.0.1/c=GB?objectClass?one"
       res `shouldBe` (Right ldapUri)
     it "generates uri components correctly for tel uri" $ do
       let res = parseOnly pUri "tel:+1-816-555-1212"
       res `shouldBe` (Right telUri)
+    it "fails for missing scheme" $ do
+      let res = parseOnly pUri "://"
+      isLeft res `shouldBe` True
+
