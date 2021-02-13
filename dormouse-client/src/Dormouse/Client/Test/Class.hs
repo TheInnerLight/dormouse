@@ -25,6 +25,7 @@ import Data.Word ( Word8 )
 import Dormouse.Client.Class ( MonadDormouseClient(..) )
 import Dormouse.Client.Payload ( RawRequestPayload(..) )
 import Dormouse.Client.Types ( HttpRequest(..), HttpResponse(..) )
+import Dormouse.Url ( IsUrl )
 import Streamly ( SerialT )
 import qualified Streamly.Prelude as S
 import qualified Streamly.External.ByteString as SEB
@@ -33,12 +34,12 @@ import qualified Streamly.External.ByteString.Lazy as SEBL
 -- | MonadDormouseTestClient describes the capability to send and receive specifically ByteString typed HTTP Requests and Responses
 class Monad m => MonadDormouseTestClient m where
   -- | Make the supplied HTTP request, expecting an HTTP response with a Lazy ByteString body to be delivered in some @MonadDormouseTest m@
-  expectLbs :: HttpRequest scheme method LB.ByteString contentTag acceptTag -> m (HttpResponse LB.ByteString)
+  expectLbs :: IsUrl url => HttpRequest url method LB.ByteString contentTag acceptTag -> m (HttpResponse LB.ByteString)
   expectLbs req = do
     resp <- expectBs $ req {requestBody = LB.toStrict $ requestBody req}
     return $ resp {responseBody = LB.fromStrict $ responseBody resp}
   -- | Make the supplied HTTP request, expecting an HTTP response with a Strict ByteString body to be delivered in some @MonadDormouseTest m@
-  expectBs :: HttpRequest scheme method SB.ByteString contentTag acceptTag -> m (HttpResponse SB.ByteString)
+  expectBs :: IsUrl url => HttpRequest url method SB.ByteString contentTag acceptTag -> m (HttpResponse SB.ByteString)
   expectBs req = do
     resp <- expectLbs $ req {requestBody = LB.fromStrict $ requestBody req}
     return $ resp {responseBody = LB.toStrict $ responseBody resp}

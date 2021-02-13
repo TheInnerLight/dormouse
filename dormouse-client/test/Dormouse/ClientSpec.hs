@@ -1,7 +1,9 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Dormouse.ClientSpec 
   ( spec
@@ -29,6 +31,7 @@ data TestEnv = TestEnv
   , sentContentType :: MVar (Maybe B.ByteString)
   , sentAcceptHeader :: MVar (Maybe B.ByteString)
   , returnJson :: MVar (Maybe (LB.ByteString))
+  , triggered :: MVar Bool
   }
 
 newtype TestM a = TestM { unTestM :: ReaderT TestEnv IO a } deriving (Functor, Applicative, Monad, MonadReader TestEnv, MonadIO, MonadThrow)
@@ -37,18 +40,29 @@ runTestM :: TestEnv -> TestM a -> IO a
 runTestM deps app = flip runReaderT deps $ unTestM app
 
 instance MonadDormouseTestClient TestM where
-  expectLbs req = do
-    testEnv <- ask
-    _ <- liftIO . swapMVar (sentJson testEnv) . Just $ requestBody req
-    _ <- liftIO . swapMVar (sentContentType testEnv) . getHeaderValue "Content-Type" $ req
-    _ <- liftIO . swapMVar (sentAcceptHeader testEnv) . getHeaderValue "Accept" $ req
-    maybeResponseJson <- liftIO . readMVar $ returnJson testEnv
-    let respBs = maybe (encode ()) id $ maybeResponseJson
-    pure HttpResponse
-      { responseStatusCode = 200
-      , responseHeaders = Map.empty
-      , responseBody = respBs
-      }
+  expectLbs (req @ HttpRequest { requestUrl = u, requestMethod = method, requestBody = body, requestHeaders = headers }) = do
+    let reqUrl = asAnyUrl u
+    case (reqUrl, method) of
+      ([url|https://starfleet.com/captains|], GET) -> do
+        testEnv <- ask
+        _ <- liftIO . swapMVar (triggered testEnv) $ True
+        pure HttpResponse
+          { responseStatusCode = 200
+          , responseHeaders = Map.empty
+          , responseBody = encode ()
+          }
+      _ -> do
+        testEnv <- ask
+        _ <- liftIO . swapMVar (sentJson testEnv) . Just $ requestBody req
+        _ <- liftIO . swapMVar (sentContentType testEnv) . getHeaderValue "Content-Type" $ req
+        _ <- liftIO . swapMVar (sentAcceptHeader testEnv) . getHeaderValue "Accept" $ req
+        maybeResponseJson <- liftIO . readMVar $ returnJson testEnv
+        let respBs = maybe (encode ()) id $ maybeResponseJson
+        pure HttpResponse
+          { responseStatusCode = 200
+          , responseHeaders = Map.empty
+          , responseBody = respBs
+          }
 
 spec :: Spec
 spec = before setup $ do
@@ -98,17 +112,25 @@ spec = before setup $ do
         let actualJson = responseBody r
         actualJson === arbJson
         actualAcceptHeader === Nothing
+    it "matches the expected url and method" $ \(_, _, _, _, testEnv, _) -> do
+      hedgehog $ do
+        let req = get [https|https://starfleet.com/captains|]
+        r :: HttpResponse Value <- liftIO $ runTestM testEnv $ expectAs json req
+        t <- liftIO . readMVar $ triggered testEnv
+        t === True
   where 
     setup = do
       sentJson' <- newMVar Nothing
       sentContentType' <- newMVar Nothing
       sentAcceptHeader' <- newMVar Nothing
       returnJson' <- newMVar Nothing
+      triggered' <- newMVar False
       let testEnv = TestEnv 
             { sentJson = sentJson'
             , sentContentType = sentContentType'
             , sentAcceptHeader = sentAcceptHeader'
             , returnJson = returnJson'
+            , triggered = triggered'
             }
       let jsonGenRanges = JsonGenRanges 
             { stringRanges = Range.constant 0 15
