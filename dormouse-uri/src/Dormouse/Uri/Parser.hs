@@ -20,6 +20,7 @@ module Dormouse.Uri.Parser
   , pPathRel
   , pQuery
   , pFragment
+  , percentDecode
   ) where
 
 import Data.Word ( Word8 ) 
