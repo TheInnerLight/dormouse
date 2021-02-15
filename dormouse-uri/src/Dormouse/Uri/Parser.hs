@@ -7,8 +7,6 @@ module Dormouse.Uri.Parser
   , pUriRef
   , pRelativeUri
   , pScheme
-  , pUsername
-  , pPassword
   , pUserInfo
   , pIPv4
   , pRegName
@@ -67,17 +65,12 @@ takeWhileW8 f = AB.takeWhile (f . BS.w2c)
 takeWhile1W8 :: (Char -> Bool) -> Parser B.ByteString 
 takeWhile1W8 f = AB.takeWhile1 (f . BS.w2c)
 
-pUsername :: Parser Username
-pUsername = do
-  xs <- takeWhileW8 (\x -> isUsernameChar x || x == '%')
+pUserInfo :: Parser UserInfo
+pUserInfo = do
+  xs <- takeWhileW8 (\x -> isUserInfoChar x || x == '%')
   xs' <- maybe (fail "Failed to percent-decode") pure $ percentDecode xs
-  return $ Username (TE.decodeUtf8 xs')
-
-pPassword :: Parser Password
-pPassword = do
-  xs <- takeWhileW8 (\x -> isPasswordChar x || x == '%')
-  xs' <- maybe (fail "Failed to percent-decode") pure $ percentDecode xs
-  return $ Password (TE.decodeUtf8 xs')
+  _ <- char '@'
+  return $ UserInfo (TE.decodeUtf8 xs')
 
 pRegName :: Parser T.Text
 pRegName = do
@@ -105,13 +98,6 @@ pHost :: Parser Host
 pHost = do
   hostText <- pRegName <|> pIPv4
   return . Host  $ hostText
-
-pUserInfo :: Parser UserInfo
-pUserInfo = do
-  username <- pUsername
-  password <- pMaybe (char ':' *> pPassword)
-  _ <- char '@'
-  return $ UserInfo { userInfoUsername = username, userInfoPassword = password }
 
 pPort :: Parser Int
 pPort = 
@@ -201,7 +187,7 @@ pRelativeUri = do
   query <- pMaybe pQuery
   fragment <- pMaybe pFragment
   _ <- endOfInput
-  return  $ RelRef { uriAuthority = authority, uriPath = path, uriQuery = query, uriFragment = fragment }
+  return  $ RelRef { relRefAuthority = authority, relRefPath = path, relRefQuery = query, relRefFragment = fragment }
 
 pUri :: Parser Uri
 pUri = do

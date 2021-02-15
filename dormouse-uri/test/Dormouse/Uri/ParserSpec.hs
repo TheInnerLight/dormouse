@@ -35,7 +35,7 @@ uriWithHostUsernameAndPath :: Uri
 uriWithHostUsernameAndPath = Uri
   { uriScheme = Scheme "http"
   , uriAuthority = Just $ Authority 
-    { authorityUserInfo = Just (UserInfo {userInfoUsername = "j.t.kirk", userInfoPassword = Nothing})
+    { authorityUserInfo = Just $ UserInfo "j.t.kirk"
     , authorityHost = Host "google.com"
     , authorityPort = Nothing
     }
@@ -48,7 +48,7 @@ uriWithHostUsernamePasswordAndPath :: Uri
 uriWithHostUsernamePasswordAndPath = Uri
   { uriScheme = Scheme "http"
   , uriAuthority = Just $ Authority 
-    { authorityUserInfo = Just (UserInfo {userInfoUsername = "j.t.kirk", userInfoPassword = Just "11a"})
+    { authorityUserInfo = Just $ UserInfo "j.t.kirk:11a"
     , authorityHost = Host "google.com"
     , authorityPort = Nothing
     }
@@ -140,24 +140,6 @@ spec = do
     it "fails for invalid schemes" $ hedgehog $ do
       schemeText <- forAll genInvalidScheme
       let res = parseOnly (pScheme <* endOfInput) schemeText
-      isLeft res === True
-  describe "pUsername" $ do
-    it "returns the matching username for all valid usernames" $ hedgehog $ do
-      usernameText <- forAll genValidUsername
-      let res = parseOnly (pUsername <* endOfInput) usernameText
-      res === (Right . Username . TE.decodeUtf8 . fromJust . percentDecode $ usernameText)
-    it "fails for invalid usernames" $ hedgehog $ do
-      usernameText <- forAll genInvalidUsername
-      let res = parseOnly (pUsername <* endOfInput) usernameText
-      isLeft res === True
-  describe "pPassword" $ do
-    it "returns the matching password for all valid passwords" $ hedgehog $ do
-      passwordText <- forAll genValidPassword
-      let res = parseOnly (pPassword <* endOfInput) passwordText
-      res === (Right . Password . TE.decodeUtf8 . fromJust .percentDecode $ passwordText)
-    it "fails for invalid passwords" $ hedgehog $ do
-      passwordText <- forAll genInvalidPassword
-      let res = parseOnly (pPassword <* endOfInput) passwordText
       isLeft res === True
   describe "pUserInfo" $ do
     it "generates a user info for all valid user infos" $ hedgehog $ do

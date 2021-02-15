@@ -13,8 +13,6 @@ module Dormouse.Uri.Types
   , PathSegment(..)
   , Query(..)
   , Scheme(..)
-  , Username(..)
-  , Password(..)
   , UserInfo(..)
   , Uri(..)
   , RelRef(..)
@@ -24,31 +22,20 @@ module Dormouse.Uri.Types
 import Data.String (IsString(..))
 import qualified Data.List as L
 import Data.Text (Text, unpack, pack)
+import qualified Data.Text as T
 import Language.Haskell.TH.Syntax (Lift(..))
 
--- | The Username subcomponent of a URI UserInfo
-newtype Username = Username { unUsername :: Text } deriving (Eq, Lift)
-
-instance Show Username where
-  show username = unpack $ unUsername username
-
-instance IsString Username where
-  fromString s = Username $ pack s
-
--- | The Password subcomponent of a URI UserInfo
-newtype Password = Password { unPassword :: Text } deriving (Eq, Lift)
-
-instance Show Password where
-  show _ = "****"
-
-instance IsString Password where
-  fromString s = Password $ pack s
-
 -- | The UserInfo subcomponent of a URI Authority
-data UserInfo = UserInfo 
-  { userInfoUsername :: Username
-  , userInfoPassword :: Maybe Password
-  } deriving (Eq, Show, Lift)
+newtype UserInfo = UserInfo 
+  { unUserInfo :: Text
+  } deriving (Eq, Lift)
+
+instance Show UserInfo where
+  show userInfo = -- applications should not render as clear text anything after the first colon
+    case T.split (==':') $ unUserInfo userInfo of 
+      [] -> ""
+      [x] -> unpack x
+      x:_ -> unpack x <> ":****"
 
 -- | The Host subcomponent of a URI Authority
 newtype Host = Host { unHost :: Text } deriving (Eq, Lift)
@@ -119,10 +106,10 @@ data Uri = Uri
 
 -- | The data associated with a URI Relative Reference
 data RelRef = RelRef
-  { uriAuthority :: Maybe Authority
-  , uriPath :: Path 'Relative
-  , uriQuery :: Maybe Query
-  , uriFragment :: Maybe Fragment
+  { relRefAuthority :: Maybe Authority
+  , relRefPath :: Path 'Relative
+  , relRefQuery :: Maybe Query
+  , relRefFragment :: Maybe Fragment
   } deriving (Eq, Show, Lift)
 
 -- | A URI-reference is either a URI or a relative reference.  If the URI-reference's prefix does not match the syntax of a scheme 
