@@ -27,13 +27,6 @@ instance NFData (UB.URIRef a) where
 
 instance NFData Scheme where
   rnf (Scheme t) = rnf t
-
-instance NFData Username where
-  rnf (Username t) = rnf t
-
-instance NFData Password where
-  rnf (Password t) = rnf t
-
 instance NFData Host where
   rnf (Host t) = rnf t
 
@@ -50,7 +43,7 @@ instance NFData (Path a) where
   rnf (Path t) = rnf t
 
 instance NFData UserInfo where
-  rnf (UserInfo a b) = rnf a `seq` rnf b
+  rnf (UserInfo a) = rnf a
 
 instance NFData Authority where
   rnf (Authority a b c) = rnf a `seq` rnf b `seq` rnf c
