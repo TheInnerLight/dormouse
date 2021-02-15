@@ -4,7 +4,7 @@
 
 module Dormouse.Uri.Parser
   ( pUri
-  , pAbsoluteUri
+  , pUriRef
   , pRelativeUri
   , pScheme
   , pUsername
@@ -131,7 +131,7 @@ pAuthority = do
     _                                         -> fail "Invalid authority termination character, must be /, ?, # or end of input"
   return Authority { authorityUserInfo = authUserInfo, authorityHost = authHost, authorityPort = authPort}
 
-pPathAbsAuth :: Parser (Path 'Absolute)
+pPathAbsAuth :: Parser (Path rt)
 pPathAbsAuth = do
   p <- takeWhileW8 (\x -> isPathChar x || x == '%' || x == '/')
   p' <- maybe (fail "Failed to percent-decode") pure $ percentDecode p
@@ -194,22 +194,23 @@ pAbsolutePart = do
   authority <- pMaybe pAuthority
   return (scheme, authority)
 
-pRelativeUri :: Parser Uri
+pRelativeUri :: Parser RelRef
 pRelativeUri = do
-  path <- pPathRel
+  authority <- pMaybe pAuthority
+  path <- if isJust authority then pPathAbsAuth else pPathRel
   query <- pMaybe pQuery
   fragment <- pMaybe pFragment
   _ <- endOfInput
-  return $ RelativeUri $ RelUri { uriPath = path, uriQuery = query, uriFragment = fragment }
+  return  $ RelRef { uriAuthority = authority, uriPath = path, uriQuery = query, uriFragment = fragment }
 
-pAbsoluteUri :: Parser Uri
-pAbsoluteUri = do
+pUri :: Parser Uri
+pUri = do
   (scheme, authority) <- pAbsolutePart
   path <- if isJust authority then pPathAbsAuth else pPathAbsNoAuth
   query <- pMaybe pQuery
   fragment <- pMaybe pFragment
   _ <- endOfInput
-  return $ AbsoluteUri $ AbsUri {uriScheme = scheme, uriAuthority = authority, uriPath = path, uriQuery = query, uriFragment = fragment }
+  return $ Uri {uriScheme = scheme, uriAuthority = authority, uriPath = path, uriQuery = query, uriFragment = fragment }
 
-pUri :: Parser Uri
-pUri = pAbsoluteUri <|> pRelativeUri
+pUriRef :: Parser UriReference
+pUriRef = (AbsoluteUri <$> pUri) <|> (RelativeRef <$> pRelativeUri)

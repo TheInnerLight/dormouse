@@ -55,15 +55,8 @@ instance NFData UserInfo where
 instance NFData Authority where
   rnf (Authority a b c) = rnf a `seq` rnf b `seq` rnf c
 
-instance NFData AbsUri where
-  rnf (AbsUri a b c d e) = rnf a `seq` rnf b `seq` rnf c `seq` rnf d `seq` rnf e
-
-instance NFData RelUri where
-  rnf (RelUri a b c) = rnf a `seq` rnf b `seq` rnf c
-
 instance NFData Uri where
-  rnf (AbsoluteUri a) = rnf a
-  rnf (RelativeUri a) = rnf a
+  rnf (Uri a b c d e) = rnf a `seq` rnf b `seq` rnf c `seq` rnf d `seq` rnf e
 
 uriStrings :: [B.ByteString]
 uriStrings = 

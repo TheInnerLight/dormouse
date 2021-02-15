@@ -19,7 +19,7 @@ module Dormouse.Generators.UriComponents
   , genValidPathRel
   , genValidQuery
   , genValidFragment
-  , genValidAbsoluteUri
+  , genValidUri
   )
   where
 
@@ -232,8 +232,8 @@ genValidFragment = do
   list <- Gen.list (Range.constant 1 50) genFragmentChar
   return $ B.append "#" $ B.intercalate "" list
 
-genValidAbsoluteUri :: Gen B.ByteString
-genValidAbsoluteUri = do
+genValidUri :: Gen B.ByteString
+genValidUri = do
   scheme <- genValidScheme
   authority <- Gen.maybe genValidAuthority
   path <- case authority of

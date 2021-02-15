@@ -5,7 +5,7 @@
 {-# LANGUAGE DeriveLift #-}
 
 module Dormouse.Uri.Types
-  ( UriReference(..)
+  ( UriReferenceType(..)
   , Authority(..)
   , Fragment(..)
   , Host(..)
@@ -17,8 +17,8 @@ module Dormouse.Uri.Types
   , Password(..)
   , UserInfo(..)
   , Uri(..)
-  , AbsUri(..)
-  , RelUri(..)
+  , RelRef(..)
+  , UriReference(..)
   ) where
 
 import Data.String (IsString(..))
@@ -75,10 +75,10 @@ instance IsString Fragment where
 instance Show Fragment where
   show fragment = unpack $ unFragment fragment
 
-data UriReference = Absolute | Relative
+data UriReferenceType = Absolute | Relative
 
 -- | The Path component of a URI, including a series of individual Path Segments
-newtype Path (ref :: UriReference) = Path { unPath :: [PathSegment]} deriving (Eq, Lift)
+newtype Path (ref :: UriReferenceType) = Path { unPath :: [PathSegment]} deriving (Eq, Lift)
 
 instance Show (Path ref) where
   show path = "[" <> L.intercalate "," (fmap show . unPath $ path) <> "]"
@@ -107,8 +107,9 @@ newtype Scheme = Scheme { unScheme :: Text } deriving (Eq, Lift)
 instance Show Scheme where
   show scheme = unpack . unScheme $ scheme
 
--- | The data associated with an Absolute URI
-data AbsUri = AbsUri
+-- | A Uniform Resource Identifier (URI) is a compact sequence of characters that identifies an abstract or physical resource.
+-- It is defined according to RFC 3986 (<https://tools.ietf.org/html/rfc3986>).
+data Uri = Uri
   { uriScheme :: Scheme
   , uriAuthority :: Maybe Authority
   , uriPath :: Path 'Absolute
@@ -116,19 +117,19 @@ data AbsUri = AbsUri
   , uriFragment :: Maybe Fragment
   } deriving (Eq, Show, Lift)
 
--- | The data associated with a Relative URI
-data RelUri = RelUri
-  { uriPath :: Path 'Relative
+-- | The data associated with a URI Relative Reference
+data RelRef = RelRef
+  { uriAuthority :: Maybe Authority
+  , uriPath :: Path 'Relative
   , uriQuery :: Maybe Query
   , uriFragment :: Maybe Fragment
   } deriving (Eq, Show, Lift)
 
--- | A Uniform Resource Identifier (URI) is a compact sequence of characters that identifies an abstract or physical resource.
--- It is defined according to RFC 3986 (<https://tools.ietf.org/html/rfc3986>).  URIs can be absolute (i.e. defined against a
--- specific scheme) or relative.
-data Uri 
-  = AbsoluteUri AbsUri
-  | RelativeUri RelUri
+-- | A URI-reference is either a URI or a relative reference.  If the URI-reference's prefix does not match the syntax of a scheme 
+-- followed by its colon separator, then the URI-reference is a relative reference.
+data UriReference 
+  = AbsoluteUri Uri
+  | RelativeRef RelRef
   deriving (Lift, Eq, Show)
 
 
