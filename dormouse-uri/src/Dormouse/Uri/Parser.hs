@@ -44,9 +44,12 @@ data PDState = Percent | Hex1 Word8 | Other | PDError
 
 percentDecode :: B.ByteString -> Maybe B.ByteString
 percentDecode xs =
-  case B.foldl' f (B.empty, Other) xs of
-    (_, PDError)  -> Nothing 
-    (bs, _)       -> Just bs
+  if B.elem 37 xs then
+    case B.foldl' f (B.empty, Other) xs of
+      (_, PDError)  -> Nothing 
+      (bs, _)       -> Just bs
+  else 
+    Just xs
   where
     f (es, Percent) e                                     = (es, Hex1 e)
     f (es, Hex1 e1) e2 | isHexDigit' e1 && isHexDigit' e2 = (B.snoc es (hexToWord8 e1 `shiftL` 4 .|. hexToWord8 e2), Other)
