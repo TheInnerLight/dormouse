@@ -20,22 +20,21 @@ module Dormouse.Uri.Parser
   , pPathRel
   , pQuery
   , pFragment
+  , percentDecode
   ) where
 
+import Data.Word ( Word8 ) 
 import Control.Applicative ((<|>))
 import Data.Attoparsec.ByteString.Char8 as A
-import Data.Char as C
-import Data.Bits (Bits, shiftL, (.|.))
+import qualified Data.Attoparsec.ByteString as AB
+import qualified Data.ByteString.Internal as BS (c2w, w2c)
+import Data.Bits (shiftL, (.|.))
 import Data.Maybe (isJust)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import Dormouse.Uri.Types
 import Dormouse.Uri.RFC3986
 import qualified Data.ByteString as B
-import qualified Data.ByteString.Char8 as B8
-
-repack :: String -> T.Text
-repack = TE.decodeUtf8 . B8.pack
 
 pMaybe :: Parser a -> Parser (Maybe a)
 pMaybe p = option Nothing (Just <$> p)
@@ -43,46 +42,48 @@ pMaybe p = option Nothing (Just <$> p)
 pAsciiAlpha :: Parser Char
 pAsciiAlpha = satisfy isAsciiAlpha
 
-pAsciiAlphaNumeric :: Parser Char
-pAsciiAlphaNumeric = satisfy isAsciiAlphaNumeric
+data PDState = Percent | Hex1 Word8 | Other | PDError
 
-pSubDelim :: Parser Char
-pSubDelim = satisfy isSubDelim
-
-pUnreserved :: Parser Char
-pUnreserved = satisfy isUnreserved
-
-pSizedHexadecimal :: (Integral a, Bits a) => Int -> Parser a
-pSizedHexadecimal n = do
-    bytes <- A.take n
-    if B.all isHexDigit' bytes then return $ B.foldl' step 0 $ bytes else fail "pSizedHexadecimal"
-  where 
+percentDecode :: B.ByteString -> Maybe B.ByteString
+percentDecode xs =
+  case B.foldl' f (B.empty, Other) xs of
+    (_, PDError)  -> Nothing 
+    (bs, _)       -> Just bs
+  where
+    f (es, Percent) e                                     = (es, Hex1 e)
+    f (es, Hex1 e1) e2 | isHexDigit' e1 && isHexDigit' e2 = (B.snoc es (hexToWord8 e1 `shiftL` 4 .|. hexToWord8 e2), Other)
+    f (es, Hex1 _)  _                                     = (es, PDError)
+    f (es, Other)   37                                    = (es, Percent)
+    f (es, Other)   e                                     = (B.snoc es e, Other)
+    f (es, PDError) _                                     = (es, PDError)
+    hexToWord8 w | w >= 48 && w <= 57 = fromIntegral (w - 48)
+                 | w >= 97            = fromIntegral (w - 87)
+                 | otherwise          = fromIntegral (w - 55)
     isHexDigit' w = (w >= 48 && w <= 57) ||  (w >= 97 && w <= 102) ||(w >= 65 && w <= 70)
-    step a w | w >= 48 && w <= 57  = (a `shiftL` 4) .|. fromIntegral (w - 48)
-             | w >= 97             = (a `shiftL` 4) .|. fromIntegral (w - 87)
-             | otherwise           = (a `shiftL` 4) .|. fromIntegral (w - 55)
 
-pPercentEnc :: Parser Char
-pPercentEnc = do
-  _ <- char '%'
-  hexdig1 <- pSizedHexadecimal 1
-  hexdig2 <- pSizedHexadecimal 1
-  return . chr $ hexdig1 * 16 + hexdig2
+takeWhileW8 :: (Char -> Bool) -> Parser B.ByteString 
+takeWhileW8 f = AB.takeWhile (f . BS.w2c)
+
+takeWhile1W8 :: (Char -> Bool) -> Parser B.ByteString 
+takeWhile1W8 f = AB.takeWhile1 (f . BS.w2c)
 
 pUsername :: Parser Username
 pUsername = do
-  xs <- many1' (satisfy isUsernameChar <|> pPercentEnc)
-  return $ Username (repack xs)
+  xs <- takeWhileW8 (\x -> isUsernameChar x || x == '%')
+  xs' <- maybe (fail "Failed to percent-decode") pure $ percentDecode xs
+  return $ Username (TE.decodeUtf8 xs')
 
 pPassword :: Parser Password
 pPassword = do
-  xs <- many1' (satisfy isPasswordChar <|> pPercentEnc)
-  return $ Password (repack xs)
+  xs <- takeWhileW8 (\x -> isPasswordChar x || x == '%')
+  xs' <- maybe (fail "Failed to percent-decode") pure $ percentDecode xs
+  return $ Password (TE.decodeUtf8 xs')
 
 pRegName :: Parser T.Text
 pRegName = do
-  xs <- many1' (satisfy isRegNameChar <|> pPercentEnc)
-  return . repack $ xs
+  xs <- takeWhileW8 (\x -> isRegNameChar x || x == '%')
+  xs' <- maybe (fail "Failed to percent-decode") pure $ percentDecode xs
+  return . TE.decodeUtf8 $ xs'
 
 pIPv4 :: Parser T.Text
 pIPv4 = do
@@ -102,7 +103,7 @@ pIPv4 = do
 
 pHost :: Parser Host
 pHost = do
-  hostText <- pIPv4 <|> pRegName
+  hostText <- pRegName <|> pIPv4
   return . Host  $ hostText
 
 pUserInfo :: Parser UserInfo
@@ -130,78 +131,62 @@ pAuthority = do
     _                                         -> fail "Invalid authority termination character, must be /, ?, # or end of input"
   return Authority { authorityUserInfo = authUserInfo, authorityHost = authHost, authorityPort = authPort}
 
-pPathChar :: Parser Char 
-pPathChar = satisfy isPathChar <|> pPercentEnc
-
-pPathCharNc :: Parser Char 
-pPathCharNc = satisfy isPathCharNoColon <|> pPercentEnc
-
-pSegmentNz :: Parser PathSegment 
-pSegmentNz = PathSegment . repack <$> many1' pPathChar
-
-pSegmentNzNc :: Parser PathSegment 
-pSegmentNzNc = PathSegment . repack <$> many1' pPathCharNc
-
-pSegment :: Parser PathSegment
-pSegment = PathSegment . repack <$> many' pPathChar
-
-pPathsAbEmpty :: Parser [PathSegment]
-pPathsAbEmpty = many1' (char '/' *> pSegment)
-
-pPathsAbsolute :: Parser [PathSegment]
-pPathsAbsolute = do
-  _ <- char '/'
-  seg <- pSegmentNz
-  comps <- many' (char '/' *> pSegment)
-  return $ seg : comps
-
-pPathsNoScheme :: Parser [PathSegment]
-pPathsNoScheme = do
-  seg <- pSegmentNzNc
-  comps <- many' (char '/' *> pSegment)
-  return $ seg : comps
-
-pPathsRootless :: Parser [PathSegment]
-pPathsRootless = do
-  seg <- pSegmentNz
-  comps <- many' (char '/' *> pSegment)
-  return $ seg : comps
-
-pPathsEmpty :: Parser [PathSegment]
-pPathsEmpty = return []
-
 pPathAbsAuth :: Parser (Path 'Absolute)
-pPathAbsAuth = fmap Path (pPathsAbEmpty <|> pPathsAbsolute <|> pPathsEmpty)
+pPathAbsAuth = do
+  p <- takeWhileW8 (\x -> isPathChar x || x == '%' || x == '/')
+  p' <- maybe (fail "Failed to percent-decode") pure $ percentDecode p
+  let ps = PathSegment <$> T.split (== '/') (TE.decodeUtf8 p')
+  case ps of -- begins with "/" is empty
+    (PathSegment x):xs | T.null x -> return $ Path xs
+    (PathSegment _):_             -> fail "must begin with /"
+    xs                            -> return $ Path xs
 
 pPathAbsNoAuth :: Parser (Path 'Absolute)
-pPathAbsNoAuth = fmap Path (pPathsAbsolute <|> pPathsRootless <|> pPathsEmpty)
+pPathAbsNoAuth = do
+  p <- takeWhileW8 (\x -> isPathChar x || x == '%' || x == '/')
+  p' <- maybe (fail "Failed to percent-decode") pure $ percentDecode p
+  let ps = PathSegment <$> T.split (== '/') (TE.decodeUtf8 p')
+  case ps of -- begins with "/" but not "//" OR begins with segment OR empty
+    (PathSegment x1):(PathSegment x2):_ | T.null x1 && T.null x2 -> fail "cannot begin with //"
+    (PathSegment x):xs                  | T.null x               -> return $ Path xs
+    xs                                                           -> return $ Path xs
 
 pPathRel :: Parser (Path 'Relative)
-pPathRel = fmap Path (pPathsAbsolute <|> pPathsNoScheme <|> pPathsEmpty)
+pPathRel = do
+  p <- takeWhileW8 (\x -> isPathChar x || x == '%' || x == '/')
+  p' <- maybe (fail "Failed to percent-decode") pure $ percentDecode p
+  let ps = PathSegment <$> T.split (== '/') (TE.decodeUtf8 p')
+  case ps of
+    (PathSegment x1):(PathSegment x2):_ | T.null x1 && T.null x2 -> fail "cannot begin with //"
+    (PathSegment x):_                   | T.isPrefixOf ":" x     -> fail "first character of a relative path cannot be :"
+    (PathSegment x):xs                  | T.null x               -> return $ Path xs
+    xs                                                           -> return $ Path xs
 
 pQuery :: Parser Query
 pQuery = do
-  queryText <- (char '?' *> (many1' (satisfy isQueryChar <|> pPercentEnc)))
+  qt <- char '?' *> takeWhile1W8 (\x -> isQueryChar x || x == '%')
+  queryText <- maybe (fail "Failed to percent-decode") pure $ percentDecode qt
   _ <- peekChar >>= \case
     Nothing           -> return ()
     Just c | c == '#' -> return ()
     c                 -> fail $ "Invalid query termination character: " <> show c <> ", must be # or end of input"
-  return . Query . repack $ queryText
+  return . Query . TE.decodeUtf8 $ queryText
 
 pFragment :: Parser Fragment
 pFragment = do
-  fragmentText <- (char '#' *> (many1' (satisfy isFragmentChar <|> pPercentEnc)))
+  ft <- char '#' *> takeWhile1W8 (\x -> isFragmentChar x || x == '%')
+  fragmentText <- maybe (fail "Failed to percent-decode") pure $ percentDecode ft
   _ <- peekChar >>= \case
     Nothing           -> return ()
     c                 -> fail $ "Invalid fragment termination character: " <> show c <> ", must be end of input"
-  return . Fragment . repack $ fragmentText
+  return . Fragment . TE.decodeUtf8 $ fragmentText
 
 pScheme :: Parser Scheme
 pScheme = do
   x <- pAsciiAlpha
-  xs <- many' (pAsciiAlphaNumeric <|> char '+' <|> char '.' <|> char '-' )
+  xs <- A.takeWhile isSchemeChar
   _ <- char ':'
-  return $ Scheme (T.toLower . repack $ x:xs)
+  return $ Scheme (T.toLower . TE.decodeUtf8 $ B.cons (BS.c2w x) xs)
 
 pAbsolutePart :: Parser (Scheme, Maybe Authority)
 pAbsolutePart = do

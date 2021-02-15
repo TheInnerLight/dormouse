@@ -10,4 +10,6 @@ cradle:
       component: "dormouse-uri:lib"
     - path: "./dormouse-uri/test"
       component: "dormouse-uri:test:dormouse-uri-test"
+    - path: "./bench/src"
+      component: "bench:bench:bench-exe"
 
