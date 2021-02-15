@@ -268,4 +268,16 @@ spec = do
     it "fails for missing scheme" $ do
       let res = parseOnly pUri "://"
       isLeft res `shouldBe` True
+    it "fails for special character scheme" $ do
+      let res = parseOnly pUri "!!!://"
+      isLeft res `shouldBe` True
+    it "fails for path only" $ do
+      let res = parseOnly pUri "/path"
+      isLeft res `shouldBe` True
+    it "fails for query only" $ do
+      let res = parseOnly pUri "?query"
+      isLeft res `shouldBe` True
+    it "fails for fragment only" $ do
+      let res = parseOnly pUri "#fragment"
+      isLeft res `shouldBe` True
 
