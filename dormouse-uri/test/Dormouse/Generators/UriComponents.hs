@@ -20,6 +20,7 @@ module Dormouse.Generators.UriComponents
   , genValidQuery
   , genValidFragment
   , genValidUri
+  , genValidUriRef
   )
   where
 
@@ -208,7 +209,7 @@ genValidPathsEmpty :: Gen B.ByteString
 genValidPathsEmpty = return B.empty
 
 genValidPathAbsAuth :: Gen B.ByteString
-genValidPathAbsAuth = Gen.choice [genPathsAbEmpty, genPathsAbsolute, genValidPathsEmpty]
+genValidPathAbsAuth = Gen.choice [genPathsAbEmpty]
 
 genValidPathAbsNoAuth :: Gen B.ByteString
 genValidPathAbsNoAuth = Gen.choice [genPathsAbsolute, genPathsRootless, genValidPathsEmpty]
@@ -243,4 +244,15 @@ genValidUri = do
   fragment <- Gen.maybe genValidFragment
   return . B.intercalate "" $ [scheme, maybe B.empty id authority, path, maybe B.empty id query, maybe B.empty id fragment]
 
+genValidRelRef :: Gen B.ByteString
+genValidRelRef = do
+  authority <- Gen.maybe genValidAuthority
+  path <- case authority of
+    Just _  -> genValidPathAbsAuth
+    Nothing -> genValidPathRel
+  query <- Gen.maybe genValidQuery
+  fragment <- Gen.maybe genValidFragment
+  return . B.intercalate "" $ [maybe B.empty id authority, path, maybe B.empty id query, maybe B.empty id fragment]
 
+genValidUriRef :: Gen B8.ByteString
+genValidUriRef = Gen.choice [genValidUri, genValidRelRef]

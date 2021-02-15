@@ -219,9 +219,14 @@ spec = do
       let res = parseOnly (pFragment <* endOfInput) fragmentText
       res === (Right . Fragment . T.tail . TE.decodeUtf8 . fromJust . percentDecode $ fragmentText)
   describe "pUri" $ do
-    it "generates an uri for all valid uris" $ hedgehog $ do
+    it "generates a uri for all valid uris" $ hedgehog $ do
       uriText <- forAll genValidUri
       let res = parseOnly (pUri <* endOfInput) uriText
+      isRight res === True
+  describe "pUriRef" $ do
+    it "generates a uri ref for all valid uri refs" $ hedgehog $ do
+      uriRefText <- forAll genValidUriRef
+      let res = parseOnly (pUriRef <* endOfInput) uriRefText
       isRight res === True
   describe "parseURI" $ do
     it "generates uri components correctly for uri with scheme, host and path" $ do
