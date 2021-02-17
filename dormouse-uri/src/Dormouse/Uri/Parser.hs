@@ -4,11 +4,9 @@
 
 module Dormouse.Uri.Parser
   ( pUri
-  , pAbsoluteUri
+  , pUriRef
   , pRelativeUri
   , pScheme
-  , pUsername
-  , pPassword
   , pUserInfo
   , pIPv4
   , pRegName
@@ -46,9 +44,12 @@ data PDState = Percent | Hex1 Word8 | Other | PDError
 
 percentDecode :: B.ByteString -> Maybe B.ByteString
 percentDecode xs =
-  case B.foldl' f (B.empty, Other) xs of
-    (_, PDError)  -> Nothing 
-    (bs, _)       -> Just bs
+  if B.elem 37 xs then
+    case B.foldl' f (B.empty, Other) xs of
+      (_, PDError)  -> Nothing 
+      (bs, _)       -> Just bs
+  else 
+    Just xs
   where
     f (es, Percent) e                                     = (es, Hex1 e)
     f (es, Hex1 e1) e2 | isHexDigit' e1 && isHexDigit' e2 = (B.snoc es (hexToWord8 e1 `shiftL` 4 .|. hexToWord8 e2), Other)
@@ -67,17 +68,12 @@ takeWhileW8 f = AB.takeWhile (f . BS.w2c)
 takeWhile1W8 :: (Char -> Bool) -> Parser B.ByteString 
 takeWhile1W8 f = AB.takeWhile1 (f . BS.w2c)
 
-pUsername :: Parser Username
-pUsername = do
-  xs <- takeWhileW8 (\x -> isUsernameChar x || x == '%')
+pUserInfo :: Parser UserInfo
+pUserInfo = do
+  xs <- takeWhileW8 (\x -> isUserInfoChar x || x == '%')
   xs' <- maybe (fail "Failed to percent-decode") pure $ percentDecode xs
-  return $ Username (TE.decodeUtf8 xs')
-
-pPassword :: Parser Password
-pPassword = do
-  xs <- takeWhileW8 (\x -> isPasswordChar x || x == '%')
-  xs' <- maybe (fail "Failed to percent-decode") pure $ percentDecode xs
-  return $ Password (TE.decodeUtf8 xs')
+  _ <- char '@'
+  return $ UserInfo (TE.decodeUtf8 xs')
 
 pRegName :: Parser T.Text
 pRegName = do
@@ -106,13 +102,6 @@ pHost = do
   hostText <- pRegName <|> pIPv4
   return . Host  $ hostText
 
-pUserInfo :: Parser UserInfo
-pUserInfo = do
-  username <- pUsername
-  password <- pMaybe (char ':' *> pPassword)
-  _ <- char '@'
-  return $ UserInfo { userInfoUsername = username, userInfoPassword = password }
-
 pPort :: Parser Int
 pPort = 
   (char ':' *> decimal) >>= \case
@@ -131,7 +120,7 @@ pAuthority = do
     _                                         -> fail "Invalid authority termination character, must be /, ?, # or end of input"
   return Authority { authorityUserInfo = authUserInfo, authorityHost = authHost, authorityPort = authPort}
 
-pPathAbsAuth :: Parser (Path 'Absolute)
+pPathAbsAuth :: Parser (Path rt)
 pPathAbsAuth = do
   p <- takeWhileW8 (\x -> isPathChar x || x == '%' || x == '/')
   p' <- maybe (fail "Failed to percent-decode") pure $ percentDecode p
@@ -194,22 +183,23 @@ pAbsolutePart = do
   authority <- pMaybe pAuthority
   return (scheme, authority)
 
-pRelativeUri :: Parser Uri
+pRelativeUri :: Parser RelRef
 pRelativeUri = do
-  path <- pPathRel
+  authority <- pMaybe pAuthority
+  path <- if isJust authority then pPathAbsAuth else pPathRel
   query <- pMaybe pQuery
   fragment <- pMaybe pFragment
   _ <- endOfInput
-  return $ RelativeUri $ RelUri { uriPath = path, uriQuery = query, uriFragment = fragment }
+  return  $ RelRef { relRefAuthority = authority, relRefPath = path, relRefQuery = query, relRefFragment = fragment }
 
-pAbsoluteUri :: Parser Uri
-pAbsoluteUri = do
+pUri :: Parser Uri
+pUri = do
   (scheme, authority) <- pAbsolutePart
   path <- if isJust authority then pPathAbsAuth else pPathAbsNoAuth
   query <- pMaybe pQuery
   fragment <- pMaybe pFragment
   _ <- endOfInput
-  return $ AbsoluteUri $ AbsUri {uriScheme = scheme, uriAuthority = authority, uriPath = path, uriQuery = query, uriFragment = fragment }
+  return $ Uri {uriScheme = scheme, uriAuthority = authority, uriPath = path, uriQuery = query, uriFragment = fragment }
 
-pUri :: Parser Uri
-pUri = pAbsoluteUri <|> pRelativeUri
+pUriRef :: Parser UriReference
+pUriRef = (AbsoluteUri <$> pUri) <|> (RelativeRef <$> pRelativeUri)

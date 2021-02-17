@@ -4,7 +4,7 @@ cabal-version: 1.18
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 53a8941fce30957b33c0c2573f20f976e663b6a0d21e6feed28a68ff8b5d68e3
+-- hash: 4038c917ae96fdfb284a4214f2d506f24647590e882d0def1ec9769da4198afd
 
 name:           dormouse-client
 version:        0.1.0.1
@@ -97,7 +97,6 @@ test-suite dormouse-client-test
       Dormouse.Client.Types
       Dormouse.Client.Generators.Json
       Dormouse.Client.Generators.Text
-      Dormouse.Client.Generators.UriComponents
       Dormouse.Client.Headers.MediaTypeSpec
       Dormouse.Client.PayloadSpec
       Dormouse.Client.StatusSpec

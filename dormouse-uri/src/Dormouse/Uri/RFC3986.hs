@@ -6,8 +6,7 @@ module Dormouse.Uri.RFC3986
   , isAsciiAlphaNumeric
   , isUnreserved
   , isSchemeChar
-  , isUsernameChar
-  , isPasswordChar
+  , isUserInfoChar
   , isRegNameChar
   , isPathChar
   , isPathCharNoColon
@@ -45,13 +44,9 @@ isUnreserved c = isAsciiAlphaNumeric c || c == '-' || c == '.' || c == '_' || c 
 isSchemeChar :: Char -> Bool
 isSchemeChar c = isAsciiAlphaNumeric c || c == '+' || c == '.' || c == '-'
 
--- | Checks whether a char is a valid username char in RFC3986
-isUsernameChar :: Char -> Bool
-isUsernameChar c = isUnreserved c || isSubDelim c
-
--- | Checks whether a char is a valid password char in RFC3986
-isPasswordChar :: Char -> Bool
-isPasswordChar c = isUnreserved c || isSubDelim c || c == ':'
+-- | Checks whether a char is a valid user info char in RFC3986
+isUserInfoChar :: Char -> Bool
+isUserInfoChar c = isUnreserved c || isSubDelim c || c == ':'
 
 -- | Checks whether a char is a valid reg-name char in RFC3986
 isRegNameChar :: Char -> Bool

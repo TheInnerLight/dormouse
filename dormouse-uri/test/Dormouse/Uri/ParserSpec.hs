@@ -23,7 +23,7 @@ import qualified Hedgehog.Range as Range
 
 
 uriWithHostAndPath :: Uri
-uriWithHostAndPath = AbsoluteUri $ AbsUri
+uriWithHostAndPath = Uri
   { uriScheme = Scheme "http"
   , uriAuthority = Just $ Authority {authorityUserInfo = Nothing, authorityHost = Host "google.com", authorityPort = Nothing}
   , uriPath = Path [PathSegment "test1", PathSegment "test2"]
@@ -32,10 +32,10 @@ uriWithHostAndPath = AbsoluteUri $ AbsUri
   }
 
 uriWithHostUsernameAndPath :: Uri
-uriWithHostUsernameAndPath = AbsoluteUri $ AbsUri
+uriWithHostUsernameAndPath = Uri
   { uriScheme = Scheme "http"
   , uriAuthority = Just $ Authority 
-    { authorityUserInfo = Just (UserInfo {userInfoUsername = "j.t.kirk", userInfoPassword = Nothing})
+    { authorityUserInfo = Just $ UserInfo "j.t.kirk"
     , authorityHost = Host "google.com"
     , authorityPort = Nothing
     }
@@ -45,10 +45,10 @@ uriWithHostUsernameAndPath = AbsoluteUri $ AbsUri
   }
 
 uriWithHostUsernamePasswordAndPath :: Uri
-uriWithHostUsernamePasswordAndPath = AbsoluteUri $ AbsUri
+uriWithHostUsernamePasswordAndPath = Uri
   { uriScheme = Scheme "http"
   , uriAuthority = Just $ Authority 
-    { authorityUserInfo = Just (UserInfo {userInfoUsername = "j.t.kirk", userInfoPassword = Just "11a"})
+    { authorityUserInfo = Just $ UserInfo "j.t.kirk:11a"
     , authorityHost = Host "google.com"
     , authorityPort = Nothing
     }
@@ -58,7 +58,7 @@ uriWithHostUsernamePasswordAndPath = AbsoluteUri $ AbsUri
   }
 
 uriWithHostPathAndPort :: Uri
-uriWithHostPathAndPort = AbsoluteUri $ AbsUri
+uriWithHostPathAndPort = Uri
   { uriScheme = Scheme "https"
   , uriAuthority = Just $ Authority { authorityUserInfo = Nothing, authorityHost = "www.example.com", authorityPort = Just 123 }
   , uriPath = Path ["forum", "questions", ""]
@@ -67,7 +67,7 @@ uriWithHostPathAndPort = AbsoluteUri $ AbsUri
   }
 
 uriWithHostPathQueryAndFragment :: Uri
-uriWithHostPathQueryAndFragment = AbsoluteUri $ AbsUri
+uriWithHostPathQueryAndFragment = Uri
   { uriScheme = Scheme "https"
   , uriAuthority = Just $ Authority { authorityUserInfo = Nothing, authorityHost = "www.example.com", authorityPort = Nothing }
   , uriPath = Path ["forum", "questions", ""]
@@ -76,7 +76,7 @@ uriWithHostPathQueryAndFragment = AbsoluteUri $ AbsUri
   }
 
 uriWithUnicodeInQuery :: Uri
-uriWithUnicodeInQuery = AbsoluteUri $ AbsUri
+uriWithUnicodeInQuery = Uri
   { uriScheme = Scheme "https"
   , uriAuthority = Just $ Authority { authorityUserInfo = Nothing, authorityHost = "www.example.com", authorityPort = Nothing }
   , uriPath = Path ["forum", "questions", ""]
@@ -85,7 +85,7 @@ uriWithUnicodeInQuery = AbsoluteUri $ AbsUri
   }
 
 uriWithSpacesInQuery :: Uri
-uriWithSpacesInQuery = AbsoluteUri $ AbsUri
+uriWithSpacesInQuery = Uri
   { uriScheme = Scheme "https"
   , uriAuthority = Just $ Authority { authorityUserInfo = Nothing, authorityHost = "www.example.com", authorityPort = Nothing }
   , uriPath = Path ["forum", "questions", ""]
@@ -95,7 +95,7 @@ uriWithSpacesInQuery = AbsoluteUri $ AbsUri
 
 
 uriWithUnicodeInFragment :: Uri
-uriWithUnicodeInFragment = AbsoluteUri $ AbsUri
+uriWithUnicodeInFragment = Uri
   { uriScheme = Scheme "https"
   , uriAuthority = Just $ Authority { authorityUserInfo = Nothing, authorityHost = "www.example.com", authorityPort = Nothing }
   , uriPath = Path ["forum", "questions", ""]
@@ -104,7 +104,7 @@ uriWithUnicodeInFragment = AbsoluteUri $ AbsUri
   }
 
 uriWithUnicodeInPath :: Uri
-uriWithUnicodeInPath = AbsoluteUri $ AbsUri
+uriWithUnicodeInPath = Uri
   { uriScheme = Scheme "https"
   , uriAuthority = Just $ Authority { authorityUserInfo = Nothing, authorityHost = "www.example.com", authorityPort = Nothing }
   , uriPath = Path ["test", "dsdsfdsfds😀😀😀", ""]
@@ -113,7 +113,7 @@ uriWithUnicodeInPath = AbsoluteUri $ AbsUri
   }
 
 ldapUri :: Uri
-ldapUri = AbsoluteUri $ AbsUri
+ldapUri = Uri
   { uriScheme = Scheme "ldap"
   , uriAuthority = Just $ Authority { authorityUserInfo = Nothing, authorityHost = "192.168.0.1", authorityPort = Nothing }
   , uriPath = Path [PathSegment "c=GB"]
@@ -122,7 +122,7 @@ ldapUri = AbsoluteUri $ AbsUri
   }
 
 telUri :: Uri
-telUri = AbsoluteUri $ AbsUri
+telUri = Uri
   { uriScheme = Scheme "tel"
   , uriAuthority = Nothing
   , uriPath = Path ["+1-816-555-1212"]
@@ -140,24 +140,6 @@ spec = do
     it "fails for invalid schemes" $ hedgehog $ do
       schemeText <- forAll genInvalidScheme
       let res = parseOnly (pScheme <* endOfInput) schemeText
-      isLeft res === True
-  describe "pUsername" $ do
-    it "returns the matching username for all valid usernames" $ hedgehog $ do
-      usernameText <- forAll genValidUsername
-      let res = parseOnly (pUsername <* endOfInput) usernameText
-      res === (Right . Username . TE.decodeUtf8 . fromJust . percentDecode $ usernameText)
-    it "fails for invalid usernames" $ hedgehog $ do
-      usernameText <- forAll genInvalidUsername
-      let res = parseOnly (pUsername <* endOfInput) usernameText
-      isLeft res === True
-  describe "pPassword" $ do
-    it "returns the matching password for all valid passwords" $ hedgehog $ do
-      passwordText <- forAll genValidPassword
-      let res = parseOnly (pPassword <* endOfInput) passwordText
-      res === (Right . Password . TE.decodeUtf8 . fromJust .percentDecode $ passwordText)
-    it "fails for invalid passwords" $ hedgehog $ do
-      passwordText <- forAll genInvalidPassword
-      let res = parseOnly (pPassword <* endOfInput) passwordText
       isLeft res === True
   describe "pUserInfo" $ do
     it "generates a user info for all valid user infos" $ hedgehog $ do
@@ -218,10 +200,15 @@ spec = do
       fragmentText <- forAll genValidFragment
       let res = parseOnly (pFragment <* endOfInput) fragmentText
       res === (Right . Fragment . T.tail . TE.decodeUtf8 . fromJust . percentDecode $ fragmentText)
-  describe "pAbsoluteUri" $ do
-    it "generates an absolute uri for all valid absolute uris" $ hedgehog $ do
-      uriText <- forAll genValidAbsoluteUri
-      let res = parseOnly (pAbsoluteUri <* endOfInput) uriText
+  describe "pUri" $ do
+    it "generates a uri for all valid uris" $ hedgehog $ do
+      uriText <- forAll genValidUri
+      let res = parseOnly (pUri <* endOfInput) uriText
+      isRight res === True
+  describe "pUriRef" $ do
+    it "generates a uri ref for all valid uri refs" $ hedgehog $ do
+      uriRefText <- forAll genValidUriRef
+      let res = parseOnly (pUriRef <* endOfInput) uriRefText
       isRight res === True
   describe "parseURI" $ do
     it "generates uri components correctly for uri with scheme, host and path" $ do
@@ -262,5 +249,17 @@ spec = do
       res `shouldBe` Right telUri
     it "fails for missing scheme" $ do
       let res = parseOnly pUri "://"
+      isLeft res `shouldBe` True
+    it "fails for special character scheme" $ do
+      let res = parseOnly pUri "!!!://"
+      isLeft res `shouldBe` True
+    it "fails for path only" $ do
+      let res = parseOnly pUri "/path"
+      isLeft res `shouldBe` True
+    it "fails for query only" $ do
+      let res = parseOnly pUri "?query"
+      isLeft res `shouldBe` True
+    it "fails for fragment only" $ do
+      let res = parseOnly pUri "#fragment"
       isLeft res `shouldBe` True
 

@@ -53,14 +53,14 @@ spec = do
       matched `shouldBe` False
   describe "relativeUri pattern" $ do
     it "pattern matches correctly against a matching uri" $ do
-      let uri' = [uri|/myPath|]
+      let uri' = [uriRef|/myPath|]
       let matched = case uri' of
-            [uri|/myPath|] -> True
+            [uriRef|/myPath|] -> True
             _ -> False
       matched `shouldBe` True
     it "pattern match doesn't match a different uri" $ do
-      let uri' = [uri|/myPath2|]
+      let uri' = [uriRef|/myPath2|]
       let matched = case uri' of
-            [uri|/myPath|] -> True
+            [uriRef|/myPath|] -> True
             _ -> False
       matched `shouldBe` False

@@ -3,10 +3,6 @@
 module Dormouse.Generators.UriComponents 
   ( genValidScheme
   , genInvalidScheme
-  , genValidUsername
-  , genInvalidUsername
-  , genValidPassword
-  , genInvalidPassword
   , genValidUserInfo
   , genInvalidUserInfo
   , genValidIPv4
@@ -19,13 +15,13 @@ module Dormouse.Generators.UriComponents
   , genValidPathRel
   , genValidQuery
   , genValidFragment
-  , genValidAbsoluteUri
+  , genValidUri
+  , genValidUriRef
   )
   where
 
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as B8
-import Data.ByteString.Internal (c2w, w2c)
 import qualified Data.Char as C
 import qualified Data.Text as T
 import Dormouse.Uri.Encode
@@ -76,70 +72,21 @@ genInvalidScheme = do
         _                   -> first : remainder ++ [':']
   return $ B8.pack finalBs
 
-genUsernameChar :: Gen B.ByteString
-genUsernameChar = Gen.frequency [(1, genPercentEncoded), (25, fmap (B8.pack . return) $ Gen.filter isUsernameChar Gen.ascii)]
-
-genValidUsername :: Gen B.ByteString
-genValidUsername = do
-  list <- Gen.list (Range.constant 1 20) genUsernameChar
-  return $ B.intercalate "" list
-
-genInvalidUsername :: Gen B.ByteString
-genInvalidUsername = do
-  invalids <- Gen.list (Range.constant 1 5) genInvalidUsernameChar
-  valids <- Gen.list (Range.constant 0 15) genUsernameChar
-  fmap (B.intercalate "") $ Gen.shuffle $ invalids ++ valids
-  where
-    genInvalidUsernameChar = fmap (B8.pack . return) $ Gen.filter (\x -> (not $ isUsernameChar x) && x /= '%'  && C.isPrint x) Gen.ascii
-
-genPasswordChar :: Gen B.ByteString
-genPasswordChar = Gen.frequency [(1, genPercentEncoded), (25, fmap (B8.pack . return) $ Gen.filter isPasswordChar Gen.ascii)]
-
-genValidPassword :: Gen B.ByteString
-genValidPassword = do
-  list <- Gen.list (Range.constant 1 20) genPasswordChar
-  return $ B.intercalate "" list
-
-genInvalidPassword :: Gen B.ByteString
-genInvalidPassword = do
-  invalids <- Gen.list (Range.constant 1 5) genInvalidPasswordChar
-  valids <- Gen.list (Range.constant 0 15) genPasswordChar
-  fmap (B.intercalate "") $ Gen.shuffle $ invalids ++ valids
-  where
-    genInvalidPasswordChar = fmap (B8.pack . return) $ Gen.filter (\x -> (not $ isPasswordChar x) && x /= '%' && C.isPrint x) Gen.ascii
+genUserInfoChar :: Gen B.ByteString
+genUserInfoChar = Gen.frequency [(1, genPercentEncoded), (25, fmap (B8.pack . return) $ Gen.filter isUserInfoChar Gen.ascii)]
 
 genValidUserInfo :: Gen B.ByteString
 genValidUserInfo = do
-  username <- genValidUsername
-  maybePassword <- Gen.maybe genValidPassword
-  let passwordSuffix = maybe B.empty (B.cons $ c2w ':') maybePassword
-  return $ B.append (B.append username passwordSuffix) "@"
-
-data UserInfoFailureMode 
-  = InvalidUsername
-  | InvalidPassword
-  | MissingAtSuffix
-
-userInfoFailureMode :: Int -> UserInfoFailureMode
-userInfoFailureMode 1 = InvalidUsername
-userInfoFailureMode 2 = InvalidPassword
-userInfoFailureMode 3 = MissingAtSuffix
-userInfoFailureMode _ = undefined
+  list <- Gen.list (Range.constant 1 20) genUserInfoChar
+  return $ B.append (B.intercalate "" list) "@"
 
 genInvalidUserInfo :: Gen B.ByteString
 genInvalidUserInfo = do
-  failureMode <- fmap userInfoFailureMode $ Gen.element [1..3]
-  username <- case failureMode of
-    InvalidUsername -> Gen.filter (B.all (\x -> w2c x /= ':')) genInvalidUsername -- if the username is supposed to be invalid, ensure that ':' is not present, otherwise the user info could be interpreted as valid if valid chars precede the ':'
-    _               -> genValidUsername
-  maybePassword <- case failureMode of 
-    InvalidPassword -> fmap Just genInvalidPassword
-    _               -> Gen.maybe $ genValidPassword
-  let passwordSuffix = maybe B.empty (B.cons $ c2w ':') maybePassword
-  let complete = case failureMode of
-        MissingAtSuffix -> B.append (B.append username passwordSuffix) "#"
-        _               -> B.append (B.append username passwordSuffix) "@"
-  return complete
+  invalids <- Gen.list (Range.constant 1 5) genInvalidUserInfoChar
+  valids <- Gen.list (Range.constant 0 15) genUserInfoChar
+  fmap (B.intercalate "") $ Gen.shuffle $ invalids ++ valids
+  where
+    genInvalidUserInfoChar = fmap (B8.pack . return) $ Gen.filter (\x -> (not $ isUserInfoChar x) && x /= '%' && C.isPrint x) Gen.ascii
 
 genValidIPv4 :: Gen B.ByteString
 genValidIPv4 = do
@@ -208,7 +155,7 @@ genValidPathsEmpty :: Gen B.ByteString
 genValidPathsEmpty = return B.empty
 
 genValidPathAbsAuth :: Gen B.ByteString
-genValidPathAbsAuth = Gen.choice [genPathsAbEmpty, genPathsAbsolute, genValidPathsEmpty]
+genValidPathAbsAuth = Gen.choice [genPathsAbEmpty]
 
 genValidPathAbsNoAuth :: Gen B.ByteString
 genValidPathAbsNoAuth = Gen.choice [genPathsAbsolute, genPathsRootless, genValidPathsEmpty]
@@ -232,8 +179,8 @@ genValidFragment = do
   list <- Gen.list (Range.constant 1 50) genFragmentChar
   return $ B.append "#" $ B.intercalate "" list
 
-genValidAbsoluteUri :: Gen B.ByteString
-genValidAbsoluteUri = do
+genValidUri :: Gen B.ByteString
+genValidUri = do
   scheme <- genValidScheme
   authority <- Gen.maybe genValidAuthority
   path <- case authority of
@@ -243,4 +190,15 @@ genValidAbsoluteUri = do
   fragment <- Gen.maybe genValidFragment
   return . B.intercalate "" $ [scheme, maybe B.empty id authority, path, maybe B.empty id query, maybe B.empty id fragment]
 
+genValidRelRef :: Gen B.ByteString
+genValidRelRef = do
+  authority <- Gen.maybe genValidAuthority
+  path <- case authority of
+    Just _  -> genValidPathAbsAuth
+    Nothing -> genValidPathRel
+  query <- Gen.maybe genValidQuery
+  fragment <- Gen.maybe genValidFragment
+  return . B.intercalate "" $ [maybe B.empty id authority, path, maybe B.empty id query, maybe B.empty id fragment]
 
+genValidUriRef :: Gen B8.ByteString
+genValidUriRef = Gen.choice [genValidUri, genValidRelRef]
