@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a103757a540e7a00d1a8b78592c65f18720cb9a20c25ac260d897bdb8f7ebfd5
+-- hash: cbb208d2627245c112a7bab66de8053d579a1f7635bb9df71ada0bbb1ca7445f
 
 name:           bench
-version:        0.1.0.0
+version:        0.2.0.0
 description:    Please see the README on GitHub at <https://github.com/githubuser/bench#readme>
 homepage:       https://github.com/githubuser/bench#readme
 bug-reports:    https://github.com/githubuser/bench/issues

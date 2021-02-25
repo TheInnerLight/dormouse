@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b7e619928ab25f37e544467253dcf0841a356bd2be5ec1dfa3bdc2b7c37abbc9
+-- hash: ced2859317982fcdd73812e6474b8e4e675ef82b40329cd0eb2e9ea64bb61bc6
 
 name:           dormouse-examples
-version:        0.1.0.1
+version:        0.2.0.0
 homepage:       https://github.com/githubuser/dormouse#readme
 bug-reports:    https://github.com/githubuser/dormouse/issues
 author:         Phil Curzon
