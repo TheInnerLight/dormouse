@@ -1,6 +1,8 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE ViewPatterns #-}
 
 -- | The "Client" module is the primary module you will need to import to perform HTTP requests with this library.
 --
@@ -74,7 +76,7 @@ module Dormouse.Client
   , parseHttpsUrl
   ) where
 
-import Control.Exception.Safe (MonadThrow)
+import Control.Exception.Safe (MonadThrow, throw)
 import Control.Monad.IO.Class
 import Control.Monad.Reader
 import qualified Data.Map.Strict as Map
@@ -87,6 +89,7 @@ import Dormouse.Client.Headers
 import Dormouse.Client.Headers.MediaType
 import Dormouse.Client.Payload
 import Dormouse.Client.Methods
+import Dormouse.Client.Status
 import Dormouse.Client.Types
 import Dormouse.Uri
 import Dormouse.Url
@@ -128,7 +131,8 @@ put :: IsUrl url => url  -> HttpRequest url "PUT" Empty EmptyPayload acceptTag
 put = makeRequest PUT
 
 -- | Supply a body to an HTTP request using the supplied tag to indicate how the request should be encoded
-supplyBody :: (AllowedBody method b, RequestPayload b contentTag) => Proxy contentTag -> b -> HttpRequest url method b' contentTag' acceptTag -> HttpRequest url method b contentTag acceptTag
+supplyBody :: (AllowedBody method b, RequestPayload b contentTag) 
+           => Proxy contentTag -> b -> HttpRequest url method b' contentTag' acceptTag -> HttpRequest url method b contentTag acceptTag
 supplyBody prox b HttpRequest { requestHeaders = headers, requestBody = _, ..} =
   HttpRequest 
     { requestHeaders = foldMap (\v -> Map.insert ("Content-Type" :: HeaderName) v headers) . fmap encodeMediaType $ mediaType prox
@@ -145,21 +149,33 @@ accept :: HasMediaType acceptTag => Proxy acceptTag -> HttpRequest url method b 
 accept prox r = maybe r (\v -> supplyHeader ("Accept", v) r) . fmap encodeMediaType $ mediaType prox
 
 -- | Make the supplied HTTP request, expecting an HTTP response with body type `b' to be delivered in some 'MonadDormouseClient m'
-expect :: (MonadDormouseClient m, RequestPayload b contentTag, ResponsePayload b' acceptTag, IsUrl url) => HttpRequest url method b contentTag acceptTag -> m (HttpResponse b')
+expect :: (MonadDormouseClient m, MonadThrow m, RequestPayload b contentTag, ResponsePayload b' acceptTag, IsUrl url) 
+       => HttpRequest url method b contentTag acceptTag -> m (HttpResponse b')
 expect r = expectAs (proxyOfReq r) r
   where 
     proxyOfReq :: HttpRequest url method b contentTag acceptTag -> Proxy acceptTag
     proxyOfReq _ = Proxy
 
 -- | Make the supplied HTTP request, expecting an HTTP response in the supplied format with body type `b' to be delivered in some 'MonadDormouseClient m'
-expectAs :: (MonadDormouseClient m, RequestPayload b contentTag, ResponsePayload b' acceptTag, IsUrl url) => Proxy acceptTag -> HttpRequest url method b contentTag acceptTag -> m (HttpResponse b')
-expectAs tag r = do
+expectAs :: (MonadDormouseClient m, MonadThrow m, RequestPayload b contentTag, ResponsePayload b' acceptTag, IsUrl url) 
+         => Proxy acceptTag -> HttpRequest url method b contentTag acceptTag -> m (HttpResponse b')
+expectAs tag r = fetchAs tag r rejectNon2xx
+
+fetchAs :: (MonadDormouseClient m, RequestPayload b contentTag, ResponsePayload b' acceptTag, IsUrl url) 
+        => Proxy acceptTag -> HttpRequest url method b contentTag acceptTag -> (HttpResponse b' -> m b'') -> m b''
+fetchAs tag r f = do
   let r' = serialiseRequest (contentTypeProx r) r
-  send r' $ deserialiseRequest tag
-  where 
+  resp <- send r' $ deserialiseRequest tag
+  f resp
+  where  
     contentTypeProx :: HttpRequest url method b contentTag acceptTag -> Proxy contentTag
     contentTypeProx _ = Proxy
 
+rejectNon2xx :: MonadThrow m => HttpResponse body -> m (HttpResponse body)
+rejectNon2xx r = case responseStatusCode r of
+  Successful -> pure r
+  _          -> throw $ UnexpectedStatusCodeException (responseStatusCode r)
+  
 -- | The DormouseClientT Monad Transformer
 newtype DormouseClientT m a = DormouseClientT 
   { unDormouseClientT :: ReaderT DormouseClientConfig m a 

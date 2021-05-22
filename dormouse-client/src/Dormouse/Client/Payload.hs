@@ -1,4 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Dormouse.Client.Payload
   ( HasMediaType(..)
@@ -14,6 +17,7 @@ module Dormouse.Client.Payload
   , noPayload
   , html
   ) where
+
 
 import Control.Exception.Safe (MonadThrow, throw)
 import Control.Monad.IO.Class
@@ -51,12 +55,12 @@ data RawRequestPayload
 -- | RequestPayload relates a type of content and a payload tag used to describe that type to its byte stream representation and the constraints required to encode it
 class HasMediaType contentTag => RequestPayload body contentTag where
   -- | Generates a the byte stream representation from the supplied content
-  serialiseRequest :: Proxy contentTag -> HttpRequest url method body contentTag acceptTag  -> HttpRequest url method RawRequestPayload contentTag acceptTag 
+  serialiseRequest :: prox contentTag -> HttpRequest url method body contentTag acceptTag  -> HttpRequest url method RawRequestPayload contentTag acceptTag 
 
 -- | ResponsePayload relates a type of content and a payload tag used to describe that type  to its byte stream representation and the constraints required to decode it
 class HasMediaType tag => ResponsePayload body tag where
   -- | Decodes the high level representation from the supplied byte stream
-  deserialiseRequest :: Proxy tag -> HttpResponse (SerialT IO Word8) -> IO (HttpResponse body)
+  deserialiseRequest :: prox tag -> HttpResponse (SerialT IO Word8) -> IO (HttpResponse body)
 
 data JsonPayload = JsonPayload
 
@@ -100,7 +104,7 @@ instance (W.FromForm body) => ResponsePayload body UrlFormPayload where
 
 -- | A type tag used to indicate that a request\/response should be encoded\/decoded as @application/x-www-form-urlencoded@ data
 urlForm :: Proxy UrlFormPayload
-urlForm = Proxy :: Proxy UrlFormPayload
+urlForm = Proxy
 
 data EmptyPayload = EmptyPayload
 
@@ -152,3 +156,6 @@ instance ResponsePayload T.Text HtmlPayload where
 -- | A type tag used to indicate that a request\/response should be encoded\/decoded as @text/html@ data
 html :: Proxy HtmlPayload
 html = Proxy :: Proxy HtmlPayload
+
+-- TO THINK ABOUT: Can we have a type tag to encode OR possibilities?  e.g. json or text for cases where the server may return application/json for successful responses and text/plain for errors
+
