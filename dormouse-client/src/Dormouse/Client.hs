@@ -132,7 +132,7 @@ put = makeRequest PUT
 
 -- | Supply a body to an HTTP request using the supplied tag to indicate how the request should be encoded
 supplyBody :: (AllowedBody method b, RequestPayload b contentTag) 
-           => Proxy contentTag -> b -> HttpRequest url method b' contentTag' acceptTag -> HttpRequest url method b contentTag acceptTag
+           => prox contentTag -> b -> HttpRequest url method b' contentTag' acceptTag -> HttpRequest url method b contentTag acceptTag
 supplyBody prox b HttpRequest { requestHeaders = headers, requestBody = _, ..} =
   HttpRequest 
     { requestHeaders = foldMap (\v -> Map.insert ("Content-Type" :: HeaderName) v headers) . fmap encodeMediaType $ mediaType prox
@@ -145,7 +145,7 @@ supplyHeader :: (HeaderName, B.ByteString) -> HttpRequest url method b contentTa
 supplyHeader (k, v) r = r { requestHeaders = Map.insert k v $ requestHeaders r }
 
 -- | Apply an accept header derived from the supplied tag proxy and add a type hint to the request, indicating how the response should be decodable
-accept :: HasMediaType acceptTag => Proxy acceptTag -> HttpRequest url method b contentTag acceptTag -> HttpRequest url method b contentTag acceptTag
+accept :: HasMediaType acceptTag => QProxy acceptTag -> HttpRequest url method b contentTag acceptTag -> HttpRequest url method b contentTag acceptTag
 accept prox r = maybe r (\v -> supplyHeader ("Accept", v) r) . fmap encodeMediaType $ mediaType prox
 
 -- | Make the supplied HTTP request, expecting an HTTP response with body type `b' to be delivered in some 'MonadDormouseClient m'
@@ -158,11 +158,11 @@ expect r = expectAs (proxyOfReq r) r
 
 -- | Make the supplied HTTP request, expecting an HTTP response in the supplied format with body type `b' to be delivered in some 'MonadDormouseClient m'
 expectAs :: (MonadDormouseClient m, MonadThrow m, RequestPayload b contentTag, ResponsePayload b' acceptTag, IsUrl url) 
-         => Proxy acceptTag -> HttpRequest url method b contentTag acceptTag -> m (HttpResponse b')
+         => prox acceptTag -> HttpRequest url method b contentTag acceptTag -> m (HttpResponse b')
 expectAs tag r = fetchAs tag r rejectNon2xx
 
 fetchAs :: (MonadDormouseClient m, RequestPayload b contentTag, ResponsePayload b' acceptTag, IsUrl url) 
-        => Proxy acceptTag -> HttpRequest url method b contentTag acceptTag -> (HttpResponse b' -> m b'') -> m b''
+        => prox acceptTag -> HttpRequest url method b contentTag acceptTag -> (HttpResponse b' -> m b'') -> m b''
 fetchAs tag r f = do
   let r' = serialiseRequest (contentTypeProx r) r
   resp <- send r' $ deserialiseRequest tag

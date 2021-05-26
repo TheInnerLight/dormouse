@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE ViewPatterns #-}
@@ -12,6 +13,7 @@ module Dormouse.Client.Payload
   , UrlFormPayload
   , HtmlPayload
   , RawRequestPayload(..)
+  , QProxy
   , json
   , urlForm
   , noPayload
@@ -23,7 +25,6 @@ import Control.Exception.Safe (MonadThrow, throw)
 import Control.Monad.IO.Class
 import Data.Aeson (FromJSON, ToJSON, encode, eitherDecodeStrict)
 import qualified Data.CaseInsensitive as CI
-import Data.Proxy
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import Data.Word (Word8, Word64)
@@ -41,9 +42,18 @@ import qualified Streamly.Prelude as S
 import qualified Streamly.External.ByteString as SEB
 import qualified Streamly.External.ByteString.Lazy as SEBL
 
+
+data QProxy tag where
+  QProxy :: QProxy tag
+  QPOr :: Double -> QProxy a -> Maybe Double -> QProxy b -> QProxy (a,b)
+
+class AcceptMediaType tag where
+  acceptHeader :: QProxy tag -> Maybe MediaType
+  canAccept :: MediaType -> prox tag -> Bool
+
 -- | Describes an association between a type @tag@ and a specific Media Type
 class HasMediaType tag where
-  mediaType :: Proxy tag -> Maybe MediaType
+  mediaType :: prox tag -> Maybe MediaType
 
 -- | A raw HTTP Request payload consisting of a stream of bytes with either a defined Content Length or using Chunked Transfer Encoding
 data RawRequestPayload
@@ -81,8 +91,8 @@ instance (FromJSON body) => ResponsePayload body JsonPayload where
     return $ resp { responseBody = body }
 
 -- | A type tag used to indicate that a request\/response should be encoded\/decoded as @application/json@ data
-json :: Proxy JsonPayload
-json = Proxy :: Proxy JsonPayload
+json :: QProxy JsonPayload
+json = QProxy
 
 data UrlFormPayload = UrlFormPayload
 
@@ -103,8 +113,8 @@ instance (W.FromForm body) => ResponsePayload body UrlFormPayload where
     return $ resp { responseBody = body }
 
 -- | A type tag used to indicate that a request\/response should be encoded\/decoded as @application/x-www-form-urlencoded@ data
-urlForm :: Proxy UrlFormPayload
-urlForm = Proxy
+urlForm :: QProxy UrlFormPayload
+urlForm = QProxy
 
 data EmptyPayload = EmptyPayload
 
@@ -121,8 +131,8 @@ instance ResponsePayload Empty EmptyPayload where
     return $ resp { responseBody = body }
 
 -- | A type tag used to indicate that a request\/response has no payload
-noPayload :: Proxy EmptyPayload
-noPayload = Proxy :: Proxy EmptyPayload
+noPayload :: QProxy EmptyPayload
+noPayload = QProxy
 
 decodeTextContent :: (MonadThrow m, MonadIO m) => HttpResponse (SerialT m Word8) -> m (HttpResponse T.Text)
 decodeTextContent resp = do
@@ -154,8 +164,8 @@ instance ResponsePayload T.Text HtmlPayload where
   deserialiseRequest _ resp = decodeTextContent resp
 
 -- | A type tag used to indicate that a request\/response should be encoded\/decoded as @text/html@ data
-html :: Proxy HtmlPayload
-html = Proxy :: Proxy HtmlPayload
+html :: QProxy HtmlPayload
+html = QProxy
 
 -- TO THINK ABOUT: Can we have a type tag to encode OR possibilities?  e.g. json or text for cases where the server may return application/json for successful responses and text/plain for errors
 
