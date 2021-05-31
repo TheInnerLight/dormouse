@@ -21,12 +21,13 @@ module Dormouse.Client.Payload
   ) where
 
 
-import Control.Exception.Safe (MonadThrow, throw)
+import Control.Exception.Safe (MonadThrow, throw, impureThrow, StringException (StringException), throwString)
 import Control.Monad.IO.Class
 import Data.Aeson (FromJSON, ToJSON, encode, eitherDecodeStrict)
 import qualified Data.CaseInsensitive as CI
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
+import Data.Proxy (Proxy(..))
 import Data.Word (Word8, Word64)
 import Dormouse.Client.Data
 import Dormouse.Client.Types
@@ -42,14 +43,22 @@ import qualified Streamly.Prelude as S
 import qualified Streamly.External.ByteString as SEB
 import qualified Streamly.External.ByteString.Lazy as SEBL
 
-
 data QProxy tag where
   QProxy :: QProxy tag
-  QPOr :: Double -> QProxy a -> Maybe Double -> QProxy b -> QProxy (a,b)
+  QPOr :: QProxy a -> QProxy b -> QProxy (a,b)
 
 class AcceptMediaType tag where
-  acceptHeader :: QProxy tag -> Maybe MediaType
+  associatedAcceptHeader :: QProxy tag -> AcceptHeader
   canAccept :: MediaType -> prox tag -> Bool
+
+instance (AcceptMediaType a, AcceptMediaType b) => AcceptMediaType (a, b) where
+  associatedAcceptHeader (QPOr q1 q2) = associatedAcceptHeader q1 <> associatedAcceptHeader q2
+  canAccept m _ = canAccept m proxA || canAccept m proxB
+    where
+      proxA :: Proxy a
+      proxA = Proxy
+      proxB :: Proxy b
+      proxB = Proxy
 
 -- | Describes an association between a type @tag@ and a specific Media Type
 class HasMediaType tag where
@@ -68,9 +77,21 @@ class HasMediaType contentTag => RequestPayload body contentTag where
   serialiseRequest :: prox contentTag -> HttpRequest url method body contentTag acceptTag  -> HttpRequest url method RawRequestPayload contentTag acceptTag 
 
 -- | ResponsePayload relates a type of content and a payload tag used to describe that type  to its byte stream representation and the constraints required to decode it
-class HasMediaType tag => ResponsePayload body tag where
+class ResponsePayload body tag where
   -- | Decodes the high level representation from the supplied byte stream
   deserialiseRequest :: prox tag -> HttpResponse (SerialT IO Word8) -> IO (HttpResponse body)
+
+instance (AcceptMediaType t1, ResponsePayload b1 t1, AcceptMediaType t2, ResponsePayload b2 t2) => ResponsePayload (Either b2 b1) (t1, t2) where
+  deserialiseRequest _ r = do
+    let q1 = Proxy :: Proxy t1
+    let q2 = Proxy :: Proxy t2
+    let contentTypeHV = getHeaderValue "Content-Type" r
+    mediaType' <- traverse MTH.parseMediaType contentTypeHV
+    case mediaType' of
+      Just mt | canAccept mt q1 -> (\r' -> r' { responseBody = Right $ responseBody r' }) <$> deserialiseRequest q1 r
+      Just mt | canAccept mt q2 -> (\r' -> r' { responseBody = Left $ responseBody r' })  <$> deserialiseRequest q2 r
+      Just _                    -> throwString "Impossible"
+      Nothing                   -> throwString "Impossible"
 
 data JsonPayload = JsonPayload
 

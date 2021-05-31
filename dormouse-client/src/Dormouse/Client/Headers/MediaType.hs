@@ -1,7 +1,12 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 module Dormouse.Client.Headers.MediaType 
   ( MediaType(..)
   , ContentType(..)
   , MediaTypeException
+  , AcceptHeader
+  , acceptHeader
+  , encodeAcceptHeader
   , parseMediaType
   , encodeMediaType
   , applicationJson
@@ -17,7 +22,10 @@ import Data.CaseInsensitive  (CI, mk, foldedCase)
 import Dormouse.Client.Exception (MediaTypeException(..))
 import qualified Data.Char as C
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 import qualified Data.Map.Strict as Map
+import qualified Data.Set as Set
+import qualified Text.Printf as P
 
 -- | A Media Type indicates the format of content which can be transferred over the wire
 data MediaType = MediaType 
@@ -25,7 +33,7 @@ data MediaType = MediaType
   , subType :: CI B.ByteString -- ^ The subtype indicates the exact subtype of data associated with this Media Type
   , suffixes :: [CI B.ByteString] -- ^ The suffixes specify additional information on the structure of this Media Type
   , parameters :: Map.Map (CI B.ByteString) B.ByteString -- ^ Parameters serve to modify the content subtype specifying additional information, e.g. the @charset@
-  } deriving (Eq, Show)
+  } deriving (Eq, Ord, Show)
 
 data ContentType
   = Text
@@ -35,14 +43,41 @@ data ContentType
   | Application
   | Multipart
   | Other (CI B.ByteString)
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)
+
+newtype AcceptWithQValue = AcceptWithQValue { unAcceptWithQValue :: (MediaType, Maybe Double) } 
+  deriving Eq
+
+instance Ord AcceptWithQValue where
+  compare (AcceptWithQValue (m1, Nothing)) (AcceptWithQValue (m2, Nothing)) = compare m1 m2
+  compare (AcceptWithQValue (m1, Just q1)) (AcceptWithQValue (m2, Just q2)) = thenCompare m1 m2 $ compare q1 q2
+  compare (AcceptWithQValue (_, Nothing)) (AcceptWithQValue (_, Just _))    = LT
+  compare (AcceptWithQValue (_, Just _)) (AcceptWithQValue (_, Nothing))    = GT
+
+thenCompare :: Ord a => a -> a -> Ordering -> Ordering 
+thenCompare a1 a2 EQ  = compare a1 a2
+thenCompare _  _  o = o
+
+newtype AcceptHeader = AcceptHeader { unAcceptHeader :: Set.Set AcceptWithQValue }
+  deriving (Eq, Ord, Semigroup, Monoid)
+
+acceptHeader :: MediaType -> Maybe Double -> AcceptHeader
+acceptHeader mt (Just q) | q > 1.0 = AcceptHeader (Set.fromList [ AcceptWithQValue (mt, Just 1.0) ])
+acceptHeader mt q                  = AcceptHeader (Set.fromList [ AcceptWithQValue (mt, q) ])
+
+encodeAcceptHeader :: AcceptHeader -> B.ByteString 
+encodeAcceptHeader (AcceptHeader acceptQValues) = Set.foldl' folder B.empty acceptQValues
+  where
+    folder acc (AcceptWithQValue(mt, Just q)) = acc <> "," <> encodeMediaType (stripSuffixParams mt) <> ";q=" <> TE.encodeUtf8 (T.pack (P.printf "%.3f" q))
+    folder acc (AcceptWithQValue(mt, Nothing)) = acc <> "," <> encodeMediaType (stripSuffixParams mt)
+    stripSuffixParams mt = mt { suffixes = [], parameters = Map.empty }
 
 -- | Encode a Media Type as an ASCII ByteString
 encodeMediaType :: MediaType -> B.ByteString
 encodeMediaType mediaType =
   let mainTypeBs = foldedCase . mainTypeAsByteString $ mainType mediaType
       subTypeBs = foldedCase $ subType mediaType
-      suffixesBs = fmap (\x -> "+" <> foldedCase x) $ suffixes mediaType
+      suffixesBs = (\x -> "+" <> foldedCase x) <$> suffixes mediaType
       paramsBs = Map.foldlWithKey' (\acc k v -> acc <> "; " <> foldedCase k <> "=" <> v) "" $ parameters mediaType
   in mainTypeBs <> "/" <> subTypeBs <> B.concat suffixesBs <> paramsBs
   where 
@@ -87,7 +122,7 @@ textHtml = MediaType
 
 pContentType :: A.Parser ContentType
 pContentType = 
-  fmap (convertContentType . mk) $ A.takeWhile1 isAsciiAlpha
+  convertContentType . mk <$> A.takeWhile1 isAsciiAlpha
   where 
     convertContentType :: CI B.ByteString -> ContentType
     convertContentType "text"        = Text
@@ -99,10 +134,10 @@ pContentType =
     convertContentType x             = Other x
 
 pSubType :: A.Parser (CI B.ByteString)
-pSubType = fmap mk $ A.takeWhile1 isSubtypeChar
+pSubType = mk <$> A.takeWhile1 isSubtypeChar
 
 pSuffix :: A.Parser (CI B.ByteString)
-pSuffix = fmap mk $ A.takeWhile1 isAsciiAlpha
+pSuffix = mk <$> A.takeWhile1 isAsciiAlpha
 
 pMediaType :: A.Parser MediaType
 pMediaType = do
