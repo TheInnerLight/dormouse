@@ -3,6 +3,7 @@
 
 module RequestBuilding where
 
+import Control.Exception.Safe (MonadThrow)
 import Dormouse.Client
 import Dormouse.Url.QQ
 import Dormouse.Url.Builder
@@ -37,7 +38,7 @@ postmanEchoPostUrl = [https|https://postman-echo.com/post|]
 postmanEchoPostReq :: HttpRequest (Url "https") "POST" Empty EmptyPayload JsonPayload
 postmanEchoPostReq = accept json $ post postmanEchoPostUrl
 
-sendPostmanEchoGetReq :: MonadDormouseClient m => m ()
+sendPostmanEchoGetReq :: (MonadDormouseClient m, MonadThrow m) => m ()
 sendPostmanEchoGetReq = do
   (_ :: HttpResponse ()) <- expect postmanEchoGetReq'
   return()
