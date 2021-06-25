@@ -71,7 +71,7 @@ postmanEchoGetReq = get postmanEchoGetUrl
 It is often useful to tell Dormouse about the expected `Content-Type` of the response in advance so that the correct `Accept` headers can be sent:
 
 ```haskell
-postmanEchoGetReq' :: HttpRequest (Url "http") "GET" Empty EmptyPayload acceptTag
+postmanEchoGetReq' :: HttpRequest (Url "http") "GET" Empty EmptyPayload JsonPayload
 postmanEchoGetReq' = accept json $ get postmanEchoGetUrl
 ```
 
