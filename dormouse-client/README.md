@@ -110,7 +110,7 @@ data PostmanEchoResponse = PostmanEchoResponse
 Once the request has been built, you can send it and expect a response of a particular type in any `MonadDormouseClient m`.
 
 ```haskell
-sendPostmanEchoGetReq :: MonadDormouseClient m => m PostmanEchoResponse
+sendPostmanEchoGetReq :: (MonadDormouseClient m, MonadThrow m) => m PostmanEchoResponse
 sendPostmanEchoGetReq = do
   (resp :: HttpResponse PostmanEchoResponse) <- expect postmanEchoGetReq'
   return $ responseBody resp

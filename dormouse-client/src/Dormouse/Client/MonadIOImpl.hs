@@ -6,7 +6,6 @@ module Dormouse.Client.MonadIOImpl
   , genClientRequestFromUrlComponents
   ) where
 
-import Control.Exception.Safe (MonadThrow, throw)
 import Control.Monad.IO.Class
 import Control.Monad.Reader
 import Data.Function ((&))
@@ -18,10 +17,8 @@ import Data.Text.Encoding (encodeUtf8)
 import Data.Word (Word8)
 import Data.ByteString as B
 import Dormouse.Client.Class
-import Dormouse.Client.Exception (UnexpectedStatusCodeException(..))
 import Dormouse.Client.Methods
 import Dormouse.Client.Payload
-import Dormouse.Client.Status
 import Dormouse.Client.Types
 import Dormouse.Uri
 import Dormouse.Uri.Encode
@@ -77,12 +74,12 @@ responseStream resp =
   & S.takeWhile (not . B.null)
   & S.concatMap (S.unfold SEB.read)
 
-sendHttp :: (HasDormouseClientConfig env, MonadReader env m, MonadIO m, MonadThrow m, IsUrl url) => HttpRequest url method RawRequestPayload contentTag acceptTag -> (HttpResponse (SerialT IO Word8) -> IO (HttpResponse b)) -> m (HttpResponse b)
+sendHttp :: (HasDormouseClientConfig env, MonadReader env m, MonadIO m, IsUrl url) => HttpRequest url method RawRequestPayload contentTag acceptTag -> (HttpResponse (SerialT IO Word8) -> IO (HttpResponse b)) -> m (HttpResponse b)
 sendHttp HttpRequest { requestMethod = method, requestUrl = url, requestBody = reqBody, requestHeaders = reqHeaders} deserialiseResp = do
   manager <- clientManager <$> reader getDormouseClientConfig
   let initialRequest = genClientRequestFromUrlComponents $ asAnyUrl url
   let request = initialRequest { C.method = methodAsByteString method, C.requestBody = translateRequestBody reqBody, C.requestHeaders = Map.toList reqHeaders }
-  response <- liftIO $ C.withResponse request manager (\resp -> do
+  liftIO $ C.withResponse request manager (\resp -> do
       let respHeaders = Map.fromList $ C.responseHeaders resp
       let statusCode = NC.statusCode . C.responseStatus $ resp
       deserialiseResp $ HttpResponse 
@@ -91,6 +88,3 @@ sendHttp HttpRequest { requestMethod = method, requestUrl = url, requestBody = r
         , responseBody = responseStream resp
         }
       ) 
-  case responseStatusCode response of
-    Successful -> return response
-    _          -> throw $ UnexpectedStatusCodeException (responseStatusCode response)

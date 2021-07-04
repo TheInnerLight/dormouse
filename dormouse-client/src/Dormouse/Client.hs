@@ -20,6 +20,8 @@ module Dormouse.Client
   , accept
   , expectAs
   , expect
+  , fetchAs
+  , fetch
   -- * Dormouse Client Monad and Transformer
   , DormouseClientT
   , DormouseClient
@@ -74,7 +76,7 @@ module Dormouse.Client
   , parseHttpsUrl
   ) where
 
-import Control.Exception.Safe (MonadThrow)
+import Control.Exception.Safe (MonadThrow, throw)
 import Control.Monad.IO.Class
 import Control.Monad.Reader
 import qualified Data.Map.Strict as Map
@@ -87,6 +89,7 @@ import Dormouse.Client.Headers
 import Dormouse.Client.Headers.MediaType
 import Dormouse.Client.Payload
 import Dormouse.Client.Methods
+import Dormouse.Client.Status
 import Dormouse.Client.Types
 import Dormouse.Uri
 import Dormouse.Url
@@ -144,21 +147,42 @@ supplyHeader (k, v) r = r { requestHeaders = Map.insert k v $ requestHeaders r }
 accept :: HasMediaType acceptTag => Proxy acceptTag -> HttpRequest url method b contentTag acceptTag -> HttpRequest url method b contentTag acceptTag
 accept prox r = maybe r (\v -> supplyHeader ("Accept", v) r) . fmap encodeMediaType $ mediaType prox
 
--- | Make the supplied HTTP request, expecting an HTTP response with body type `b' to be delivered in some 'MonadDormouseClient m'
-expect :: (MonadDormouseClient m, RequestPayload b contentTag, ResponsePayload b' acceptTag, IsUrl url) => HttpRequest url method b contentTag acceptTag -> m (HttpResponse b')
+-- | Make the supplied HTTP request, expecting a Successful (2xx) HTTP response with body type `b' to be delivered in some 'MonadDormouseClient m'
+expect :: (MonadDormouseClient m, MonadThrow m, RequestPayload b contentTag, ResponsePayload b' acceptTag, IsUrl url) 
+       => HttpRequest url method b contentTag acceptTag -> m (HttpResponse b')
 expect r = expectAs (proxyOfReq r) r
   where 
     proxyOfReq :: HttpRequest url method b contentTag acceptTag -> Proxy acceptTag
     proxyOfReq _ = Proxy
 
--- | Make the supplied HTTP request, expecting an HTTP response in the supplied format with body type `b' to be delivered in some 'MonadDormouseClient m'
-expectAs :: (MonadDormouseClient m, RequestPayload b contentTag, ResponsePayload b' acceptTag, IsUrl url) => Proxy acceptTag -> HttpRequest url method b contentTag acceptTag -> m (HttpResponse b')
-expectAs tag r = do
+-- | Make the supplied HTTP request, expecting a Successful (2xx) HTTP response in the supplied format with body type `b' to be delivered in some 'MonadDormouseClient m'
+expectAs :: (MonadDormouseClient m, MonadThrow m, RequestPayload b contentTag, ResponsePayload b' acceptTag, IsUrl url) 
+         => Proxy acceptTag -> HttpRequest url method b contentTag acceptTag -> m (HttpResponse b')
+expectAs tag r = fetchAs tag r rejectNon2xx
+
+-- | Make the supplied HTTP request and transform the response into a result in some 'MonadDormouseClient m'
+fetch :: (MonadDormouseClient m, RequestPayload b contentTag, ResponsePayload b' acceptTag, IsUrl url) 
+        => HttpRequest url method b contentTag acceptTag -> (HttpResponse b' -> m b'') -> m b''
+fetch r = fetchAs (proxyOfReq r) r
+  where  
+    proxyOfReq :: HttpRequest url method b contentTag acceptTag -> Proxy acceptTag
+    proxyOfReq _ = Proxy
+
+-- | Make the supplied HTTP request and transform the response in the supplied format into a result in some 'MonadDormouseClient m'
+fetchAs :: (MonadDormouseClient m, RequestPayload b contentTag, ResponsePayload b' acceptTag, IsUrl url) 
+        => Proxy acceptTag -> HttpRequest url method b contentTag acceptTag -> (HttpResponse b' -> m b'') -> m b''
+fetchAs tag r f = do
   let r' = serialiseRequest (contentTypeProx r) r
-  send r' $ deserialiseRequest tag
-  where 
+  resp <- send r' $ deserialiseRequest tag
+  f resp
+  where  
     contentTypeProx :: HttpRequest url method b contentTag acceptTag -> Proxy contentTag
     contentTypeProx _ = Proxy
+
+rejectNon2xx :: MonadThrow m => HttpResponse body -> m (HttpResponse body)
+rejectNon2xx r = case responseStatusCode r of
+  Successful -> pure r
+  _          -> throw $ UnexpectedStatusCodeException (responseStatusCode r)
 
 -- | The DormouseClientT Monad Transformer
 newtype DormouseClientT m a = DormouseClientT 
