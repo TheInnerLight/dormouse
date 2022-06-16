@@ -1,5 +1,5 @@
 name:                dormouse-uri
-version:             0.2.0.0
+version:             0.2.1.0
 github:              "theinnerlight/dormouse"
 license:             BSD3
 author:              Phil Curzon
@@ -40,7 +40,7 @@ description: |
 
 dependencies:
 - base >= 4.7 && < 5
-- attoparsec >= 0.13.2.4 && < 0.14
+- attoparsec >= 0.13.2.4 && < 0.15
 - bytestring >= 0.10.8 && < 0.11.0
 - safe-exceptions >= 0.1.7 && < 0.2.0
 - case-insensitive >= 1.2.1.0 && < 2.0.0

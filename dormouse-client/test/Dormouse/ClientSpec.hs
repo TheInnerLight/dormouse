@@ -40,7 +40,7 @@ runTestM :: TestEnv -> TestM a -> IO a
 runTestM deps app = flip runReaderT deps $ unTestM app
 
 instance MonadDormouseTestClient TestM where
-  expectLbs (req @ HttpRequest { requestUrl = u, requestMethod = method, requestBody = body, requestHeaders = headers }) = do
+  expectLbs req@HttpRequest { requestUrl = u, requestMethod = method, requestBody = body, requestHeaders = headers } = do
     let reqUrl = asAnyUrl u
     case (reqUrl, method) of
       ([url|https://starfleet.com/captains|], GET) -> do

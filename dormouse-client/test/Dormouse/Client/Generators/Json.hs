@@ -7,6 +7,7 @@ module Dormouse.Client.Generators.Json
   where
 
 import qualified Data.Aeson as A
+import qualified Data.Aeson.Key as AK
 import qualified Data.Scientific as S
 import qualified Data.Vector as V
 import Hedgehog
@@ -39,12 +40,12 @@ genJsonArray ranges = fmap (A.Array . V.fromList) $ Gen.list ar gen
     ar = arrayLenRanges ranges
 
 genJsonObject :: JsonGenRanges -> Gen A.Value
-genJsonObject ranges =  fmap A.object $ Gen.list ar genNameValue
+genJsonObject ranges = fmap A.object $ Gen.list ar genNameValue
   where
     genNameValue = do
       name <- Gen.text sr Gen.unicode
       value <- genJsonValue ranges
-      return (name, value)
+      return (AK.fromText name, value)
     sr = stringRanges ranges
     ar = arrayLenRanges ranges
 

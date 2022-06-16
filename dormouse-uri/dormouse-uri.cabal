@@ -1,13 +1,13 @@
 cabal-version: 1.18
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.34.4.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b8a506a500d16ae04b32a32f96f93aa0b0c0993f219d0beed44057eda0b8f0c7
+-- hash: 6dcac8debd8c24ab440f9fc0db3243874573497aba6d5dd562f65588b1cb8bb5
 
 name:           dormouse-uri
-version:        0.2.0.0
+version:        0.2.1.0
 synopsis:       Library for type-safe representations of Uri/Urls
 description:    Dormouse-Uri provides type safe handling of `Uri`s and `Url`s.
                 .
@@ -61,10 +61,14 @@ library
       Paths_dormouse_uri
   hs-source-dirs:
       src
-  default-extensions: OverloadedStrings MultiParamTypeClasses ScopedTypeVariables FlexibleContexts
+  default-extensions:
+      OverloadedStrings
+      MultiParamTypeClasses
+      ScopedTypeVariables
+      FlexibleContexts
   ghc-options: -Wall
   build-depends:
-      attoparsec >=0.13.2.4 && <0.14
+      attoparsec >=0.13.2.4 && <0.15
     , base >=4.7 && <5
     , bytestring >=0.10.8 && <0.11.0
     , case-insensitive >=1.2.1.0 && <2.0.0
@@ -100,10 +104,14 @@ test-suite dormouse-uri-test
   hs-source-dirs:
       src
       test
-  default-extensions: OverloadedStrings MultiParamTypeClasses ScopedTypeVariables FlexibleContexts
+  default-extensions:
+      OverloadedStrings
+      MultiParamTypeClasses
+      ScopedTypeVariables
+      FlexibleContexts
   ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -fdicts-strict
   build-depends:
-      attoparsec >=0.13.2.4 && <0.14
+      attoparsec >=0.13.2.4 && <0.15
     , base >=4.7 && <5
     , bytestring >=0.10.8 && <0.11.0
     , case-insensitive >=1.2.1.0 && <2.0.0

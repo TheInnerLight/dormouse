@@ -29,7 +29,7 @@ import qualified Network.HTTP.Types.Status as NC
 import Streamly
 import qualified Streamly.Prelude as S
 import qualified Streamly.External.ByteString as SEB
-import qualified Streamly.Internal.Memory.ArrayStream as SIMA
+import qualified Streamly.Internal.Data.Array.Stream.Foreign as SIMA
 
 givesPopper :: SerialT IO Word8 -> C.GivesPopper ()
 givesPopper rawStream k = do
