@@ -38,6 +38,18 @@ jobs:
         run: |
           stack update
           stack init --resolver ${{ matrix.resolver }} --force
+          
+      - name: Cache
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-stack
+        with:
+          path: |
+            ~/.stack
+            .stack-work
+          key: ${{ runner.os }}-stack-${{ hashFiles('stack.yaml.lock', 'package.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-stack
 
       - name: Build package dependencies
         run: |
