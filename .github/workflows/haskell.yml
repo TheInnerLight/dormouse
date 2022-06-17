@@ -71,6 +71,10 @@ jobs:
         run: |
           stack --resolver ${{ matrix.resolver }} exec ghc-pkg list || true
           
+      - name: Builld documentation
+        run: |
+          stack --resolver ${{ matrix.resolver }} haddock --no-haddock-deps
+          
       - name: Create Dormouse-Uri Tarball
         run: |
           stack --resolver ${{ matrix.resolver }} sdist dormouse-uri
@@ -78,3 +82,15 @@ jobs:
       - name: Create Dormouse-Client Tarball
         run: |
           stack --resolver ${{ matrix.resolver }} sdist dormouse-client
+          
+      - name: Upload Dormouse-Uri Candidate Package
+        env:
+          HACKAGE_KEY: ${{ secrets.HACKAGE_API_KEY }}
+        run: |
+          stack --resolver ${{ matrix.resolver }} upload --candidate dormouse-uri
+          
+      - name: Upload Dormouse-Client Candidate Package
+        env:
+          HACKAGE_KEY: ${{ secrets.HACKAGE_API_KEY }}
+        run: |
+          stack --resolver ${{ matrix.resolver }} upload --candidate dormouse-client
