@@ -73,7 +73,7 @@ jobs:
           
       - name: Builld documentation
         run: |
-          stack --resolver ${{ matrix.resolver }} haddock --no-haddock-deps
+          stack --resolver ${{ matrix.resolver }} haddock
           
       - name: Create Dormouse-Uri Tarball
         run: |
