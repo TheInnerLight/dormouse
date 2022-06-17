@@ -58,3 +58,11 @@ jobs:
       - name: Package list
         run: |
           stack --resolver ${{ matrix.resolver }} exec ghc-pkg list || true
+          
+      - name: Create Dormouse-Uri Tarball
+        run: |
+          stack --resolver ${{ matrix.resolver }} sdist dormouse-uri
+          
+      - name: Create Dormouse-Client Tarball
+        run: |
+          stack --resolver ${{ matrix.resolver }} sdist dormouse-client
