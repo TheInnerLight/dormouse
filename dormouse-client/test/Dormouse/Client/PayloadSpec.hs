@@ -9,15 +9,13 @@ import Dormouse.Client.Types
 import Dormouse.Client.Generators.Text
 import Dormouse.Client.Payload
 
-import Streamly
-import qualified Streamly.Prelude as S
-
 import Data.Proxy
 
 import Test.Hspec
 import Test.Hspec.Hedgehog
 import qualified Hedgehog.Range as Range
 import qualified Streamly.External.ByteString as SEB
+import qualified Streamly.Data.Stream as Stream
 
 spec :: Spec
 spec = before setup $ do
@@ -29,7 +27,7 @@ spec = before setup $ do
           resp = HttpResponse 
             { responseStatusCode = 200
             , responseHeaders = Map.fromList [("Content-Type", "text/plain; charset=iso-8859-1")]
-            , responseBody = S.unfold SEB.read txt
+            , responseBody = Stream.unfold SEB.read txt
             }
           expectedLatin1Text = decodeLatin1 txt
         resp' <- liftIO . deserialiseRequest html $ resp
@@ -41,7 +39,7 @@ spec = before setup $ do
           resp = HttpResponse 
             { responseStatusCode = 200
             , responseHeaders = Map.fromList [("Content-Type", "text/plain; charset=utf8")]
-            , responseBody = S.unfold SEB.read txt
+            , responseBody = Stream.unfold SEB.read txt
             }
           expectedUtf8Text = decodeUtf8 txt
         resp' <- liftIO . deserialiseRequest html $ resp
@@ -53,7 +51,7 @@ spec = before setup $ do
           resp = HttpResponse 
             { responseStatusCode = 200
             , responseHeaders = Map.empty
-            , responseBody = S.unfold SEB.read txt
+            , responseBody = Stream.unfold SEB.read txt
             }
           expectedUtf8Text = decodeUtf8 txt
         resp' <- liftIO . deserialiseRequest html $ resp

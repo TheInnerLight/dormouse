@@ -1,13 +1,11 @@
 cabal-version: 1.18
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.36.0.
 --
 -- see: https://github.com/sol/hpack
---
--- hash: 6dcac8debd8c24ab440f9fc0db3243874573497aba6d5dd562f65588b1cb8bb5
 
 name:           dormouse-uri
-version:        0.2.1.0
+version:        0.2.1.1
 synopsis:       Library for type-safe representations of Uri/Urls
 description:    Dormouse-Uri provides type safe handling of `Uri`s and `Url`s.
                 .
@@ -70,13 +68,13 @@ library
   build-depends:
       attoparsec >=0.13.2.4 && <0.15
     , base >=4.7 && <5
-    , bytestring >=0.10.8 && <0.11.0
+    , bytestring >=0.10.8 && <0.12.0
     , case-insensitive >=1.2.1.0 && <2.0.0
     , containers >=0.6.2.1 && <0.7
     , http-types >=0.12.3 && <0.13
     , safe-exceptions >=0.1.7 && <0.2.0
     , template-haskell >=2.15.0 && <3.0.0
-    , text >=1.2.4 && <2.0.0
+    , text >=2.0.0 && <3.0.0
   default-language: Haskell2010
 
 test-suite dormouse-uri-test
@@ -113,17 +111,17 @@ test-suite dormouse-uri-test
   build-depends:
       attoparsec >=0.13.2.4 && <0.15
     , base >=4.7 && <5
-    , bytestring >=0.10.8 && <0.11.0
+    , bytestring >=0.10.8 && <0.12.0
     , case-insensitive >=1.2.1.0 && <2.0.0
     , containers >=0.6.2.1 && <0.7
-    , hedgehog >=1.0.1 && <2
+    , hedgehog
     , hspec >=2.0.0 && <3
     , hspec-discover >=2.0.0 && <3
-    , hspec-hedgehog >=0.0.1.2 && <0.1
+    , hspec-hedgehog
     , http-types >=0.12.3 && <0.13
     , safe-exceptions >=0.1.7 && <0.2.0
     , scientific >=0.3.6.2 && <0.4
     , template-haskell >=2.15.0 && <3.0.0
-    , text >=1.2.4 && <2.0.0
-    , vector >=0.12.0.3 && <0.13
+    , text >=2.0.0 && <3.0.0
+    , vector
   default-language: Haskell2010

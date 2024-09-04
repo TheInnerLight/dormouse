@@ -26,10 +26,9 @@ import Dormouse.Client.Class ( MonadDormouseClient(..) )
 import Dormouse.Client.Payload ( RawRequestPayload(..) )
 import Dormouse.Client.Types ( HttpRequest(..), HttpResponse(..) )
 import Dormouse.Url ( IsUrl )
-import Streamly ( SerialT )
-import qualified Streamly.Prelude as S
 import qualified Streamly.External.ByteString as SEB
 import qualified Streamly.External.ByteString.Lazy as SEBL
+import qualified Streamly.Data.Stream as Stream
 
 -- | MonadDormouseTestClient describes the capability to send and receive specifically ByteString typed HTTP Requests and Responses
 class Monad m => MonadDormouseTestClient m where
@@ -47,13 +46,13 @@ class Monad m => MonadDormouseTestClient m where
 
 instance (Monad m, MonadIO m, MonadDormouseTestClient m) => MonadDormouseClient m where
   send req deserialiseResp = do
-    reqBody <- liftIO . S.fold SEB.write . extricateRequestStream . requestBody $ req
+    reqBody <- liftIO . Stream.fold SEB.write . extricateRequestStream . requestBody $ req
     let reqBs = req {requestBody = reqBody}
     respBs <- expectBs reqBs
-    let respStream = S.unfold SEBL.read . LB.fromStrict $ responseBody respBs
+    let respStream = Stream.unfold SEBL.reader . LB.fromStrict $ responseBody respBs
     liftIO $ deserialiseResp $ respBs { responseBody = respStream }
     where 
-      extricateRequestStream :: RawRequestPayload -> SerialT IO Word8
+      extricateRequestStream :: RawRequestPayload -> Stream.Stream IO Word8
       extricateRequestStream (DefinedContentLength _ s) = s
       extricateRequestStream (ChunkedTransfer s) = s
 

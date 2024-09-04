@@ -26,18 +26,16 @@ import Dormouse.Url
 import qualified Network.HTTP.Client as C
 import qualified Network.HTTP.Types as T
 import qualified Network.HTTP.Types.Status as NC
-import Streamly
-import qualified Streamly.Prelude as S
 import qualified Streamly.External.ByteString as SEB
-import qualified Streamly.Internal.Data.Array.Stream.Foreign as SIMA
+import qualified Streamly.Data.Stream as Stream
 
-givesPopper :: SerialT IO Word8 -> C.GivesPopper ()
+givesPopper :: Stream.Stream IO Word8 -> C.GivesPopper ()
 givesPopper rawStream k = do
-  let initialStream = SIMA.arraysOf 32768 rawStream
+  let initialStream = Stream.chunksOf 32768 rawStream
   streamState <- newIORef initialStream
   let popper = do
         stream <- readIORef streamState
-        test <- S.uncons stream
+        test <- Stream.uncons stream
         case test of
           Just (elems, stream') -> writeIORef streamState stream' $> SEB.fromArray elems
           Nothing               -> return B.empty
@@ -68,13 +66,13 @@ genClientRequestFromUrlComponents url =
     , C.queryString = encodeQuery queryText
     }
 
-responseStream :: C.Response C.BodyReader -> SerialT IO Word8
+responseStream :: C.Response C.BodyReader -> Stream.Stream IO Word8
 responseStream resp = 
-    S.repeatM (C.brRead $ C.responseBody resp)
-  & S.takeWhile (not . B.null)
-  & S.concatMap (S.unfold SEB.read)
+    Stream.repeatM (C.brRead $ C.responseBody resp)
+  & Stream.takeWhile (not . B.null)
+  & Stream.concatMap (Stream.unfold SEB.reader)
 
-sendHttp :: (HasDormouseClientConfig env, MonadReader env m, MonadIO m, IsUrl url) => HttpRequest url method RawRequestPayload contentTag acceptTag -> (HttpResponse (SerialT IO Word8) -> IO (HttpResponse b)) -> m (HttpResponse b)
+sendHttp :: (HasDormouseClientConfig env, MonadReader env m, MonadIO m, IsUrl url) => HttpRequest url method RawRequestPayload contentTag acceptTag -> (HttpResponse (Stream.Stream IO Word8) -> IO (HttpResponse b)) -> m (HttpResponse b)
 sendHttp HttpRequest { requestMethod = method, requestUrl = url, requestBody = reqBody, requestHeaders = reqHeaders} deserialiseResp = do
   manager <- clientManager <$> reader getDormouseClientConfig
   let initialRequest = genClientRequestFromUrlComponents $ asAnyUrl url

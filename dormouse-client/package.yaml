@@ -38,19 +38,20 @@ description: |
 dependencies:
 - base >= 4.7 && < 5
 - attoparsec >= 0.13.2.4 && < 0.15
-- bytestring >= 0.10.8 && < 0.11.0
+- bytestring >= 0.10.8 && < 0.12.0
 - aeson >= 2.0 && < 3.0
-- http-api-data >= 0.4.1.1 && < 0.5
+- http-api-data >= 0.4.1.1 && < 0.6
 - http-client >= 0.6.4.1 && < 0.8.0
 - http-client-tls >= 0.3.5.3 && < 0.4
 - safe-exceptions >= 0.1.7 && < 0.2.0
 - case-insensitive >= 1.2.1.0 && < 2.0.0
 - http-types >= 0.12.3 && < 0.13
-- text >= 1.2.4 && < 2.0.0
+- text >= 2.0.0 && < 3.0.0
 - mtl >= 2.2.2 && < 3
 - template-haskell >= 2.15.0 && < 3.0.0
-- streamly >= 0.8.0 && < 0.9
-- streamly-bytestring >= 0.1.2 && < 0.2
+- streamly
+- streamly-core
+- streamly-bytestring
 - containers >= 0.6.2.1 && < 0.7
 
 library:
@@ -83,10 +84,10 @@ tests:
     - dormouse-uri
     - hspec >= 2.0.0 && < 3
     - hspec-discover >= 2.0.0 && < 3
-    - hedgehog >= 1.0.1 && < 2
-    - hspec-hedgehog >= 0.0.1.2 && < 0.1
+    - hedgehog 
+    - hspec-hedgehog 
     - scientific >= 0.3.6.2 && < 0.4
-    - vector >= 0.12.0.3 && < 0.13
+    - vector 
 
 default-extensions:
   - OverloadedStrings

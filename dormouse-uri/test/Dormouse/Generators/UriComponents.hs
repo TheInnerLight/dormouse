@@ -86,7 +86,7 @@ genInvalidUserInfo = do
   valids <- Gen.list (Range.constant 0 15) genUserInfoChar
   fmap (B.intercalate "") $ Gen.shuffle $ invalids ++ valids
   where
-    genInvalidUserInfoChar = fmap (B8.pack . return) $ Gen.filter (\x -> (not $ isUserInfoChar x) && x /= '%' && C.isPrint x) Gen.ascii
+    genInvalidUserInfoChar = fmap (B8.pack . return) $ Gen.filter (\x -> (not $ isUserInfoChar x) && x /= '%' && x /= '@' && C.isPrint x) Gen.ascii
 
 genValidIPv4 :: Gen B.ByteString
 genValidIPv4 = do

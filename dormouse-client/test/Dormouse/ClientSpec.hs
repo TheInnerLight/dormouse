@@ -10,10 +10,10 @@ module Dormouse.ClientSpec
   ) where
 
 import Control.Concurrent.MVar
-import Control.Exception.Safe (MonadThrow)
+import Control.Exception.Safe (MonadThrow, catch, Exception, SomeException (SomeException))
 import Control.Monad.IO.Class
 import Control.Monad.Reader
-import Data.Aeson (encode, Value)
+import Data.Aeson (encode, Value, ToJSON (toJSON))
 import qualified Data.Map.Strict as Map
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as LB
@@ -21,6 +21,7 @@ import Dormouse.Client
 import Dormouse.Client.Test.Class
 import Dormouse.Url.QQ
 import Dormouse.Client.Generators.Json
+
 import Test.Hspec
 import Test.Hspec.Hedgehog
 

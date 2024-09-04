@@ -73,13 +73,13 @@ pUserInfo = do
   xs <- takeWhileW8 (\x -> isUserInfoChar x || x == '%')
   xs' <- maybe (fail "Failed to percent-decode") pure $ percentDecode xs
   _ <- char '@'
-  return $ UserInfo (TE.decodeUtf8 xs')
+  return $ UserInfo (TE.decodeUtf8Lenient xs')
 
 pRegName :: Parser T.Text
 pRegName = do
   xs <- takeWhileW8 (\x -> isRegNameChar x || x == '%')
   xs' <- maybe (fail "Failed to percent-decode") pure $ percentDecode xs
-  return . TE.decodeUtf8 $ xs'
+  return . TE.decodeUtf8Lenient $ xs'
 
 pIPv4 :: Parser T.Text
 pIPv4 = do
@@ -124,7 +124,7 @@ pPathAbsAuth :: Parser (Path rt)
 pPathAbsAuth = do
   p <- takeWhileW8 (\x -> isPathChar x || x == '%' || x == '/')
   p' <- maybe (fail "Failed to percent-decode") pure $ percentDecode p
-  let ps = PathSegment <$> T.split (== '/') (TE.decodeUtf8 p')
+  let ps = PathSegment <$> T.split (== '/') (TE.decodeUtf8Lenient p')
   case ps of -- begins with "/" is empty
     (PathSegment x):xs | T.null x -> return $ Path xs
     (PathSegment _):_             -> fail "must begin with /"
@@ -134,7 +134,7 @@ pPathAbsNoAuth :: Parser (Path 'Absolute)
 pPathAbsNoAuth = do
   p <- takeWhileW8 (\x -> isPathChar x || x == '%' || x == '/')
   p' <- maybe (fail "Failed to percent-decode") pure $ percentDecode p
-  let ps = PathSegment <$> T.split (== '/') (TE.decodeUtf8 p')
+  let ps = PathSegment <$> T.split (== '/') (TE.decodeUtf8Lenient p')
   case ps of -- begins with "/" but not "//" OR begins with segment OR empty
     (PathSegment x1):(PathSegment x2):_ | T.null x1 && T.null x2 -> fail "cannot begin with //"
     (PathSegment x):xs                  | T.null x               -> return $ Path xs
@@ -144,7 +144,7 @@ pPathRel :: Parser (Path 'Relative)
 pPathRel = do
   p <- takeWhileW8 (\x -> isPathChar x || x == '%' || x == '/')
   p' <- maybe (fail "Failed to percent-decode") pure $ percentDecode p
-  let ps = PathSegment <$> T.split (== '/') (TE.decodeUtf8 p')
+  let ps = PathSegment <$> T.split (== '/') (TE.decodeUtf8Lenient p')
   case ps of
     (PathSegment x1):(PathSegment x2):_ | T.null x1 && T.null x2 -> fail "cannot begin with //"
     (PathSegment x):_                   | T.isPrefixOf ":" x     -> fail "first character of a relative path cannot be :"
@@ -159,7 +159,7 @@ pQuery = do
     Nothing           -> return ()
     Just c | c == '#' -> return ()
     c                 -> fail $ "Invalid query termination character: " <> show c <> ", must be # or end of input"
-  return . Query . TE.decodeUtf8 $ queryText
+  return . Query . TE.decodeUtf8Lenient $ queryText
 
 pFragment :: Parser Fragment
 pFragment = do
@@ -168,14 +168,14 @@ pFragment = do
   _ <- peekChar >>= \case
     Nothing           -> return ()
     c                 -> fail $ "Invalid fragment termination character: " <> show c <> ", must be end of input"
-  return . Fragment . TE.decodeUtf8 $ fragmentText
+  return . Fragment . TE.decodeUtf8Lenient $ fragmentText
 
 pScheme :: Parser Scheme
 pScheme = do
   x <- pAsciiAlpha
   xs <- A.takeWhile isSchemeChar
   _ <- char ':'
-  return $ Scheme (T.toLower . TE.decodeUtf8 $ B.cons (BS.c2w x) xs)
+  return $ Scheme (T.toLower . TE.decodeUtf8Lenient $ B.cons (BS.c2w x) xs)
 
 pAbsolutePart :: Parser (Scheme, Maybe Authority)
 pAbsolutePart = do

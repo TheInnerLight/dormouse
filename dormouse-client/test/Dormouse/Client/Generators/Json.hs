@@ -10,6 +10,7 @@ import qualified Data.Aeson as A
 import qualified Data.Aeson.Key as AK
 import qualified Data.Scientific as S
 import qualified Data.Vector as V
+import qualified Data.Char as C
 import Hedgehog
 import qualified Hedgehog.Gen as Gen
 
@@ -23,7 +24,10 @@ genJsonNull :: Gen A.Value
 genJsonNull = pure A.Null
 
 genJsonString :: Range Int -> Gen A.Value
-genJsonString sr = fmap A.String $ Gen.text sr Gen.unicode
+genJsonString sr = fmap A.String $ Gen.text sr jsonChar
+
+jsonChar :: Gen Char
+jsonChar = Gen.filter (\c -> c /= '\"' && c /= '\\' && (not $ C.isControl c) && c /= '\r' && c /= '\n') Gen.unicode
 
 genJsonBool :: Gen A.Value
 genJsonBool = fmap A.Bool Gen.bool
@@ -43,7 +47,7 @@ genJsonObject :: JsonGenRanges -> Gen A.Value
 genJsonObject ranges = fmap A.object $ Gen.list ar genNameValue
   where
     genNameValue = do
-      name <- Gen.text sr Gen.unicode
+      name <- Gen.text sr jsonChar
       value <- genJsonValue ranges
       return (AK.fromText name, value)
     sr = stringRanges ranges
