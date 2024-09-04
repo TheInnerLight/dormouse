@@ -1,0 +1,58 @@
+name: "Nix Build"
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: cachix/install-nix-action@v27
+      with:
+        github_access_token: ${{ secrets.GITHUB_TOKEN }}
+    - run: nix develop
+    - name: Build package dependencies
+      run: |
+        stack build --no-run-tests --no-run-benchmarks --only-dependencies
+
+    - name: Build package
+      run: |
+        stack build --no-run-tests --no-run-benchmarks
+
+    - name: Build testing dependencies
+      run: |
+        stack build --no-run-tests --no-run-benchmarks --test --bench
+
+    - name: Run tests
+      run: |
+        stack build --test --no-run-benchmarks
+
+    - name: Package list
+      run: |
+        stack exec ghc-pkg list || true
+        
+    - name: Builld documentation
+      run: |
+        stack haddock
+        
+    - name: Create Dormouse-Uri Tarball
+      run: |
+        stack sdist dormouse-uri
+        
+    - name: Create Dormouse-Client Tarball
+      run: |
+        stack sdist dormouse-client
+        
+    - name: Upload Dormouse-Uri Candidate Package
+      env:
+        HACKAGE_KEY: ${{ secrets.HACKAGE_API_KEY }}
+      run: |
+        stack upload --candidate dormouse-uri
+        
+    - name: Upload Dormouse-Client Candidate Package
+      env:
+        HACKAGE_KEY: ${{ secrets.HACKAGE_API_KEY }}
+      run: |
+        stack upload --candidate dormouse-client
