@@ -1,13 +1,13 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.36.0.
+-- This file has been generated from package.yaml by hpack version 0.37.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 885afc6c8636b9c7d9d10d5ce55c9958272cf85e4e7d8f88a37836a5c5a0a494
+-- hash: 319eb15529df2d22bf4dd40ddab1d1de1c3435c44d3f92295b0b7593c935f43d
 
 name:           bench
-version:        0.2.1.1
+version:        0.3.0.0
 description:    Please see the README on GitHub at <https://github.com/githubuser/bench#readme>
 homepage:       https://github.com/githubuser/bench#readme
 bug-reports:    https://github.com/githubuser/bench/issues

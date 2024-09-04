@@ -33,7 +33,7 @@ description: |
 
     - The `Uri` and `Url` data types use `Data.Text` internally, this allows you to freely include percent-decoded characters which will be properly rendered when the `Url`/`Uri` is encoded.
     - Quasiquoters to allow safe construction of `Uri`/`Url`s from string literals.
-    - `DataKinds` allow `Url`s to be restricted to the `http` or `https` schemes are the type level.
+    - `DataKinds` allow `Url`s to be restricted to the `http` or `https` schemes at the type level.
     - A UrlBuilder syntax to allow type-safe construction/concatenation of `Url`s from their components, e.g. path and query parameters.
 
   Please see https://dormouse.io for full documentation.
