@@ -51,6 +51,7 @@ library
       Dormouse.Client.Exception
       Dormouse.Client.Methods
       Dormouse.Client.Payload
+      Dormouse.Client.Payload.ServerSentEvents
       Dormouse.Client.Types
       Paths_dormouse_client
   hs-source-dirs:
@@ -95,6 +96,7 @@ test-suite dormouse-client-test
       Dormouse.Client.Methods
       Dormouse.Client.MonadIOImpl
       Dormouse.Client.Payload
+      Dormouse.Client.Payload.ServerSentEvents
       Dormouse.Client.Status
       Dormouse.Client.Test.Class
       Dormouse.Client.Types

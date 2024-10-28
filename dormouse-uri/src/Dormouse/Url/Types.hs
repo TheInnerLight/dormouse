@@ -22,7 +22,7 @@ data UrlComponents = UrlComponents
   , urlPath :: Path 'Absolute
   , urlQuery :: Maybe Query
   , urlFragment :: Maybe Fragment
-  } deriving (Eq, Show, Lift)
+  } deriving (Eq, Ord, Show, Lift)
 
 data UrlScheme
   = HttpScheme
@@ -37,6 +37,10 @@ data Url (scheme :: Symbol) where
 instance Eq (Url scheme) where
   (==) (HttpUrl u1)  (HttpUrl u2)  = show u1 == show u2
   (==) (HttpsUrl u1) (HttpsUrl u2) = show u1 == show u2
+
+instance Ord (Url scheme) where
+  compare (HttpUrl u1) (HttpUrl u2) = compare u1 u2
+  compare (HttpsUrl u1) (HttpsUrl u2) = compare u1 u2
 
 instance Show (Url scheme) where
   show (HttpUrl wu)  = "http " <> show wu
@@ -53,6 +57,12 @@ instance Eq AnyUrl where
   (==) (AnyUrl (HttpUrl d1)) (AnyUrl (HttpUrl d2))   = d1 == d2
   (==) (AnyUrl (HttpsUrl d1)) (AnyUrl (HttpsUrl d2)) = d1 == d2
   (==) _  _                                          = False
+
+instance Ord AnyUrl where
+  compare (AnyUrl (HttpUrl u1)) (AnyUrl (HttpUrl u2)) = compare u1 u2
+  compare (AnyUrl (HttpUrl _)) (AnyUrl (HttpsUrl _)) = LT
+  compare (AnyUrl (HttpsUrl u1)) (AnyUrl (HttpsUrl u2)) = compare u1 u2
+  compare (AnyUrl (HttpsUrl _)) (AnyUrl (HttpUrl _)) = GT
 
 instance Show AnyUrl where
   show (AnyUrl u) = show u

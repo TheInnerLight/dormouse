@@ -28,7 +28,7 @@ import Language.Haskell.TH.Syntax (Lift(..))
 -- | The UserInfo subcomponent of a URI Authority
 newtype UserInfo = UserInfo 
   { unUserInfo :: Text
-  } deriving (Eq, Lift)
+  } deriving (Eq, Ord, Lift)
 
 instance Show UserInfo where
   show userInfo = -- applications should not render as clear text anything after the first colon
@@ -38,7 +38,7 @@ instance Show UserInfo where
       x:_ -> unpack x <> ":****"
 
 -- | The Host subcomponent of a URI Authority
-newtype Host = Host { unHost :: Text } deriving (Eq, Lift)
+newtype Host = Host { unHost :: Text } deriving (Eq, Ord, Lift)
 
 instance IsString Host where
   fromString s = Host $ pack s
@@ -51,10 +51,10 @@ data Authority = Authority
   { authorityUserInfo :: Maybe UserInfo
   , authorityHost :: Host
   , authorityPort :: Maybe Int
-  } deriving (Eq, Show, Lift)
+  } deriving (Eq, Ord, Show, Lift)
 
 -- | The Fragment component of a URI
-newtype Fragment = Fragment { unFragment :: Text } deriving (Eq, Lift)
+newtype Fragment = Fragment { unFragment :: Text } deriving (Eq, Ord, Lift)
 
 instance IsString Fragment where
   fromString s = Fragment $ pack s
@@ -65,13 +65,13 @@ instance Show Fragment where
 data UriReferenceType = Absolute | Relative
 
 -- | The Path component of a URI, including a series of individual Path Segments
-newtype Path (ref :: UriReferenceType) = Path { unPath :: [PathSegment]} deriving (Eq, Lift)
+newtype Path (ref :: UriReferenceType) = Path { unPath :: [PathSegment]} deriving (Eq, Ord, Lift)
 
 instance Show (Path ref) where
   show path = "[" <> L.intercalate "," (fmap show . unPath $ path) <> "]"
 
 -- | An individial Path segment of a URI
-newtype PathSegment = PathSegment { unPathSegment :: Text } deriving (Eq, Lift)
+newtype PathSegment = PathSegment { unPathSegment :: Text } deriving (Eq, Ord, Lift)
 
 instance IsString PathSegment where
   fromString s = PathSegment $ pack s
@@ -80,7 +80,7 @@ instance Show PathSegment where
   show seg = unpack $ unPathSegment seg
 
 -- | The Query component of a URI
-newtype Query = Query { unQuery :: Text } deriving (Eq, Lift)
+newtype Query = Query { unQuery :: Text } deriving (Eq, Ord, Lift)
 
 instance IsString Query where
   fromString s = Query $ pack s
@@ -89,7 +89,7 @@ instance Show Query where
   show query = unpack $ unQuery query
 
 -- | The Scheme component of a URI
-newtype Scheme = Scheme { unScheme :: Text } deriving (Eq, Lift)
+newtype Scheme = Scheme { unScheme :: Text } deriving (Eq, Ord, Lift)
 
 instance Show Scheme where
   show scheme = unpack . unScheme $ scheme
@@ -102,7 +102,7 @@ data Uri = Uri
   , uriPath :: Path 'Absolute
   , uriQuery :: Maybe Query
   , uriFragment :: Maybe Fragment
-  } deriving (Eq, Show, Lift)
+  } deriving (Eq, Ord, Show, Lift)
 
 -- | The data associated with a URI Relative Reference
 data RelRef = RelRef
@@ -110,13 +110,13 @@ data RelRef = RelRef
   , relRefPath :: Path 'Relative
   , relRefQuery :: Maybe Query
   , relRefFragment :: Maybe Fragment
-  } deriving (Eq, Show, Lift)
+  } deriving (Eq, Ord, Show, Lift)
 
 -- | A URI-reference is either a URI or a relative reference.  If the URI-reference's prefix does not match the syntax of a scheme 
 -- followed by its colon separator, then the URI-reference is a relative reference.
 data UriReference 
   = AbsoluteUri Uri
   | RelativeRef RelRef
-  deriving (Lift, Eq, Show)
+  deriving (Lift, Ord, Eq, Show)
 
 
