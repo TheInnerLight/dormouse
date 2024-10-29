@@ -20,6 +20,7 @@ import Dormouse.Uri.Parser
 import Hedgehog
 import qualified Hedgehog.Gen as Gen
 import qualified Hedgehog.Range as Range
+import Dormouse.Url (urlAsBS, parseHttpUrl, httpUrlAsBS, parseHttpsUrl, httpsUrlAsBS)
 
 
 uriWithHostAndPath :: Uri
@@ -262,4 +263,17 @@ spec = do
     it "fails for fragment only" $ do
       let res = parseOnly pUri "#fragment"
       isLeft res `shouldBe` True
+  describe "urlAsBS" $ do
+    it "outputs the original http url after parsing" $ do
+      let (Right url') = parseHttpUrl "http://www.example.com/forum/questions/?tag=with%20space"
+      httpUrlAsBS url' `shouldBe` "http://www.example.com/forum/questions/?tag=with%20space"
+    it "outputs the original http url after parsing with host, username, path and port" $ do
+      let (Right url') = parseHttpsUrl "https://www.example.com:123/forum/questions/"
+      httpsUrlAsBS url' `shouldBe` "https://www.example.com:123/forum/questions/"
+    it "outputs the original http url after parsing with host, username and path" $ do
+      let (Right url') = parseHttpUrl "http://j.t.kirk:11a@google.com/test1/test2"
+      httpUrlAsBS url' `shouldBe` "http://j.t.kirk:11a@google.com/test1/test2"
+    it "outputs the original https url after parsing with percent encoded unicode in the fragment" $ do
+      let (Right url') = parseHttpsUrl "https://www.example.com/forum/questions/#%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80"
+      httpsUrlAsBS url' `shouldBe` "https://www.example.com/forum/questions/#%F0%9F%98%80%F0%9F%98%80%F0%9F%98%80"
 

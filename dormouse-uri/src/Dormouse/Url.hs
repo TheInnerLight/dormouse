@@ -10,6 +10,9 @@ module Dormouse.Url
   , parseUrl
   , parseHttpUrl
   , parseHttpsUrl
+  , httpUrlAsBS
+  , httpsUrlAsBS
+  , urlAsBS
   , IsUrl(..)
   ) where
 
@@ -20,6 +23,9 @@ import Dormouse.Url.Exception (UrlException(..))
 import Dormouse.Uri
 import Dormouse.Url.Class
 import Dormouse.Url.Types
+import qualified Data.Text.Encoding as TE
+import Dormouse.Uri.Encode (encodeQuery, encodePath)
+import Network.HTTP.Types (urlEncode)
 
 -- | Ensure that the supplied Url uses the _http_ scheme, throwing a 'UrlException' in @m@ if this is not the case
 ensureHttp :: MonadThrow m => AnyUrl -> m (Url "http")
@@ -45,15 +51,40 @@ parseUrl :: MonadThrow m => SB.ByteString -> m AnyUrl
 parseUrl bs = do
   url <- parseUri bs
   ensureUrl url
-  
+
 -- | Parse an ascii 'ByteString' as an http url, throwing a 'UriException' in @m@ if this fails
 parseHttpUrl :: MonadThrow m => SB.ByteString -> m (Url "http")
-parseHttpUrl text = do 
+parseHttpUrl text = do
   anyUrl <- parseUrl text
   ensureHttp anyUrl
 
 -- | Parse an ascii 'ByteString' as an https url, throwing a 'UriException' in @m@ if this fails
 parseHttpsUrl :: MonadThrow m => SB.ByteString -> m (Url "https")
-parseHttpsUrl text = do 
+parseHttpsUrl text = do
   anyUrl <- parseUrl text
   ensureHttps anyUrl
+
+httpUrlAsBS :: Url "http" -> SB.ByteString
+httpUrlAsBS (HttpUrl httpUrl) = "http://" <> componentsAsBS httpUrl
+
+httpsUrlAsBS :: Url "https" -> SB.ByteString
+httpsUrlAsBS (HttpsUrl httpsUrl) = "https://" <> componentsAsBS httpsUrl
+
+urlAsBS :: AnyUrl -> SB.ByteString
+urlAsBS (AnyUrl (HttpUrl httpUrl)) = httpUrlAsBS (HttpUrl httpUrl)
+urlAsBS (AnyUrl (HttpsUrl httpUrl)) = httpsUrlAsBS (HttpsUrl httpUrl)
+
+componentsAsBS :: UrlComponents -> SB.ByteString
+componentsAsBS uc =
+  let auth = urlAuthority uc
+      uInfo = maybe "" (\ui -> TE.encodeUtf8 (unUserInfo ui) <> "@") (authorityUserInfo auth)
+      host = TE.encodeUtf8 $ unHost $ authorityHost auth
+      port = maybe "" (\p -> ":" <> TE.encodeUtf8 (T.pack (show p))) (authorityPort auth)
+      path = encodePath (urlPath uc)
+      queryString = maybe "" encodeQuery (urlQuery uc)
+      fragment = maybe "" (\f -> "#" <> urlEncode False (TE.encodeUtf8 (unFragment f))) (urlFragment uc)
+  in uInfo <> host <> port <> path <> queryString <> fragment
+
+
+
+
